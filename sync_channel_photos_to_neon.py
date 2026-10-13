@@ -45,10 +45,10 @@ async def sync():
     await db.init_db()
 
     channel_username = config.channel_username or "shbdbdjdhdjjdhd"
-    logger.info(f"Ma'lumotlar bazasi rejimi: {'Neon PostgreSQL' if db.is_postgres else 'SQLite'}")
+    logger.info("Ma'lumotlar bazasi: Neon PostgreSQL")
 
-    products = await db.fetch("SELECT id, name, message_id, image_url FROM products ORDER BY id DESC;")
-    logger.info(f"Jami {len(products)} ta mahsulot tekshirilmoqda...")
+    products = await db.fetch("SELECT id, name, description, message_id, image_url FROM products WHERE is_active = 1 ORDER BY id DESC;")
+    logger.info(f"Jami {len(products)} ta faol mahsulot tekshirilmoqda...")
 
     updated_count = 0
     for p in products:
@@ -58,9 +58,10 @@ async def sync():
 
         photos = get_channel_post_photos(channel_username, msg_id)
         if photos:
-            from bot.utils.photo_selector import select_best_product_photos
-            primary_photo, gallery_urls = select_best_product_photos(p.get("name", ""), "", photos)
-            primary_photo = primary_photo or photos[0]
+            from bot.utils.photo_selector import select_best_index_async
+            best_idx = await select_best_index_async(p.get("name", ""), p.get("description") or "", photos)
+            primary_photo = photos[best_idx]
+            gallery_urls = [primary_photo] + [u for i, u in enumerate(photos) if i != best_idx]
             gallery_json = json.dumps(gallery_urls)
             
             await db.execute("""
