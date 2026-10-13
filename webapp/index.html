@@ -18,8 +18,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet">
   </noscript>
   
-  <link rel="stylesheet" href="/static/mini_app_buttons.css?v=44.0" />
-  <link rel="stylesheet" href="/static/app.css?v=44.0" />
+  <link rel="stylesheet" href="/static/mini_app_buttons.css?v=45.0" />
+  <link rel="stylesheet" href="/static/app.css?v=45.0" />
 </head>
 <body>
   <!-- To'liq ekranli Parda (Curtain Reveal) Kirish Animatsiyasi -->
@@ -263,6 +263,39 @@
             <p class="empty-description">Qidiruv soʻrovingiz yoki tanlangan toifa boʻyicha mahsulot mavjud emas.</p>
             <button id="resetFiltersBtn" class="btn-buy" style="margin-top: 14px; width: auto; padding: 10px 24px;">
               Filtrlarni tozalash
+            </button>
+        <!-- Maxsus Tugmalar & Animatsiyalar (Liquid Glass & Spring TMA UI Kit) -->
+        <div class="interactive-buttons-card" id="interactiveButtonsCard">
+          <div class="interactive-buttons-header">
+            <div>
+              <strong class="interactive-buttons-title">Maxsus Tugmalar & Animatsiyalar</strong>
+              <div style="font-size: 0.74rem; color: var(--text-sub); margin-top: 2px;">TMA Liquid Glass va elastik sakrash</div>
+            </div>
+            <span class="interactive-buttons-badge">TMA UI Kit</span>
+          </div>
+          <div class="interactive-buttons-grid">
+            <!-- C. Shaffof Shisha (Liquid Glass) -->
+            <button class="btn btn-liquid" data-haptic="light" id="btnLiquidDemo">
+              <span>💎 Shisha Tugma</span>
+            </button>
+            <!-- A. Spring (Elastik sakrash) va Haptic Titrash -->
+            <button class="btn btn-bounce" data-haptic="medium" id="btnBounceDemo">
+              <span>⚡ Davom etish</span>
+            </button>
+            <!-- D. Suv To‘lqini (Ripple Wave) -->
+            <button class="btn btn-ripple" data-ripple="true" data-haptic="light" id="btnRippleDemo">
+              <span>🌊 To‘lqin Effekti</span>
+            </button>
+            <!-- B. 3D Tactile (Duolingo uslubi - pastga bosilish) -->
+            <button class="btn btn-3d" data-haptic="heavy" id="btn3dDemo">
+              <span>🎮 3D Tugma</span>
+            </button>
+          </div>
+          <!-- E. Serverga ma'lumot jo‘natishda Loading Spinner -->
+          <div style="margin-top: 10px;">
+            <button class="btn btn-bounce" id="mySubmitBtn" data-haptic="medium" style="background: var(--btn-main-bg); color: var(--btn-main-text); border: 1px solid var(--btn-main-border);">
+              <span class="btn-text">Yuklanish Effekti (Loading)</span>
+              <div class="btn-spinner"></div>
             </button>
           </div>
         </div>
@@ -706,7 +739,7 @@
     </div>
   </div>
 
-  <script src="/static/mini_app_core.js?v=44.0"></script>
-  <script src="/static/app.js?v=44.0"></script>
+  <script src="/static/mini_app_core.js?v=45.0"></script>
+  <script src="/static/app.js?v=45.0"></script>
 </body>
 </html>

@@ -35,59 +35,83 @@
 }
 
 /* ----------------------------------------------------
-   1. SPRING / BOUNCE (Yumshoq sakrash)
+   1. SPRING / BOUNCE (Yumshoq sezilar-sezilmas sakrash)
    Foydalanish: class="btn btn-bounce"
    ---------------------------------------------------- */
 .btn-bounce {
   background: linear-gradient(135deg, #4F46E5 0%, #3B82F6 100%);
   color: #FFFFFF;
-  box-shadow: 0 8px 20px rgba(79, 70, 229, 0.35);
+  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.28);
+  transition: transform 0.24s cubic-bezier(0.25, 1.4, 0.5, 1), box-shadow 0.2s ease;
+  will-change: transform;
 }
 .btn-bounce:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 24px rgba(79, 70, 229, 0.45);
+  transform: translateY(-1.5px);
+  box-shadow: 0 8px 20px rgba(79, 70, 229, 0.38);
 }
 .btn-bounce:active {
-  transform: scale(0.93);
-  transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform: scale(0.96) !important;
+  transition: transform 0.1s cubic-bezier(0.2, 0, 0, 1) !important;
 }
 
 /* ----------------------------------------------------
-   2. LIQUID GLASS (Shaffof shisha + nur yugurishi)
+   2. LIQUID GLASS (Shaffof shisha + ustidan yuguruvchi nur)
    Foydalanish: class="btn btn-liquid"
    ---------------------------------------------------- */
+@keyframes liquidShimmer {
+  0% { left: -75%; opacity: 0; }
+  15% { opacity: 1; }
+  35% { left: 145%; opacity: 1; }
+  36%, 100% { left: 145%; opacity: 0; }
+}
+
 .btn-liquid {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0.1) 100%);
-  color: inherit;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.75) 0%, rgba(240, 245, 255, 0.45) 100%);
+  color: #0f172a;
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1.5px solid rgba(255, 255, 255, 0.5);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06), inset 0 1px 1px rgba(255, 255, 255, 0.9);
+  border: 1.5px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05), inset 0 1px 1px rgba(255, 255, 255, 0.9);
   position: relative;
+  overflow: hidden;
+  transition: transform 0.24s cubic-bezier(0.25, 1.4, 0.5, 1), box-shadow 0.2s ease, border-color 0.2s ease;
+  will-change: transform;
 }
-body.dark-mode .btn-liquid, [data-theme="dark"] .btn-liquid {
+
+html.dark .btn-liquid, body.dark-mode .btn-liquid, [data-theme="dark"] .btn-liquid {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.04) 100%);
-  border: 1.5px solid rgba(255, 255, 255, 0.15);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.2);
+  border: 1.5px solid rgba(255, 255, 255, 0.18);
+  color: #FFFFFF;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.25);
 }
+
 .btn-liquid::before {
   content: '';
   position: absolute;
-  top: -50%;
-  left: -60%;
-  width: 40%;
-  height: 200%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.45), transparent);
+  top: -60%;
+  left: -75%;
+  width: 50%;
+  height: 220%;
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.55) 50%, transparent 100%);
   transform: rotate(25deg);
-  transition: none;
+  pointer-events: none;
+  animation: liquidShimmer 4.2s infinite cubic-bezier(0.4, 0, 0.2, 1);
 }
-.btn-liquid:hover::before {
-  left: 130%;
-  transition: left 0.75s ease-in-out;
+
+html.dark .btn-liquid::before {
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.35) 50%, transparent 100%);
 }
+
+.btn-liquid:hover::before,
+.btn-liquid:active::before {
+  left: 145%;
+  transition: left 0.45s ease-in-out;
+}
+
 .btn-liquid:active {
-  transform: scale(0.96) translateY(1px);
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+  transform: scale(0.96) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  transition: transform 0.1s cubic-bezier(0.2, 0, 0, 1) !important;
 }
 
 /* ----------------------------------------------------
@@ -270,4 +294,57 @@ body.dark-mode .sticky-bottom-bar, [data-theme="dark"] .sticky-bottom-bar {
 .btn-main-action:active {
   transform: scale(0.96);
   box-shadow: 0 3px 10px rgba(37, 99, 235, 0.3);
+}
+
+/* ----------------------------------------------------
+   9. INTERACTIVE BUTTONS SHOWCASE SECTION
+   ---------------------------------------------------- */
+.interactive-buttons-card {
+  margin: 20px 16px 24px;
+  padding: 18px 16px;
+  background: var(--bg-card, #ffffff);
+  border: 1px solid var(--border-color, rgba(0, 0, 0, 0.08));
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+}
+html.dark .interactive-buttons-card {
+  background: #18181b;
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+.interactive-buttons-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.interactive-buttons-title {
+  font-size: 0.96rem;
+  font-weight: 700;
+  color: var(--text-main, #09090b);
+  letter-spacing: -0.2px;
+}
+.interactive-buttons-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 20px;
+  background: rgba(99, 102, 241, 0.12);
+  color: #6366f1;
+}
+.interactive-buttons-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+@media (max-width: 380px) {
+  .interactive-buttons-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.interactive-buttons-grid .btn {
+  padding: 12px 14px;
+  font-size: 0.82rem;
+  border-radius: 13px;
+  height: 44px;
 }

@@ -888,7 +888,7 @@ html.dark .bottom-bar-uzs {
 }
 
 .btn-buy:active {
-  transform: scale(0.94) !important;
+  transform: scale(0.96) !important;
   opacity: 1 !important;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
   transition: transform 0.08s cubic-bezier(0.2, 0, 0, 1) !important;
@@ -927,7 +927,7 @@ html.dark .bottom-bar-uzs {
 }
 
 .btn-channel-link:active {
-  transform: scale(0.95);
+  transform: scale(0.96) !important;
   background: rgba(36, 161, 222, 0.18);
   transition: transform 0.08s cubic-bezier(0.2, 0, 0, 1) !important;
 }
@@ -3242,7 +3242,7 @@ html.light .btn-channel-pd {
   background: #27272a;
 }
 .deal-cart-btn:active {
-  transform: scale(0.94) !important;
+  transform: scale(0.96) !important;
   transition: transform 0.08s cubic-bezier(0.2, 0, 0, 1) !important;
 }
 .deal-cart-btn.is-success {

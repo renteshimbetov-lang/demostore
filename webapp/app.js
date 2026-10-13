@@ -1316,7 +1316,7 @@
     }
 
     // 1-bosqich: Smooth tactile bosilish va aylanuvchi spinner (Spinner + "Qo'shilmoqda...")
-    btn.style.transform = 'scale(0.93)';
+    btn.style.transform = 'scale(0.96)';
     btn.style.transition = 'transform 0.1s cubic-bezier(0.2, 0, 0, 1)';
 
     const addingText = (typeof t === 'function' ? t('adding') : null) || "Qo'shilmoqda...";
@@ -1638,7 +1638,7 @@
                 <span>Savatga</span>
               </button>
               ${p.post_url ? `
-                <button class="btn-channel-link" data-post-url="${p.post_url}" data-id="${p.id}" data-haptic="light">
+                <button class="btn-channel-link btn-liquid" data-post-url="${p.post_url}" data-id="${p.id}" data-haptic="light">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="m22 2-7 20-4-9-9-4Z"></path>
                     <path d="M22 2 11 13"></path>
@@ -1766,7 +1766,7 @@
                 <span>${t('add_to_cart')}</span>
               </button>
               ${p.post_url ? `
-                <button class="btn-channel-link" data-post-url="${p.post_url}" data-id="${p.id}" data-haptic="light">
+                <button class="btn-channel-link btn-liquid" data-post-url="${p.post_url}" data-id="${p.id}" data-haptic="light">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="m22 2-7 20-4-9-9-4Z"></path>
                     <path d="M22 2 11 13"></path>
@@ -1967,7 +1967,7 @@
 
       ${prod.post_url ? `
         <div class="pd-channel-box">
-          <button class="btn-channel-pd" id="pdChannelViewBtn" data-post-url="${prod.post_url}">
+          <button class="btn-channel-pd btn-liquid" id="pdChannelViewBtn" data-post-url="${prod.post_url}" data-haptic="light">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="m22 2-7 20-4-9-9-4Z"></path>
               <path d="M22 2 11 13"></path>
@@ -2187,7 +2187,7 @@
                 <span>${t('add_to_cart')}</span>
               </button>
               ${p.post_url ? `
-                <button class="btn-channel-link" data-post-url="${p.post_url}" data-id="${p.id}" data-haptic="light">
+                <button class="btn-channel-link btn-liquid" data-post-url="${p.post_url}" data-id="${p.id}" data-haptic="light">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="m22 2-7 20-4-9-9-4Z"></path>
                     <path d="M22 2 11 13"></path>
@@ -2627,6 +2627,42 @@
     setTimeout(openCurtains, 1200);
   }
 
+  // Interaktiv tugmalar (Liquid Glass, Bounce, Ripple, 3D, Loading) hodisalari
+  function setupInteractiveButtonsDemo() {
+    const btnLiquid = document.getElementById('btnLiquidDemo');
+    const btnBounce = document.getElementById('btnBounceDemo');
+    const btnRipple = document.getElementById('btnRippleDemo');
+    const btn3d = document.getElementById('btn3dDemo');
+    const btnLoading = document.getElementById('mySubmitBtn');
+
+    btnLiquid?.addEventListener('click', () => {
+      showToast('💎 Liquid Glass: Shaffof shisha va oquvchi nur effekti!');
+    });
+
+    btnBounce?.addEventListener('click', () => {
+      showToast('⚡ Spring Bounce: Yumshoq elastik sakrash!');
+    });
+
+    btnRipple?.addEventListener('click', () => {
+      showToast('🌊 Ripple Wave: Suv to‘lqini effekti!');
+    });
+
+    btn3d?.addEventListener('click', () => {
+      showToast('🎮 3D Tactile: Duolingo chuqur bosilish effekti!');
+    });
+
+    btnLoading?.addEventListener('click', () => {
+      if (window.MiniApp && typeof window.MiniApp.showLoading === 'function') {
+        window.MiniApp.showLoading(btnLoading);
+        setTimeout(() => {
+          window.MiniApp.hideLoading(btnLoading);
+          window.MiniApp.haptic('success');
+          showToast('✅ Yuklanish muvaffaqiyatli yakunlandi!');
+        }, 1400);
+      }
+    });
+  }
+
   // ==========================================================================
   // INITSIALIZATSIYA
   // ==========================================================================
@@ -2637,6 +2673,7 @@
     applyLanguage(state.lang);
     updateWishlistBadge();
     updateCartBadges();
+    setupInteractiveButtonsDemo();
 
     // 1. Agar keshda mahsulotlar bo'lsa — darhol 0ms da chizish!
     const hasCache = Boolean(state.products && state.products.length > 0);
