@@ -102,11 +102,24 @@ def parse_price(text: str, usd_rate: int = DEFAULT_USD_RATE) -> Optional[int]:
     return None
 
 def clean_title_text(raw_line: str, full_text: str = "") -> str:
-    """Sarlavhadan emojilar, 'Nomi:' prefikslari va ortiqcha qavslarni tozalash (faqat toza model nomi)"""
-    cleaned = re.sub(r"^[^\w\d]+", "", raw_line).strip()
+    """Sarlavhadan barcha emojilar, stikerlar, 'Nomi:' prefikslari va ortiqcha qavslarni tozalash (100% toza model nomi)"""
+    # 1. Barcha Unicode emojilari va stiker belgilarini olib tashlash
+    cleaned = re.sub(r"[\U00010000-\U0010ffff]", "", raw_line)
+    cleaned = re.sub(r"[\u2600-\u27BF\u2300-\u23FF\u2B50\u2B55\uFE0F\uFE0E\u200D\u200C]", "", cleaned)
+    
+    # 2. Boshidagi belgilar va prefikslarni tozalash
+    cleaned = re.sub(r"^[^\w\d]+", "", cleaned).strip()
     cleaned = re.sub(r"^(?:nomi|model|tovar|mahsulot|name)\s*[:\-]\s*", "", cleaned, flags=re.I).strip()
-    # Qavs ichidagi (256GB / Desert...) kabi ortiqcha matnlarni tozalash
+    
+    # 3. Qavs ichidagi (256GB / Desert...) kabi ortiqcha matnlarni tozalash
     cleaned = re.sub(r"\s*\([^)]*\)", "", cleaned).strip()
+    
+    # 4. Oxiridagi narx yozuvlarini tozalash (masalan ' - 159$' yoki '- 175$')
+    cleaned = re.sub(r"\s*-\s*\$?\d+\$?\s*$", "", cleaned).strip()
+    
+    # 5. Oxiridagi qolib ketgan noharfiy belgilarni tozalash
+    cleaned = re.sub(r"[^\w\d]+$", "", cleaned).strip()
+    cleaned = re.sub(r"\s+", " ", cleaned).strip()
     return cleaned if cleaned else "Mahsulot"
 
 def parse_channel_post_content(raw_text: str) -> Tuple[str, str, int]:

@@ -166,6 +166,15 @@
     }
   }
 
+  // Barcha matnlardan stiker va emojilarni tozalovchi sof funksiya
+  function stripAllEmojis(str) {
+    if (!str) return '';
+    return str
+      .replace(/[\p{Extended_Pictographic}\uFE0F\uFE0E\u200D\u200C]/gu, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
   // Tavsif matnidagi parametrlarni to'liq va aqlli ajratib olish (Telefon va Noutbuklar uchun)
   function parseSpecs(desc) {
     if (!desc) return [];
@@ -175,11 +184,12 @@
 
     function addSpec(key, val) {
       if (!key || !val) return;
-      const cleanVal = val.trim();
+      const cleanVal = stripAllEmojis(val);
       if (!cleanVal) return;
-      if (seenKeys.has(key)) return;
-      seenKeys.add(key);
-      specs.push({ key, val: cleanVal });
+      const cleanKey = stripAllEmojis(key);
+      if (seenKeys.has(cleanKey)) return;
+      seenKeys.add(cleanKey);
+      specs.push({ key: cleanKey, val: cleanVal });
     }
 
     lines.forEach(line => {
@@ -260,9 +270,9 @@
       // 6. Karobka & Hujjatlar
       if (raw.includes('📦') || lower.includes('box') || lower.includes('karobka')) {
         if (lower.includes('nobox') || raw.includes('❌')) {
-          addSpec('Karobka & Hujjat', 'Nobox (Karobkasiz) ❌');
+          addSpec('Karobka & Hujjat', 'Nobox (Karobkasiz)');
         } else {
-          addSpec('Karobka & Hujjat', "To'liq komplekt bor ✅");
+          addSpec('Karobka & Hujjat', "To'liq komplekt mavjud");
         }
         return;
       }
@@ -270,10 +280,9 @@
       // 7. Tashqi holati (Condition)
       if (raw.includes('🛠') || lower.includes('holat') || lower.includes('состояние') || lower.includes('как новый')) {
         if (raw.includes('⭐️') || raw.includes('⭐')) {
-          const stars = (raw.match(/⭐️|⭐/g) || []).length;
-          addSpec('Tashqi holati', '⭐️'.repeat(stars) + " (A'lo darajada)");
+          addSpec('Tashqi holati', "A'lo darajada");
         } else {
-          const val = raw.replace(/^[^\w\d]+/, '').trim();
+          const val = stripAllEmojis(raw.replace(/^[^\w\d]+/, ''));
           addSpec('Tashqi holati', val);
         }
         return;
@@ -281,7 +290,7 @@
 
       // 8. Kafolat
       if (lower.includes('kafolat') || lower.includes('гарантия')) {
-        const val = raw.replace(/^[^\w\d]+/, '').trim();
+        const val = stripAllEmojis(raw.replace(/^[^\w\d]+/, ''));
         addSpec('Kafolat', val);
         return;
       }
@@ -297,7 +306,7 @@
 
       // 10. Protsessor
       if (lower.includes('protsessor') || lower.includes('chip')) {
-        const val = raw.replace(/^(?:protsessor|chip)[:\s]*/i, '').replace(/^[^\w\d]+/, '').trim();
+        const val = stripAllEmojis(raw.replace(/^(?:protsessor|chip)[:\s]*/i, '').replace(/^[^\w\d]+/, ''));
         if (val) {
           addSpec('Protsessor', val);
           return;
@@ -306,7 +315,7 @@
 
       // 11. Ekran
       if (lower.includes('ekran') || lower.includes('display')) {
-        const val = raw.replace(/^(?:ekran|display)[:\s]*/i, '').replace(/^[^\w\d]+/, '').trim();
+        const val = stripAllEmojis(raw.replace(/^(?:ekran|display)[:\s]*/i, '').replace(/^[^\w\d]+/, ''));
         if (val) {
           addSpec('Ekran', val);
           return;
@@ -315,7 +324,7 @@
 
       // 12. Touch ID
       if (lower.includes('touch id')) {
-        addSpec('Xavfsizlik', 'Touch ID ✅');
+        addSpec('Xavfsizlik', 'Touch ID');
         return;
       }
 
@@ -369,23 +378,28 @@
     const specs = parseSpecs(prod.description);
     const badges = [];
     const storage = specs.find(s => s.key.includes('Xotira'));
-    if (storage) badges.push({ text: storage.val, type: 'storage' });
+    if (storage) badges.push({ text: stripAllEmojis(storage.val), type: 'storage' });
     const color = specs.find(s => s.key === 'Rangi');
-    if (color) badges.push({ text: color.val, type: 'color' });
+    if (color) badges.push({ text: stripAllEmojis(color.val), type: 'color' });
     const bat = specs.find(s => s.key.includes('Batareya'));
     if (bat) {
       const pctMatch = bat.val.match(/\d+%/);
-      badges.push({ text: pctMatch ? `🔋 ${pctMatch[0]}` : bat.val, type: 'battery' });
+      badges.push({ text: pctMatch ? pctMatch[0] : stripAllEmojis(bat.val), type: 'battery' });
     }
     const ram = specs.find(s => s.key.includes('RAM'));
-    if (ram && badges.length < 3) badges.push({ text: `RAM ${ram.val}`, type: 'ram' });
+    if (ram && badges.length < 3) badges.push({ text: `RAM ${stripAllEmojis(ram.val)}`, type: 'ram' });
     return badges;
   }
 
-  // Mahsulot kartasida faqat toza model nomini ko'rsatish (qavslardagi ortiqcha matnlarsiz)
+  // Mahsulot kartasida faqat toza model nomini ko'rsatish (stikerlar, emojilar va qavslarsiz 100% toza)
   function getCleanCardTitle(name) {
     if (!name) return 'Mahsulot';
-    return name.replace(/\s*\([^)]*\)/g, '').trim();
+    return stripAllEmojis(
+      name
+        .replace(/\s*\([^)]*\)/g, '')
+        .replace(/\s*-\s*\$?\d+\$?\s*$/g, '')
+        .replace(/[^\p{L}\p{N}]+$/gu, '')
+    ) || 'Mahsulot';
   }
 
   // Toifa bo'yicha qat'iy va xatosiz filtrlash (Noutbuklar hech qachon smartfonga kirmaydi)
@@ -1463,7 +1477,7 @@
     });
     text += `\nJami summa: ${formatPrice(total)} (${formatPriceUzs(total)})\n`;
     const rateVal = Math.round(state.currentUsdRate || 12850).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-    text += `💵 Joriy MB kursi: 1$ = ${rateVal} soʻm\n\nIltimos, yetkazib berish boʻyicha maʼlumot bering.`;
+    text += `Joriy MB kursi: 1$ = ${rateVal} soʻm\n\nIltimos, yetkazib berish boʻyicha maʼlumot bering.`;
 
     const encoded = encodeURIComponent(text);
     const tgUrl = `https://t.me/SmartBook_menejer?text=${encoded}`;
