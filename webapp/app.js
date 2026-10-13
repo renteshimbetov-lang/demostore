@@ -2321,26 +2321,26 @@
   }
 
   // Qidiruv yozilgandan so'ng pastga yoki boshqa tarafga scroll qilinganda klaviaturani yo'q qilish
-  let touchStartY = 0;
-  let touchStartX = 0;
-  let isTouching = false;
+  let searchTouchStartY = 0;
+  let searchTouchStartX = 0;
+  let searchIsTouching = false;
 
   document.addEventListener('touchstart', (e) => {
     if (e.touches && e.touches.length > 0) {
-      touchStartY = e.touches[0].clientY;
-      touchStartX = e.touches[0].clientX;
-      isTouching = true;
+      searchTouchStartY = e.touches[0].clientY;
+      searchTouchStartX = e.touches[0].clientX;
+      searchIsTouching = true;
     }
   }, { passive: true });
 
   document.addEventListener('touchmove', (e) => {
-    if (!isTouching || !e.touches || e.touches.length === 0) return;
+    if (!searchIsTouching || !e.touches || e.touches.length === 0) return;
     if (document.activeElement !== searchInputEl) return;
 
     const currentY = e.touches[0].clientY;
     const currentX = e.touches[0].clientX;
-    const diffY = touchStartY - currentY; // diffY > 0 foydalanuvchi barmoqni tepaga surib pastga scrol qilganda
-    const diffX = Math.abs(currentX - touchStartX);
+    const diffY = searchTouchStartY - currentY; // diffY > 0 foydalanuvchi barmoqni tepaga surib pastga scrol qilganda
+    const diffX = Math.abs(currentX - searchTouchStartX);
 
     // Qidiruv maydonining o'zida matn kursori surilmayotgan bo'lsa
     const isDirectInput = (e.target === searchInputEl || searchInputEl?.contains(e.target));
@@ -2353,7 +2353,7 @@
   }, { passive: true });
 
   document.addEventListener('touchend', () => {
-    isTouching = false;
+    searchIsTouching = false;
   }, { passive: true });
 
   // Native scroll hodisasi (sahifa yoki asosiy kontent harakatlanganda)
