@@ -2257,6 +2257,134 @@
       sectionTitleEl.textContent = t('popular_products');
     }
     loadProducts();
+    searchInputEl?.blur();
+  });
+
+  // ==========================================================================
+  // MOBIL KLAVIATURA VA PASTKI DOCK BOSHQARUVI (Anti-Jumping & Auto-Dismiss)
+  // ==========================================================================
+  let dockRestoreTimer = null;
+
+  function hideDockForKeyboard() {
+    clearTimeout(dockRestoreTimer);
+    document.body.classList.add('search-focused', 'keyboard-open');
+    if (mobileDockEl) {
+      mobileDockEl.classList.add('dock-hidden-keyboard');
+    }
+  }
+
+  function showDockAfterKeyboard() {
+    document.body.classList.remove('search-focused');
+    clearTimeout(dockRestoreTimer);
+    dockRestoreTimer = setTimeout(() => {
+      // Faqatgina qidiruv yoki boshqa input faol bo'lmaganda dock qaytariladi
+      if (document.activeElement !== searchInputEl && !isKeyboardOpenByViewport()) {
+        document.body.classList.remove('keyboard-open');
+        if (mobileDockEl) {
+          mobileDockEl.classList.remove('dock-hidden-keyboard');
+        }
+      }
+    }, 140);
+  }
+
+  function isKeyboardOpenByViewport() {
+    if (window.visualViewport) {
+      return (window.innerHeight - window.visualViewport.height) > 120;
+    }
+    return false;
+  }
+
+  // Qidiruv maydoniga bosilishi bilanoq pastki dock tugmasi sakrab chiqmasligi uchun darhol yashiriladi
+  searchInputEl?.addEventListener('focus', hideDockForKeyboard);
+  searchInputEl?.addEventListener('touchstart', hideDockForKeyboard, { passive: true });
+  searchInputEl?.addEventListener('pointerdown', hideDockForKeyboard, { passive: true });
+  searchInputEl?.addEventListener('blur', showDockAfterKeyboard);
+
+  // Enter / Go / Search tugmasi bosilganda ham klaviaturani silliq yopish
+  searchInputEl?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      searchInputEl.blur();
+    }
+  });
+
+  // Visual Viewport kuzatuvchisi (iOS Safari / Android Chrome / Telegram WebApp klaviatura o'lchamini kuzatish)
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', () => {
+      if (isKeyboardOpenByViewport()) {
+        hideDockForKeyboard();
+      } else {
+        if (document.activeElement !== searchInputEl) {
+          showDockAfterKeyboard();
+        }
+      }
+    });
+  }
+
+  // Qidiruv yozilgandan so'ng pastga yoki boshqa tarafga scroll qilinganda klaviaturani yo'q qilish
+  let touchStartY = 0;
+  let touchStartX = 0;
+  let isTouching = false;
+
+  document.addEventListener('touchstart', (e) => {
+    if (e.touches && e.touches.length > 0) {
+      touchStartY = e.touches[0].clientY;
+      touchStartX = e.touches[0].clientX;
+      isTouching = true;
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchmove', (e) => {
+    if (!isTouching || !e.touches || e.touches.length === 0) return;
+    if (document.activeElement !== searchInputEl) return;
+
+    const currentY = e.touches[0].clientY;
+    const currentX = e.touches[0].clientX;
+    const diffY = touchStartY - currentY; // diffY > 0 foydalanuvchi barmoqni tepaga surib pastga scrol qilganda
+    const diffX = Math.abs(currentX - touchStartX);
+
+    // Qidiruv maydonining o'zida matn kursori surilmayotgan bo'lsa
+    const isDirectInput = (e.target === searchInputEl || searchInputEl?.contains(e.target));
+    const threshold = isDirectInput ? 28 : 6;
+
+    // Pastga (yoki yuqoriga) scrol harakati sezilganda klaviatura darhol yopiladi
+    if (Math.abs(diffY) > threshold && Math.abs(diffY) > diffX) {
+      searchInputEl.blur();
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchend', () => {
+    isTouching = false;
+  }, { passive: true });
+
+  // Native scroll hodisasi (sahifa yoki asosiy kontent harakatlanganda)
+  let lastScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+  const onPageScroll = () => {
+    if (document.activeElement === searchInputEl) {
+      const currentScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+      if (Math.abs(currentScrollY - lastScrollY) > 5) {
+        searchInputEl.blur();
+      }
+      lastScrollY = currentScrollY;
+    } else {
+      lastScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+    }
+  };
+
+  window.addEventListener('scroll', onPageScroll, { passive: true });
+  document.addEventListener('scroll', onPageScroll, { passive: true });
+  document.getElementById('mainContent')?.addEventListener('scroll', () => {
+    if (document.activeElement === searchInputEl) {
+      searchInputEl.blur();
+    }
+  }, { passive: true });
+
+  // Qidiruv ochiq paytda boshqa joyga (masalan fon yoki mahsulot kartasiga) teginilganda klaviaturani yopish
+  document.addEventListener('click', (e) => {
+    if (document.activeElement === searchInputEl) {
+      if (e.target !== searchInputEl && !clearSearchBtnEl?.contains(e.target)) {
+        searchInputEl.blur();
+      }
+    }
   });
 
   resetFiltersBtnEl?.addEventListener('click', () => {
