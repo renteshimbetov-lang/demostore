@@ -275,8 +275,16 @@ def create_web_app(db: Database, webapp_dir: str) -> web.Application:
                 return web.FileResponse(intro_path)
             return web.Response(status=404)
 
+        async def serve_demo(request: web.Request) -> web.FileResponse:
+            demo_path = os.path.join(webapp_dir, "mini_app_demo.html")
+            if os.path.exists(demo_path):
+                return web.FileResponse(demo_path)
+            return web.FileResponse(os.path.join(webapp_dir, "index.html"))
+
         app.router.add_get("/", serve_index)
         app.router.add_get("/webapp", serve_index)
         app.router.add_get("/intro.mp4", serve_intro)
+        app.router.add_get("/demo", serve_demo)
+        app.router.add_get("/buttons", serve_demo)
 
     return app

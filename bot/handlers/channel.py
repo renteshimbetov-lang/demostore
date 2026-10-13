@@ -73,9 +73,13 @@ def setup_channel_router(db: Database, bot: Bot) -> Router:
             logger.debug(f"Embed rasm olishda xatolik: {e}")
             return []
 
-    async def save_product_from_messages(main_msg: Message, all_messages: List[Message]):
+    async def save_product_from_messages(main_msg: Message, all_messages: List[Message], is_edit: bool = False):
         """Bir yoki bir nechta xabardan (albomdan) mahsulotni yaratish yoki yangilash"""
         import json
+        from bot.config import config
+        from bot.utils.photo_selector import select_best_index_async
+        from bot.utils.moderation import build_moderation_caption, build_moderation_keyboard, photo_input
+
         raw_text = (main_msg.caption or main_msg.text or "").strip()
         channel_id = str(main_msg.chat.id)
         message_id = main_msg.message_id
@@ -87,34 +91,34 @@ def setup_channel_router(db: Database, bot: Bot) -> Router:
             return
 
         name, description, price = parse_channel_post_content(raw_text)
+        existing = await db.get_product_by_channel_post(channel_id, message_id)
 
-        # Telegram file_id larini ajratib olish (diskka hech narsa yuklanmaydi)
-        file_ids = extract_all_photo_file_ids(all_messages)
+        # Tahrirlangan postda Telegram faqat bitta xabarni yuboradi —
+        # mavjud galereya va admin tanlagan rasm o'zgarmasdan saqlanadi.
+        keep_media = bool(is_edit and existing)
 
-        # Agar kanal ommaviy bo'lsa, Telegram rasmiy CDN manzillarini olish
-        from bot.config import config
-        from bot.utils.photo_selector import select_best_product_photos
+        image_url = ""
+        gallery_urls: List[str] = []
+        primary_file_id = None
+        if not keep_media:
+            # 1-manba: Telegram file_id lar (doimiy, muddati tugamaydi, edit_media bilan ishlaydi)
+            file_ids = extract_all_photo_file_ids(all_messages)
+            if file_ids:
+                gallery_urls = [f"/api/photo/{fid}" for fid in file_ids]
+            else:
+                # 2-manba: ommaviy kanal CDN rasmlari
+                chan_user = main_msg.chat.username or config.channel_username
+                gallery_urls = await asyncio.to_thread(fetch_channel_embed_photos, chan_user, message_id) if chan_user else []
 
-        chan_user = main_msg.chat.username or config.channel_username
-        cdn_photos = fetch_channel_embed_photos(chan_user, message_id) if chan_user else []
-
-        if cdn_photos:
-            best_img, gallery_urls = select_best_product_photos(name, description, cdn_photos)
-            image_url = best_img or cdn_photos[0]
-            # Primary file id (admin xabari uchun)
-            primary_file_id = file_ids[0] if file_ids else None
-        elif file_ids:
-            best_fid, ordered_fids = select_best_product_photos(name, description, file_ids)
-            primary_file_id = best_fid or file_ids[0]
-            image_url = f"/api/photo/{primary_file_id}"
-            gallery_urls = [f"/api/photo/{fid}" for fid in ordered_fids]
-        else:
-            primary_file_id = None
-            image_url = "/static/apple_3d_logo.png"
-            gallery_urls = ["/static/apple_3d_logo.png"]
-
-        gallery_images_json = json.dumps(gallery_urls)
-        post_url = build_post_url(main_msg)
+            if gallery_urls:
+                best_idx = await select_best_index_async(name, description, gallery_urls, bot)
+                image_url = gallery_urls[best_idx]
+                # Tanlangan rasm galereyada birinchi bo'ladi
+                gallery_urls = [image_url] + [g for i, g in enumerate(gallery_urls) if i != best_idx]
+                primary_file_id = photo_input(image_url) if image_url.startswith("/api/photo/") else None
+            else:
+                image_url = "/static/apple_3d_logo.png"
+                gallery_urls = [image_url]
 
         async with _db_write_lock:
             product_id = await db.upsert_product_from_channel(
@@ -124,62 +128,40 @@ def setup_channel_router(db: Database, bot: Bot) -> Router:
                 description=description,
                 price=price,
                 image_url=image_url,
-                post_url=post_url,
+                post_url=build_post_url(main_msg),
                 media_group_id=main_msg.media_group_id,
                 photo_file_id=primary_file_id,
-                gallery_images=gallery_images_json,
+                gallery_images=json.dumps(gallery_urls) if gallery_urls else None,
                 is_active=0  # Yangi postlar admin 'Ha' deguncha mini ilovada ko'rinmaydi!
             )
 
-        logger.info(
-            f"Kanal posti qabul qilindi! Mahsulot ID: {product_id}, Nomi: {name}, "
-            f"Narxi: ${price}, Tanlangan rasm: {image_url[:50]}"
-        )
+        logger.info(f"Kanal posti qabul qilindi! ID: {product_id}, {name}, ${price}, asosiy rasm: {image_url[:60]}")
 
-        # Adminlarga srazu bildirishnoma yuborish (Ha / Yo'q va Rasm tanlash tugmalari bilan)
-        from bot.utils.helpers import format_price
-        price_uzs = format_price(price * config.usd_rate)
-        admin_alert_text = (
-            f"🔔 <b>KANALDAN YANGI POST QABUL QILINDI!</b>\n"
-            f"━━━━━━━━━━━━━━━━━━━━━━\n"
-            f"📱 <b>Model:</b> {name}\n"
-            f"💵 <b>Narxi:</b> ${price} (≈ {price_uzs})\n"
-            f"🔗 <b>Kanal posti:</b> <a href=\"{post_url}\">Postni ko'rish</a>\n"
-            f"━━━━━━━━━━━━━━━━━━━━━━\n"
-            f"❓ <b>Shuni do'kon / mini ilovaga joylaylikmi?</b>"
-        )
-        admin_kb_buttons = [
-            [
-                InlineKeyboardButton(text="🟢 Ha, do'konga joylash", callback_data=f"chan_approve_{product_id}"),
-                InlineKeyboardButton(text="🔴 Yo'q, rad etish", callback_data=f"chan_reject_{product_id}")
-            ]
-        ]
-        if len(gallery_urls) > 1:
-            admin_kb_buttons.append([
-                InlineKeyboardButton(text=f"🔄 Boshqa rasmni tanlash (1/{len(gallery_urls)})", callback_data=f"chan_nextphoto_{product_id}_0")
-            ])
-        admin_kb = InlineKeyboardMarkup(inline_keyboard=admin_kb_buttons)
+        # Allaqachon tasdiqlangan post tahrirlansa, adminga qayta so'rov yuborilmaydi
+        if existing and existing.get("is_active") == 1:
+            return
 
-        photo_to_send = primary_file_id or (image_url if image_url.startswith("http") else None)
+        prod = await db.get_product(product_id)
+        if not prod:
+            return
+        gallery = json.loads(prod.get("gallery_images") or "[]") or [prod.get("image_url")]
+        idx = gallery.index(prod["image_url"]) if prod.get("image_url") in gallery else 0
+        caption = build_moderation_caption(prod, idx, len(gallery))
+        kb = build_moderation_keyboard(product_id, idx, len(gallery))
+        photo = photo_input(prod.get("image_url") or "")
+
         for admin_id in config.admin_ids:
             try:
-                if photo_to_send:
-                    await bot.send_photo(
-                        chat_id=admin_id,
-                        photo=photo_to_send,
-                        caption=admin_alert_text,
-                        reply_markup=admin_kb,
-                        parse_mode="HTML"
-                    )
+                if photo:
+                    await bot.send_photo(chat_id=admin_id, photo=photo, caption=caption, reply_markup=kb, parse_mode="HTML")
                 else:
-                    await bot.send_message(
-                        chat_id=admin_id,
-                        text=admin_alert_text,
-                        reply_markup=admin_kb,
-                        parse_mode="HTML"
-                    )
+                    await bot.send_message(chat_id=admin_id, text=caption, reply_markup=kb, parse_mode="HTML")
             except Exception as e:
                 logger.warning(f"Adminga bildirishnoma yuborishda xatolik ({admin_id}): {e}")
+                try:
+                    await bot.send_message(chat_id=admin_id, text=caption, reply_markup=kb, parse_mode="HTML")
+                except Exception:
+                    pass
 
     async def _process_debounced_media_group(mg_id: str):
         """Albomning barcha 2-4 ta rasmi Telegramdan kelib bo'lgach (1.2s debounce) qayta ishlash"""
@@ -247,7 +229,7 @@ def setup_channel_router(db: Database, bot: Bot) -> Router:
             logger.info(f"Tahrirlangan post #{message_id} nofaol qilindi.")
             return
 
-        await save_product_from_messages(message, [message])
+        await save_product_from_messages(message, [message], is_edit=True)
 
     # Orqa fonda avtomatik sinxronlash vazifasini ishga tushirish
     from bot.config import config

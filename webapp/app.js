@@ -962,7 +962,7 @@
             </div>
             <h3 class="deal-title" title="${escapeHtml(getCleanCardTitle(p.name))}">${escapeHtml(getCleanCardTitle(p.name))}</h3>
             <div class="deal-footer-action">
-              <button class="deal-cart-btn btn-buy" data-id="${p.id}">
+              <button class="deal-cart-btn btn-buy btn-bounce" data-id="${p.id}" data-haptic="medium">
                 <span class="deal-cart-icon">
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
                 </span>
@@ -1623,12 +1623,12 @@
               <span class="price-uzs">≈ ${formatPriceUzs(p.price)}</span>
             </div>
             <div class="card-actions-stack">
-              <button class="btn-buy btn-add-cart" data-id="${p.id}">
+              <button class="btn-buy btn-add-cart btn-bounce" data-id="${p.id}" data-haptic="medium">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
                 <span>Savatga</span>
               </button>
               ${p.post_url ? `
-                <button class="btn-channel-link" data-post-url="${p.post_url}" data-id="${p.id}">
+                <button class="btn-channel-link" data-post-url="${p.post_url}" data-id="${p.id}" data-haptic="light">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="m22 2-7 20-4-9-9-4Z"></path>
                     <path d="M22 2 11 13"></path>
@@ -1751,12 +1751,12 @@
               <span class="price-uzs">≈ ${formatPriceUzs(p.price)}</span>
             </div>
             <div class="card-actions-stack">
-              <button class="btn-buy btn-add-cart" data-id="${p.id}">
+              <button class="btn-buy btn-add-cart btn-bounce" data-id="${p.id}" data-haptic="medium">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
                 <span>${t('add_to_cart')}</span>
               </button>
               ${p.post_url ? `
-                <button class="btn-channel-link" data-post-url="${p.post_url}" data-id="${p.id}">
+                <button class="btn-channel-link" data-post-url="${p.post_url}" data-id="${p.id}" data-haptic="light">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="m22 2-7 20-4-9-9-4Z"></path>
                     <path d="M22 2 11 13"></path>
@@ -2172,12 +2172,12 @@
               <span class="price-uzs">≈ ${formatPriceUzs(p.price)}</span>
             </div>
             <div class="card-actions-stack">
-              <button class="btn-buy btn-add-cart" data-id="${p.id}">
+              <button class="btn-buy btn-add-cart btn-bounce" data-id="${p.id}" data-haptic="medium">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
                 <span>${t('add_to_cart')}</span>
               </button>
               ${p.post_url ? `
-                <button class="btn-channel-link" data-post-url="${p.post_url}" data-id="${p.id}">
+                <button class="btn-channel-link" data-post-url="${p.post_url}" data-id="${p.id}" data-haptic="light">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="m22 2-7 20-4-9-9-4Z"></path>
                     <path d="M22 2 11 13"></path>
