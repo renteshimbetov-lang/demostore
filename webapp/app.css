@@ -2688,17 +2688,17 @@ html.light .btn-channel-pd {
    ========================================================================== */
 /* 1. Spinner (Aylanuvchi loader) */
 .btn-spinner {
-  display: inline-block;
-  width: 14px;
-  height: 14px;
-  border: 2.2px solid rgba(255, 255, 255, 0.35);
-  border-top-color: #ffffff;
-  border-radius: 50%;
-  animation: btnSpinnerRotate 0.65s linear infinite;
-  margin-right: 6px;
-  vertical-align: middle;
-  flex-shrink: 0;
-  box-sizing: border-box;
+  display: inline-block !important;
+  width: 14px !important;
+  height: 14px !important;
+  border: 2.2px solid rgba(255, 255, 255, 0.35) !important;
+  border-top-color: #ffffff !important;
+  border-radius: 50% !important;
+  animation: btnSpinnerRotate 0.65s linear infinite !important;
+  margin-right: 6px !important;
+  vertical-align: middle !important;
+  flex-shrink: 0 !important;
+  box-sizing: border-box !important;
 }
 @keyframes btnSpinnerRotate {
   to { transform: rotate(360deg); }

@@ -273,3 +273,27 @@ function renderQrCode(url) {
     `;
   };
 }
+
+// Interactive buttons showcase in Taplink
+document.addEventListener('DOMContentLoaded', () => {
+  const tapLiquid = document.getElementById('taplinkLiquidDemo');
+  const tapBounce = document.getElementById('taplinkBounceDemo');
+  const tapRipple = document.getElementById('taplinkRippleDemo');
+  const tap3d = document.getElementById('taplink3dDemo');
+  const tapSubmit = document.getElementById('taplinkSubmitBtn');
+
+  tapLiquid?.addEventListener('click', () => showToast('💎 Liquid Glass: Shaffof shisha effekti!'));
+  tapBounce?.addEventListener('click', () => showToast('⚡ Spring Bounce: Yumshoq sakrash!'));
+  tapRipple?.addEventListener('click', () => showToast('🌊 Ripple Wave: Suv to‘lqini effekti!'));
+  tap3d?.addEventListener('click', () => showToast('🎮 3D Tactile: Duolingo chuqur bosilish effekti!'));
+  tapSubmit?.addEventListener('click', () => {
+    if (window.MiniApp && typeof window.MiniApp.showLoading === 'function') {
+      window.MiniApp.showLoading(tapSubmit);
+      setTimeout(() => {
+        window.MiniApp.hideLoading(tapSubmit);
+        window.MiniApp.haptic('success');
+        showToast('✅ Yuklanish muvaffaqiyatli yakunlandi!');
+      }, 1400);
+    }
+  });
+});
