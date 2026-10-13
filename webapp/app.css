@@ -867,26 +867,30 @@ html.dark .bottom-bar-uzs {
   color: var(--btn-main-text) !important;
   border: 1px solid var(--btn-main-border) !important;
   border-radius: 12px;
-  padding: 9px;
+  padding: 0 14px;
+  height: 38px;
   font-family: var(--font-body);
-  font-weight: 700;
+  font-weight: 600;
   font-size: 0.82rem;
+  letter-spacing: -0.2px;
   cursor: pointer;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
   -webkit-user-select: none;
-  transition: transform 0.22s cubic-bezier(0.25, 1.4, 0.5, 1), background-color 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.26s cubic-bezier(0.25, 1.4, 0.5, 1), background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 7px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
   will-change: transform;
 }
 
 .btn-buy:active {
-  transform: scale(0.95) !important;
+  transform: scale(0.94) !important;
   opacity: 1 !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
   transition: transform 0.08s cubic-bezier(0.2, 0, 0, 1) !important;
 }
 
@@ -894,7 +898,7 @@ html.dark .bottom-bar-uzs {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  margin-top: 6px;
+  margin-top: 8px;
   width: 100%;
 }
 
@@ -905,26 +909,39 @@ html.dark .bottom-bar-uzs {
   gap: 6px;
   width: 100%;
   height: 34px;
-  border-radius: 12px;
-  background: rgba(36, 161, 222, 0.1);
-  border: 1px solid rgba(36, 161, 222, 0.3);
-  color: #24a1de;
+  border-radius: 11px;
+  background: rgba(36, 161, 222, 0.08);
+  border: 1px solid rgba(36, 161, 222, 0.24);
+  color: #0284c7;
   font-family: var(--font-body);
-  font-size: 0.74rem;
+  font-size: 0.76rem;
   font-weight: 600;
+  letter-spacing: -0.15px;
   cursor: pointer;
-  transition: var(--transition);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: transform 0.26s cubic-bezier(0.25, 1.4, 0.5, 1), background-color 0.2s ease, border-color 0.2s ease;
+  will-change: transform;
 }
 
 .btn-channel-link:active {
-  transform: scale(0.96);
-  background: rgba(36, 161, 222, 0.22);
+  transform: scale(0.95);
+  background: rgba(36, 161, 222, 0.18);
+  transition: transform 0.08s cubic-bezier(0.2, 0, 0, 1) !important;
 }
 
 html.light .btn-channel-link {
   background: rgba(36, 161, 222, 0.08);
-  border-color: rgba(36, 161, 222, 0.35);
+  border-color: rgba(36, 161, 222, 0.28);
   color: #0284c7;
+}
+
+html.dark .btn-channel-link {
+  background: rgba(36, 161, 222, 0.12);
+  border-color: rgba(36, 161, 222, 0.35);
+  color: #38bdf8;
 }
 
 /* ==========================================================================
@@ -976,19 +993,20 @@ body.search-focused .mobile-dock {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
+  gap: 3px;
   flex: 1;
-  height: 48px;
-  border-radius: var(--radius-full);
+  height: 50px;
+  border-radius: 16px;
   cursor: pointer;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
   -webkit-user-select: none;
   font-family: var(--font-body);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 500;
-  transition: transform 0.22s cubic-bezier(0.25, 1.4, 0.5, 1), color 0.18s ease, background-color 0.18s ease;
+  letter-spacing: -0.1px;
+  transition: transform 0.26s cubic-bezier(0.25, 1.4, 0.5, 1), color 0.18s ease, background-color 0.18s ease;
   will-change: transform;
 }
 
@@ -1000,12 +1018,13 @@ body.search-focused .mobile-dock {
 
 .dock-item.active {
   color: var(--text-main);
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.06);
   font-weight: 700;
 }
 
-html.light .dock-item.active {
-  background: rgba(0, 0, 0, 0.07);
+html.dark .dock-item.active {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
 }
 
 .dock-icon-wrap {
@@ -2081,14 +2100,25 @@ html.light .cart-qty-pill button {
 }
 
 .btn-checkout-large {
-  margin-top: 6px;
-  padding: 14px;
+  margin-top: 8px;
+  height: 50px;
+  border-radius: 14px;
   font-size: 0.96rem;
+  font-weight: 700;
+  letter-spacing: -0.2px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   width: 100%;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.16);
+  transition: transform 0.26s cubic-bezier(0.25, 1.4, 0.5, 1), background-color 0.2s ease, box-shadow 0.2s ease;
+  will-change: transform;
+}
+
+.btn-checkout-large:active {
+  transform: scale(0.96) !important;
+  transition: transform 0.08s cubic-bezier(0.2, 0, 0, 1) !important;
 }
 
 .cart-guarantee-note {
@@ -2549,18 +2579,18 @@ html.dark .pd-bottom-uzs-val {
 
 /* Savatga olish tugmasi — IXCHAM, ELEGANT APPLE PILL DIZAYN */
 .pd-add-btn {
-  flex: 0 0 auto;
-  min-width: 136px;
-  height: 42px;
-  min-height: 42px;
+  flex: 1.5;
+  height: 48px;
+  min-height: 48px;
   padding: 0 18px;
-  border-radius: var(--radius-full);
+  border-radius: 14px;
   background: var(--btn-main-bg);
   color: var(--btn-main-text);
   border: 1px solid var(--btn-main-border);
   font-family: var(--font-body);
-  font-size: 0.84rem;
-  font-weight: 600;
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: -0.2px;
   cursor: pointer;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
@@ -2569,9 +2599,9 @@ html.dark .pd-bottom-uzs-val {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 7px;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
-  transition: transform 0.22s cubic-bezier(0.25, 1.4, 0.5, 1), background-color 0.2s ease, box-shadow 0.2s ease;
+  gap: 8px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+  transition: transform 0.26s cubic-bezier(0.25, 1.4, 0.5, 1), background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
   white-space: nowrap;
   will-change: transform;
 }
@@ -2583,9 +2613,10 @@ html.dark .pd-bottom-uzs-val {
 }
 
 .pd-add-btn.is-success {
-  background: #10b981 !important;
-  border-color: #10b981 !important;
-  color: #ffffff !important;
+  background: rgba(16, 185, 129, 0.16) !important;
+  border: 1.5px solid #10b981 !important;
+  color: #10b981 !important;
+  box-shadow: 0 4px 18px rgba(16, 185, 129, 0.3) !important;
 }
 
 .pd-channel-box {
@@ -2598,22 +2629,26 @@ html.dark .pd-bottom-uzs-val {
   justify-content: center;
   gap: 8px;
   width: 100%;
-  padding: 13px 18px;
-  border-radius: var(--radius-full);
-  background: linear-gradient(135deg, rgba(36, 161, 222, 0.18), rgba(36, 161, 222, 0.08));
-  border: 1.5px solid rgba(36, 161, 222, 0.4);
-  color: #24a1de;
+  height: 46px;
+  border-radius: 14px;
+  background: rgba(36, 161, 222, 0.09);
+  border: 1.5px solid rgba(36, 161, 222, 0.35);
+  color: #0284c7;
   font-family: var(--font-body);
   font-size: 0.88rem;
   font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 4px 16px rgba(36, 161, 222, 0.15);
-  transition: var(--transition);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  box-shadow: 0 4px 14px rgba(36, 161, 222, 0.12);
+  transition: transform 0.26s cubic-bezier(0.25, 1.4, 0.5, 1), background-color 0.2s ease;
+  will-change: transform;
 }
 
 .btn-channel-pd:active {
-  transform: scale(0.98);
-  background: rgba(36, 161, 222, 0.28);
+  transform: scale(0.96) !important;
+  background: rgba(36, 161, 222, 0.22);
+  transition: transform 0.08s cubic-bezier(0.2, 0, 0, 1) !important;
 }
 
 html.light .btn-channel-pd {
@@ -2677,25 +2712,54 @@ html.light .btn-channel-pd {
   animation: checkmarkPop 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
 
-/* Tugmaning "Qo'shildi" yashil holati */
-.btn-buy.is-success {
+/* Tugmaning "Qo'shildi" yashil holati (Apple Emerald Success Badge) */
+.btn-buy.is-success,
+.pd-add-btn.is-success,
+.deal-cart-btn.is-success {
   background: rgba(16, 185, 129, 0.16) !important;
   border: 1.5px solid #10b981 !important;
   color: #10b981 !important;
-  box-shadow: 0 4px 18px rgba(16, 185, 129, 0.35) !important;
+  box-shadow: 0 4px 18px rgba(16, 185, 129, 0.3) !important;
   pointer-events: none;
 }
 
-/* 3. TEPADAGI VA PASTKI SAVATNING HARAKATSIZ TURISHI (QIMIRLAMASLIK KAFOLATI) */
-.bottom-cart-jump-anim {
+/* 3. TEPADAGI SAVAT (HEADER CART) MUTLAQO QIMIRLAMAYDI — 100% STATIK VA HARAKATSIZ */
+#btnHeaderCart,
+.header-cart-btn {
   animation: none !important;
   transform: none !important;
 }
+#btnHeaderCart:active {
+  transform: scale(0.92) !important;
+  transition: transform 0.08s cubic-bezier(0.2, 0, 0, 1) !important;
+}
 
-/* 4. HISOB-KITOB NISHONI (BADGE) NING NOZIK YANGILANISHI */
+/* Pastki Dockdagi savatning o'zi elastik sakraydi (Lively Apple Spring Jump) */
+@keyframes mobileCartSpringJump {
+  0% { transform: scale(1) translateY(0); }
+  25% { transform: scale(1.15, 0.88) translateY(1px); }
+  50% { transform: scale(0.94, 1.15) translateY(-8px); }
+  75% { transform: scale(1.06, 0.96) translateY(0); }
+  100% { transform: scale(1) translateY(0); }
+}
+
+.bottom-cart-jump-anim {
+  animation: mobileCartSpringJump 0.55s cubic-bezier(0.25, 1.4, 0.5, 1) !important;
+  transform-origin: center bottom !important;
+  will-change: transform !important;
+}
+
+/* 4. PASTKI HISOB-KITOB NISHONI (BADGE) NING SHISHIB SAKRASHI */
+@keyframes badgeSpringPop {
+  0% { transform: scale(0.7); }
+  40% { transform: scale(1.4); }
+  75% { transform: scale(0.92); }
+  100% { transform: scale(1); }
+}
+
 .badge-pop-anim {
-  animation: none !important;
-  transform: none !important;
+  animation: badgeSpringPop 0.45s cubic-bezier(0.25, 1.4, 0.5, 1) !important;
+  will-change: transform !important;
 }
 
 /* 5. SEVIMLILAR YURAKCHASI SAKRASHI (HEART BEAT) */
@@ -3151,35 +3215,40 @@ html.light .btn-channel-pd {
 /* Savatga tugmasi (Black Store uslubidagi nozik va ixcham yagona tugma) */
 .deal-cart-btn {
   width: 100%;
+  height: 36px;
   border: 1px solid #09090b;
   background: #09090b;
   color: #ffffff;
   font-family: var(--font-body);
-  font-weight: 700;
+  font-weight: 600;
   font-size: 0.78rem;
-  padding: 8px 10px;
+  letter-spacing: -0.15px;
+  padding: 0 12px;
   border-radius: 11px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
   cursor: pointer;
-  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  transition: transform 0.26s cubic-bezier(0.25, 1.4, 0.5, 1), background-color 0.2s ease, box-shadow 0.2s ease;
+  will-change: transform;
 }
 .deal-cart-btn:hover {
   background: #27272a;
-  color: #ffffff;
-  border-color: #3f3f46;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.22);
 }
 .deal-cart-btn:active {
-  transform: scale(0.97);
+  transform: scale(0.94) !important;
+  transition: transform 0.08s cubic-bezier(0.2, 0, 0, 1) !important;
 }
 .deal-cart-btn.is-success {
-  background: #10b981 !important;
+  background: rgba(16, 185, 129, 0.16) !important;
   border-color: #10b981 !important;
-  color: #ffffff !important;
+  color: #10b981 !important;
+  box-shadow: 0 4px 18px rgba(16, 185, 129, 0.3) !important;
+  pointer-events: none;
 }
 .deal-cart-icon {
   display: inline-flex;

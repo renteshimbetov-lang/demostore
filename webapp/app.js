@@ -109,13 +109,20 @@
   window.addEventListener('resize', updateHeaderHeight);
   window.addEventListener('orientationchange', updateHeaderHeight);
 
-  // Haptic feedback yordamchisi
+  // Haptic feedback yordamchisi (Native Telegram Mini App haptic physics)
   function triggerHaptic(type = 'light') {
     try {
       if (tg?.HapticFeedback) {
-        tg.HapticFeedback.impactOccurred(type);
+        if (type === 'success' || type === 'error' || type === 'warning') {
+          tg.HapticFeedback.notificationOccurred(type);
+        } else if (type === 'selection') {
+          tg.HapticFeedback.selectionChanged();
+        } else {
+          tg.HapticFeedback.impactOccurred(type);
+        }
       } else if (navigator.vibrate) {
-        navigator.vibrate(25);
+        if (type === 'success') navigator.vibrate([15, 30, 20]);
+        else navigator.vibrate(20);
       }
     } catch (err) {}
   }
@@ -1275,22 +1282,78 @@
   // ==========================================================================
   // 3. MIKRO-ANIMATSIYALAR TIZIMI (PREMIUM MICRO-ANIMATIONS)
   // ==========================================================================
-  // 1. Savat hisoblagichi (Badge) yangilanishi — Tepadagi va pastdagi savat qimirlamaydi
+  // 1. Savat hisoblagichi (Badge) va pastki dock animatsiyasi
+  // DIQQAT: Tepadagi savat (#btnHeaderCart) foydalanuvchi talabiga binoan MUTLAQO QIMIRLAMAYDI!
   function triggerCartJump() {
-    // Foydalanuvchi talabi: Tepadagi savat va pastki tugmalar hech qachon qimirlamasin (sakramasin)
-    // Faqatgina hisoblagich (badge) sokin yangilanadi
+    const bottomCartItem = document.querySelector('.mobile-dock .dock-item[data-tab="cart"]');
+    const bottomBadge = bottomCartItem?.querySelector('.dock-badge');
+
+    if (bottomCartItem) {
+      bottomCartItem.classList.remove('bottom-cart-jump-anim');
+      void bottomCartItem.offsetWidth; // DOM reflow
+      bottomCartItem.classList.add('bottom-cart-jump-anim');
+      setTimeout(() => {
+        bottomCartItem.classList.remove('bottom-cart-jump-anim');
+      }, 700);
+    }
+
+    if (bottomBadge) {
+      bottomBadge.classList.remove('badge-pop-anim');
+      void bottomBadge.offsetWidth;
+      bottomBadge.classList.add('badge-pop-anim');
+      setTimeout(() => {
+        bottomBadge.classList.remove('badge-pop-anim');
+      }, 600);
+    }
   }
 
-  // 2. Tugmaning silliq muvaffaqiyat indikatsiyasi (matn va o'lcham sakramasdan)
+  // 2. Savatga qo'shish tugmasining jonli Apple-style animatsiyasi (Spring Checkmark Pop)
   function animateCartButton(btn) {
     if (!btn || btn.dataset.animating === 'true') return;
     btn.dataset.animating = 'true';
-    btn.classList.add('is-success');
+
+    const originalContent = btn.innerHTML;
+    const currentWidth = btn.offsetWidth;
+    if (currentWidth > 0) {
+      btn.style.minWidth = `${currentWidth}px`;
+    }
+
+    // 1-bosqich: Tezkor elastik qisilish
+    btn.style.transform = 'scale(0.92)';
+    btn.style.transition = 'transform 0.1s cubic-bezier(0.2, 0, 0, 1)';
 
     setTimeout(() => {
-      btn.classList.remove('is-success');
-      btn.dataset.animating = 'false';
-    }, 550);
+      // 2-bosqich: Yashil muvaffaqiyat holatiga o'tish (Checkmark + "Qo'shildi")
+      btn.classList.add('is-success');
+      btn.style.transform = 'scale(1)';
+      btn.style.transition = 'transform 0.24s cubic-bezier(0.25, 1.4, 0.5, 1), background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease';
+
+      const addedText = (typeof t === 'function' ? t('added') : null) || "Qo'shildi!";
+      btn.innerHTML = `
+        <svg class="checkmark-pop-anim" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; flex-shrink:0;">
+          <circle cx="12" cy="12" r="9.5" fill="rgba(16, 185, 129, 0.18)"></circle>
+          <polyline points="8 12 11 15 16 9"></polyline>
+        </svg>
+        <span>${addedText}</span>
+      `;
+
+      triggerHaptic('success');
+
+      // 3-bosqich: Asl holatiga mayin qaytish
+      setTimeout(() => {
+        btn.style.transform = 'scale(0.96)';
+        btn.style.transition = 'transform 0.12s ease';
+
+        setTimeout(() => {
+          btn.classList.remove('is-success');
+          btn.innerHTML = originalContent;
+          btn.style.transform = '';
+          btn.style.transition = '';
+          btn.style.minWidth = '';
+          btn.dataset.animating = 'false';
+        }, 120);
+      }, 750);
+    }, 110);
   }
 
   // 3. Telegram kanaldagi postni ochish funksiyasi
