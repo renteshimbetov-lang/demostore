@@ -1,0 +1,23 @@
+# Frontend Design Skill & System Rules
+
+Sen loyihaning frontend qismini ishlab chiqishda quyidagi premium dizayn qoidalariga qat'iy amal qilishing shart:
+
+## 1. Ikonkalar va Grafika
+- HECH QANDAY standart emoji yoki stiker ishlatilmasin (❌ 🛍, 🔍, 🚀 ishlatish taqiqlanadi).
+- Faqat professional, minimalist SVG vektor ikonkalardan (Lucide Icons yoki Phosphor Icons) foydalanilsin.
+- Ikonka o'lchamlari standart 18px - 22px oralig'ida, nozik chiziqli (stroke-width: 1.5 yoki 2) bo'lsin.
+
+## 2. Ranglar va Vizual Uslub (Apple Minimalist / Dark & Light)
+- Fon: Sof qora (#000000) yoki to'q grafit (#0f172a), elementlar uchun nozik shisha effekti (`backdrop-blur-md bg-white/5` yoki `bg-black/5`).
+- Hoshiyalar (Borders): Qalin bo'lmagan, juda nozik yarim-shaffof hoshiyalar (`border border-white/10`).
+- Tipografiya: Zamonaviy sans-serif shriftlar (-apple-system, Inter). Narxlar qalin va aniq formatda (masalan, 250 000 UZS yoki $ USD), tovar nomlari esa nozik va ixcham.
+
+## 3. Mahsulot Kartochkalari va Grid
+- 2 ustunli toza to'r (Grid: `grid-cols-2 gap-3`).
+- Mahsulot rasmlari: O'lchamlari mutanosib (aspect-ratio: 1/1 yoki 4/5), `object-cover` yoki `object-contain`, burchaklari silliq yumaloqlangan (`rounded-2xl`).
+- Tugmalar: Shovqinli va yorqin ranglar o'rniga monoxrom qora/oq yoki nafis gradientli zamonaviy tugmalar.
+
+## 4. Foydalanuvchi Tajribasi (UX) va Animatsiyalar
+- Animatsiyalar: Barcha o'tishlar silliq bo'lsin (`transition-all duration-300 ease-out`).
+- Skeleton Loading: Ma'lumotlar yuklanayotgan paytda bo'sh turmasdan, xira pulsatsiyali Skeleton Loader ko'rinsin.
+- Telegram integratsiyasi: Har bir faol harakatda `Telegram.WebApp.HapticFeedback` (engil tebranish) ishlatilsin.

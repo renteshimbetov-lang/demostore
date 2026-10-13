@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="uz" class="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>DemoStore — Apple mahsulotlari | Mini App</title>
+  
+  <!-- Telegram Web App SDK -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+  <!-- Google Fonts: Inter & Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="/static/app.css?v=28.0" />
+</head>
+<body>
+  <!-- To'liq ekranli Parda (Curtain Reveal) Kirish Animatsiyasi -->
+  <div id="splash-screen" class="splash-screen" aria-label="DemoStore Kirish Animatsiyasi">
+    <!-- Chap parda qismi -->
+    <div class="curtain-panel curtain-left" id="curtainLeft"></div>
+    
+    <!-- O'ng parda qismi -->
+    <div class="curtain-panel curtain-right" id="curtainRight"></div>
+
+    <!-- Markaziy tarkib: Logo va Do'kon nomi -->
+    <div class="splash-center-content" id="splashCenterContent">
+      <div class="splash-logo-box">
+        <img
+          src="/static/apple_3d_logo.png"
+          alt="Apple Logo"
+          class="splash-logo-img"
+          width="82"
+          height="95"
+        />
+        <div class="splash-logo-glow"></div>
+      </div>
+
+      <div class="splash-brand-wrap">
+        <h1 class="splash-brand-title">DemoStore<span class="splash-brand-dot">.UZ</span></h1>
+        <p class="splash-brand-subtitle">APPLE PREMIUM STORE</p>
+      </div>
+    </div>
+
+    <!-- Foydalanuvchi xohlasa o'tkazib yuborish tugmasi -->
+    <button class="splash-skip-btn" id="splashSkipBtn" aria-label="O'tkazish" type="button">
+      <span>O'tkazish</span>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="9 18 15 12 9 6"></polyline>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Splash Screen Tezyurar va Ishonchli Kontrolleri -->
+  <script>
+    (function () {
+      // Telegram Bot API 8.0+: Darhol to'liq ekranga ochish (Fullscreen mode)
+      try {
+        var tg = window.Telegram?.WebApp;
+        if (tg) {
+          tg.ready();
+          tg.expand();
+          if (typeof tg.requestFullscreen === 'function') {
+            tg.requestFullscreen();
+          }
+        }
+      } catch (e) {}
+
+      try {
+        if (sessionStorage.getItem('demostore_intro_shown') === 'true') {
+          var el = document.getElementById('splash-screen');
+          if (el) el.style.display = 'none';
+          return;
+        }
+      } catch (e) {}
+
+      var splashEl = document.getElementById('splash-screen');
+      var skipBtn = document.getElementById('splashSkipBtn');
+      if (!splashEl) return;
+
+      var opened = false;
+      function openCurtain() {
+        if (opened) return;
+        opened = true;
+        try { sessionStorage.setItem('demostore_intro_shown', 'true'); } catch (e) {}
+        splashEl.classList.add('curtain-open');
+        splashEl.style.pointerEvents = 'none';
+        setTimeout(function () {
+          splashEl.style.display = 'none';
+        }, 850);
+      }
+
+      window.dismissIntroCurtains = openCurtain;
+
+      if (skipBtn) {
+        skipBtn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          openCurtain();
+        });
+      }
+      splashEl.addEventListener('click', openCurtain);
+
+      // 1.3 soniyadan so'ng parda o'zi avtomatik ochiladi
+      setTimeout(openCurtain, 1300);
+    })();
+  </script>
+
+  <div id="app">
+    <!-- Mobil Header (Telegram Yopish tugmasidan to'liq xavfsiz) -->
+    <header class="mobile-header" id="mobileHeader">
+      <div class="header-inner">
+        <!-- Chap: Hamburger menyu -->
+        <button class="icon-btn" id="btnOpenMenu" aria-label="Menyu">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
+
+        <!-- Markaz: Logo -->
+        <a href="#" class="brand-logo" id="logoBtn">
+          <span class="logo-text">DemoStore<span class="logo-dot">.UZ</span></span>
+        </a>
+
+        <!-- O'ng: Til, Tungi/Kunduzgi rejim & Savat -->
+        <div class="header-actions">
+          <!-- Til almashtirish tugmasi -->
+          <button class="lang-switch-btn" id="btnLangSwitch" aria-label="Tilni tanlash" title="Tilni tanlash">
+            <svg class="lang-globe-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="2" y1="12" x2="22" y2="12"></line>
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+            </svg>
+            <span class="lang-label" id="currentLangLabel">UZ</span>
+          </button>
+
+          <button class="icon-btn" id="btnHeaderCart" aria-label="Savat">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <path d="M16 10a4 4 0 0 1-8 0"></path>
+            </svg>
+            <span class="badge cart-badge hidden" id="headerCartBadge"></span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Mobil Qidiruv maydoni -->
+      <div class="search-wrap">
+        <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input 
+          type="text" 
+          id="searchInput" 
+          class="search-input" 
+          placeholder="Mahsulotlarni qidirish..." 
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <button id="clearSearchBtn" class="search-clear-btn hidden" aria-label="Tozalash">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+            <path d="M18 6 6 18"></path>
+            <path d="m6 6 12 12"></path>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Asosiy Kontent (Haqiqiy Bo'limlar Tizimi) -->
+    <main class="main-content" id="mainContent">
+
+      <!-- 1. BOSH SAHIFA BO'LIMI (Home Section) -->
+      <section class="app-section active" id="sectionHome" data-section="home">
+
+        <!-- Hafta Chegirmalari Gorizontal Slayderi (Black Store uslubidagi maxsus karta konteyneri) -->
+        <section class="discounts-slider-section" id="discountsSliderSection">
+          <div class="deals-card-container">
+            <div class="deals-header">
+              <div class="deals-title-group" id="dealsTitleGroup">
+                <span class="deals-header-badge">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+                    <line x1="7" y1="7" x2="7.01" y2="7"></line>
+                  </svg>
+                </span>
+                <h2 class="deals-section-title" data-i18n="weekly_discounts">Hafta chegirmalari</h2>
+              </div>
+              <div class="deals-header-right">
+                <button class="deals-see-all-link" id="btnDiscountsSeeAll" type="button">
+                  <span class="see-all-desktop" data-i18n="see_all">Hammasini koʻrish</span>
+                  <span class="see-all-mobile" data-i18n="cat_all">Barchasi</span>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- Gorizontal Swipe / Scroll Track -->
+            <div class="deals-slider-track" id="discountsTrack">
+              <!-- JS orqali dinamik kartalar generatsiya qilinadi -->
+            </div>
+          </div>
+        </section>
+
+        <!-- Mahsulotlar Gridi -->
+        <div class="products-section">
+          <div class="section-top">
+            <div class="section-title-wrap">
+              <h2 class="section-title" id="sectionTitle" data-i18n="popular_products">Ommabop tovarlar</h2>
+              <span class="results-count-badge" id="resultsCount">Yuklanmoqda...</span>
+            </div>
+            <button class="filter-trigger-btn" id="btnOpenFilter" aria-label="Filtr va Saralash">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+              </svg>
+              <span data-i18n="filter">Filtr</span>
+            </button>
+          </div>
+
+          <div class="products-grid" id="productsGrid">
+            <!-- Skeleton yuklanish kartalari -->
+            <div class="skeleton-card">
+              <div class="skeleton-img"></div>
+              <div class="skeleton-body">
+                <div class="skeleton-line skeleton-title"></div>
+                <div class="skeleton-line skeleton-price"></div>
+                <div class="skeleton-line skeleton-btn"></div>
+              </div>
+            </div>
+            <div class="skeleton-card">
+              <div class="skeleton-img"></div>
+              <div class="skeleton-body">
+                <div class="skeleton-line skeleton-title"></div>
+                <div class="skeleton-line skeleton-price"></div>
+                <div class="skeleton-line skeleton-btn"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bo'sh holat (Empty state) -->
+          <div id="emptyState" class="empty-state hidden">
+            <div class="empty-icon-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="m21 21-4.3-4.3"></path>
+                <path d="M8 11h6"></path>
+              </svg>
+            </div>
+            <h3 class="empty-title">Hech narsa topilmadi</h3>
+            <p class="empty-description">Qidiruv soʻrovingiz yoki tanlangan toifa boʻyicha mahsulot mavjud emas.</p>
+            <button id="resetFiltersBtn" class="btn-buy" style="margin-top: 14px; width: auto; padding: 10px 24px;">
+              Filtrlarni tozalash
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. KATALOG BO'LIMI (Catalog Section — To'liq Bo'lim) -->
+      <section class="app-section hidden" id="sectionCatalog" data-section="catalog">
+        <div class="section-page-head">
+          <div class="page-head-title-wrap">
+            <h1 class="page-head-title" data-i18n="catalog_title">Katalog</h1>
+            <span class="page-head-subtitle" data-i18n="catalog_subtitle">Toifani tanlang yoki barcha tovarlarni koʻring</span>
+          </div>
+        </div>
+
+        <!-- Gorizontal Toifalar (Compact Category Pills) -->
+        <div class="category-slider" id="catalogCategorySlider">
+          <button class="category-pill active" data-category="0" data-i18n="cat_all">Barchasi</button>
+          <button class="category-pill" data-category="1" data-i18n="cat_smartphones">Smartfonlar</button>
+          <button class="category-pill" data-category="2" data-i18n="cat_laptops">Noutbuklar</button>
+          <button class="category-pill" data-category="3" data-i18n="cat_audio">Quloqchinlar va Audio</button>
+          <button class="category-pill" data-category="4" data-i18n="cat_watches">Aqlli soatlar</button>
+          <button class="category-pill" data-category="5" data-i18n="cat_accessories">Aksessuarlar</button>
+        </div>
+
+        <!-- Tanlangan toifadagi mahsulotlar -->
+        <div class="catalog-products-wrap">
+          <div class="section-top" style="margin-top: 20px;">
+            <div class="section-title-wrap">
+              <h2 class="section-title" id="catalogSectionTitle">Barcha mahsulotlar</h2>
+              <span class="results-count-badge" id="catalogResultsCount">...</span>
+            </div>
+          </div>
+          <div class="products-grid" id="catalogProductsGrid"></div>
+        </div>
+      </section>
+
+      <!-- 3. SAVAT BO'LIMI (Cart Section — To'liq Bo'lim) -->
+      <section class="app-section hidden" id="sectionCart" data-section="cart">
+        <div class="section-page-head">
+          <div class="page-head-title-wrap">
+            <h1 class="page-head-title">Sizning savatingiz</h1>
+            <span class="page-head-subtitle" id="cartSectionSubtitle">0 ta mahsulot tanlandi</span>
+          </div>
+          <button class="clear-cart-btn hidden" id="btnClearCart" title="Savatni tozalash">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 6h18"></path>
+              <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+              <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+            </svg>
+            <span>Tozalash</span>
+          </button>
+        </div>
+
+        <div id="cartSectionContent">
+          <!-- Savatdagi mahsulotlar ro'yxati -->
+          <div id="cartSectionItemsList" class="cart-section-items-list"></div>
+
+          <!-- Hisob-kitob va Xulosa bloki -->
+          <div class="cart-checkout-card" id="cartSectionSummary">
+            <div class="cart-summary-line">
+              <span>Mahsulotlar qiymati:</span>
+              <strong id="cartSubtotalPrice">$0</strong>
+            </div>
+            <div class="cart-summary-line">
+              <span>Yetkazib berish:</span>
+              <span class="free-badge">Bepul</span>
+            </div>
+            <div class="cart-summary-line">
+              <span>Rasmiy kafolat:</span>
+              <span class="guarantee-text">1 yil bepul xizmat</span>
+            </div>
+            <div class="cart-divider"></div>
+            <div class="cart-summary-line total-line">
+              <span>Jami toʻlov:</span>
+              <strong class="cart-total-price-large" id="cartFinalTotalPrice">$0</strong>
+            </div>
+            <button class="btn-buy btn-checkout-large" id="btnCheckoutSection">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m22 2-7 20-4-9-9-4Z"></path>
+                <path d="M22 2 11 13"></path>
+              </svg>
+              <span>Telegram orqali buyurtma berish</span>
+            </button>
+            <div class="cart-guarantee-note">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              <span>100% original mahsulotlar • Ishonchli xarid</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bo'sh savat holati -->
+        <div id="cartSectionEmpty" class="section-empty-box hidden">
+          <div class="empty-icon-circle">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <path d="M16 10a4 4 0 0 1-8 0"></path>
+            </svg>
+          </div>
+          <h3 class="empty-box-title">Savatingiz hozircha boʻsh</h3>
+          <p class="empty-box-desc">Oʻzingizga kerakli original Apple qurilmasini tanlang va savatga qoʻshing.</p>
+          <button class="btn-buy btn-start-shopping" id="btnStartShopping">
+            Katalogga oʻtish
+          </button>
+        </div>
+      </section>
+
+      <!-- 4. SEVIMLILAR BO'LIMI (Wishlist Section — To'liq Bo'lim) -->
+      <section class="app-section hidden" id="sectionWishlist" data-section="wishlist">
+        <div class="section-page-head">
+          <div class="page-head-title-wrap">
+            <h1 class="page-head-title">Sevimlilar</h1>
+            <span class="page-head-subtitle" id="wishlistSectionSubtitle">0 ta saqlangan mahsulot</span>
+          </div>
+        </div>
+
+        <div class="products-grid" id="wishlistProductsGrid"></div>
+
+        <!-- Bo'sh sevimlilar holati -->
+        <div id="wishlistSectionEmpty" class="section-empty-box hidden">
+          <div class="empty-icon-circle">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+            </svg>
+          </div>
+          <h3 class="empty-box-title">Sevimlilar roʻyxati boʻsh</h3>
+          <p class="empty-box-desc">Yoqqan mahsulotlaringizning yurakchasini bosib shu yerda saqlab qoʻyishingiz mumkin.</p>
+          <button class="btn-buy btn-start-shopping" id="btnBrowseProducts">
+            Mahsulotlarni koʻrish
+          </button>
+        </div>
+      </section>
+
+      <!-- 5. PROFIL VA BOG'LANISH BO'LIMI (Profile Section — To'liq Bo'lim) -->
+      <section class="app-section hidden" id="sectionProfile" data-section="profile">
+        <div class="section-page-head">
+          <div class="page-head-title-wrap">
+            <h1 class="page-head-title">Profil va Aloqa</h1>
+            <span class="page-head-subtitle">Shaxsiy kabinet va qoʻllab-quvvatlash</span>
+          </div>
+        </div>
+
+        <!-- Foydalanuvchi kartasi (Telegram WebApp user info) -->
+        <div class="profile-card">
+          <div class="profile-avatar-circle" id="profileAvatar">DS</div>
+          <div class="profile-info">
+            <h3 class="profile-user-name" id="profileUserName">Hurmatli mijoz</h3>
+            <span class="profile-user-handle" id="profileUserHandle">@foydalanuvchi</span>
+            <div class="profile-badge">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              <span>DemoStore mijozi</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tezkor ko'rsatkichlar (Stats) -->
+        <div class="profile-stats-grid">
+          <div class="profile-stat-box" id="statCartBox">
+            <strong class="stat-number" id="statCartCount">0</strong>
+            <span class="stat-label">Savatda</span>
+          </div>
+          <div class="profile-stat-box" id="statWishBox">
+            <strong class="stat-number" id="statWishCount">0</strong>
+            <span class="stat-label">Sevimlilar</span>
+          </div>
+          <div class="profile-stat-box">
+            <strong class="stat-number">100%</strong>
+            <span class="stat-label">Asl Apple</span>
+          </div>
+        </div>
+
+        <!-- Sozlamalar va Rejim -->
+        <div class="profile-menu-group">
+          <h4 class="profile-group-title" data-i18n="app_settings">Ilova sozlamalari</h4>
+
+          <div class="profile-action-row" id="rowLangSelect">
+            <div class="action-row-left">
+              <div class="action-icon-box">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="2" y1="12" x2="22" y2="12"></line>
+                  <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                </svg>
+              </div>
+              <div class="action-info">
+                <strong data-i18n="app_language">Ilova tili</strong>
+                <span id="currentProfileLangLabel">Oʻzbek tili</span>
+              </div>
+            </div>
+            <div class="profile-lang-chips">
+              <button class="profile-lang-btn active" data-lang="uz">UZ</button>
+              <button class="profile-lang-btn" data-lang="ru">RU</button>
+              <button class="profile-lang-btn" data-lang="en">EN</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bog'lanish kanallari -->
+        <div class="profile-menu-group">
+          <h4 class="profile-group-title">Bogʻlanish va Qoʻllab-quvvatlash</h4>
+          <div class="contact-links-list">
+            <a href="https://t.me/shbdbdjdhdjjdhd" target="_blank" class="contact-link-card">
+              <div class="contact-icon-box tg-box">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="m22 2-7 20-4-9-9-4Z"></path>
+                  <path d="M22 2 11 13"></path>
+                </svg>
+              </div>
+              <div class="contact-card-info">
+                <strong>Rasmiy Telegram Kanal</strong>
+                <span>@shbdbdjdhdjjdhd</span>
+              </div>
+              <svg class="chevron-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+            </a>
+
+            <a href="https://t.me/SmartBook_menejer" target="_blank" class="contact-link-card">
+              <div class="contact-icon-box menejer-box">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                </svg>
+              </div>
+              <div class="contact-card-info">
+                <strong>Savdo menejeri bilan aloqa</strong>
+                <span>@SmartBook_menejer</span>
+              </div>
+              <svg class="chevron-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+            </a>
+
+            <a href="tel:+998931699003" class="contact-link-card">
+              <div class="contact-icon-box phone-box">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                </svg>
+              </div>
+              <div class="contact-card-info">
+                <strong>Telefon orqali qoʻngʻiroq</strong>
+                <span>+998-93-169-90-03</span>
+              </div>
+              <svg class="chevron-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+            </a>
+          </div>
+        </div>
+
+        <!-- Do'kon kafolati -->
+        <div class="store-guarantee-card">
+          <strong class="guarantee-card-title">DEMOSTORE KAFOLATI</strong>
+          <p class="guarantee-card-desc">Barcha Apple qurilmalari yangi va qadoqlangan holatda yetkaziladi. Toshkent boʻylab 2 soatda, viloyatlarga 1 kunda yetkazib berish mavjud.</p>
+          <div class="guarantee-workhours">Ish vaqti: Har kuni 09:00 dan 22:00 gacha</div>
+        </div>
+      </section>
+
+      <!-- 6. MAHSULOT BATAFSIL KO'RISH BO'LIMI (Product Detail Full Section) -->
+      <section class="app-section product-detail-section hidden" id="sectionProductDetail" data-section="product-detail">
+        <div class="pd-top-bar">
+          <button class="pd-back-btn" id="pdBackBtn" aria-label="Orqaga">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m15 18-6-6 6-6"></path>
+            </svg>
+            <span>Orqaga</span>
+          </button>
+          <button class="pd-wishlist-btn" id="pdWishlistBtn" aria-label="Sevimlilar">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+            </svg>
+          </button>
+        </div>
+
+        <div class="pd-body" id="pdBodyContent">
+          <!-- Dinamik chiqariladi -->
+        </div>
+
+        <!-- Suzuvchi pastki xarid paneli -->
+        <div class="pd-bottom-bar" id="pdBottomBar">
+          <div class="pd-price-box">
+            <span class="pd-price-label">Narxi:</span>
+            <div class="pd-price-row">
+              <svg class="pd-price-cart-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="9" cy="21" r="1"></circle>
+                <circle cx="20" cy="21" r="1"></circle>
+                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+              </svg>
+              <strong class="pd-price-val" id="pdBottomPrice">$0</strong>
+            </div>
+          </div>
+          <button class="btn-buy pd-add-btn" id="pdAddToCartBtn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+            <span id="pdBtnText">Savatga olish</span>
+          </button>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- iOS Floating Dock (Mobil Pastki Panel — Zero Scroll Jitter) -->
+    <nav class="mobile-dock" id="mobileDock" aria-label="Mobil boshqaruv">
+      <button class="dock-item active" id="dockHome" data-tab="home">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+          <polyline points="9 22 9 12 15 12 15 22"></polyline>
+        </svg>
+        <span>Bosh sahifa</span>
+      </button>
+
+      <button class="dock-item" id="dockCatalog" data-tab="catalog">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="7"></rect>
+          <rect x="14" y="3" width="7" height="7"></rect>
+          <rect x="14" y="14" width="7" height="7"></rect>
+          <rect x="3" y="14" width="7" height="7"></rect>
+        </svg>
+        <span>Katalog</span>
+      </button>
+
+      <button class="dock-item" id="dockCart" data-tab="cart">
+        <div class="dock-icon-wrap">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <path d="M16 10a4 4 0 0 1-8 0"></path>
+          </svg>
+          <span class="badge dock-badge hidden" id="dockCartBadge"></span>
+        </div>
+        <span>Savat</span>
+      </button>
+
+      <button class="dock-item" id="dockWishlist" data-tab="wishlist">
+        <div class="dock-icon-wrap">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+          </svg>
+          <span class="badge dock-badge hidden" id="dockWishBadge"></span>
+        </div>
+        <span>Sevimlilar</span>
+      </button>
+
+      <button class="dock-item" id="dockProfile" data-tab="profile">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+        <span>Profil</span>
+      </button>
+    </nav>
+
+    <!-- Orqa fon qoraytirgich (Drawer Backdrop) -->
+    <div class="drawer-backdrop" id="drawerBackdrop"></div>
+
+    <!-- Chap Tomon Yon Menyu (Left Drawer) -->
+    <aside class="drawer drawer-left" id="leftNavDrawer" aria-label="Yon Menyu">
+      <div class="drawer-head">
+        <div class="drawer-title-row">
+          <span class="drawer-title">Menyu</span>
+        </div>
+        <button class="icon-btn close-btn" id="btnCloseMenu" aria-label="Yopish">✕</button>
+      </div>
+      <div class="drawer-body">
+        <div class="drawer-brand-card">
+          <strong class="drawer-brand-name">DEMOSTORE</strong>
+          <p class="drawer-brand-desc">Asl Apple mahsulotlari va tezkor yetkazib berish xizmati.</p>
+        </div>
+
+        <!-- Til tanlash (Language Switcher in Drawer) -->
+        <div class="drawer-lang-selector">
+          <span class="drawer-lang-title" data-i18n="select_language">Ilova tili:</span>
+          <div class="drawer-lang-chips">
+            <button class="lang-chip active" data-lang="uz">Oʻzbek</button>
+            <button class="lang-chip" data-lang="ru">Русский</button>
+            <button class="lang-chip" data-lang="en">English</button>
+          </div>
+        </div>
+
+        <nav class="nav-links-list">
+          <a href="#" class="nav-link-row" data-action="all">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
+            <span>Bosh sahifa</span>
+          </a>
+          <a href="#" class="nav-link-row" data-action="cat-1">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
+            <span>Smartfonlar (iPhone)</span>
+          </a>
+          <a href="#" class="nav-link-row" data-action="cat-2">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="2" y1="20" x2="22" y2="20"></line></svg>
+            <span>Noutbuklar (MacBook)</span>
+          </a>
+          <a href="#" class="nav-link-row" data-action="cat-3">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"></path><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path></svg>
+            <span>Quloqchinlar va Audio</span>
+          </a>
+          <a href="#" class="nav-link-row" data-action="wishlist">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+            <span>Sevimlilar roʻyxati</span>
+          </a>
+          <a href="#" class="nav-link-row" data-action="cart">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <path d="M16 10a4 4 0 0 1-8 0"></path>
+            </svg>
+            <span>Savat</span>
+          </a>
+          <a href="https://t.me/shbdbdjdhdjjdhd" target="_blank" class="nav-link-row external-link">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg>
+            <span>Rasmiy Telegram Kanal</span>
+          </a>
+          <a href="#" class="nav-link-row" data-action="contact">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+            <span>Bogʻlanish & Qoʻllab-quvvatlash</span>
+          </a>
+        </nav>
+      </div>
+    </aside>
+
+    <!-- Pastdan Chiquvchi Darcha (Bottom Sheet Filter) -->
+    <div class="drawer drawer-bottom" id="bottomFilterDrawer" aria-label="Saralash & Filtr">
+      <div class="drawer-drag-pill"></div>
+      <div class="drawer-head">
+        <span class="drawer-title">Saralash & Filtr</span>
+        <button class="icon-btn close-btn" id="btnCloseFilter" aria-label="Yopish">✕</button>
+      </div>
+      <div class="drawer-body">
+        <div class="filter-opt">
+          <label class="filter-radio-row">
+            <input type="radio" name="sort" value="default" checked />
+            <span class="radio-label">Odatiy (Kanal tartibi)</span>
+          </label>
+          <label class="filter-radio-row">
+            <input type="radio" name="sort" value="popular" />
+            <span class="radio-label">Eng ommabop mahsulotlar</span>
+          </label>
+          <label class="filter-radio-row">
+            <input type="radio" name="sort" value="price_asc" />
+            <span class="radio-label">Arzonroqdan qimmatroqqa ($)</span>
+          </label>
+          <label class="filter-radio-row">
+            <input type="radio" name="sort" value="price_desc" />
+            <span class="radio-label">Qimmatroqdan arzonroqqa ($)</span>
+          </label>
+          <label class="filter-radio-row">
+            <input type="radio" name="sort" value="newest" />
+            <span class="radio-label">Eng yangi qoʻshilganlar</span>
+          </label>
+        </div>
+        <button class="btn-buy" style="margin-top: 20px; width: 100%;" id="btnApplyFilter">Qoʻllash</button>
+      </div>
+    </div>
+
+
+    <!-- Toast Bildirishnoma -->
+    <div id="toast" class="toast">
+      <span id="toastMsg"></span>
+    </div>
+  </div>
+
+  <script src="/static/app.js?v=28.0"></script>
+</body>
+</html>

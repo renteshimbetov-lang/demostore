@@ -1,0 +1,1915 @@
+// DemoStore Telegram Mini App — Mobile-First Architecture
+(function () {
+  'use strict';
+
+  // 1. Telegram WebApp Initsializatsiyasi (To'liq ekranga to'lish & Header himoyasi)
+  const tg = window.Telegram?.WebApp;
+  if (tg) {
+    try {
+      tg.ready();
+      tg.expand();
+      // Telegram Bot API 8.0+: To'liq ekranga ochish (Fullscreen mode)
+      if (typeof tg.requestFullscreen === 'function') {
+        tg.requestFullscreen();
+      }
+      if (typeof tg.disableVerticalSwipes === 'function') {
+        tg.disableVerticalSwipes();
+      }
+      if (typeof tg.enableClosingConfirmation === 'function') {
+        tg.enableClosingConfirmation();
+      }
+      if (typeof tg.setHeaderColor === 'function') {
+        tg.setHeaderColor('#ffffff');
+      }
+      if (typeof tg.setBackgroundColor === 'function') {
+        tg.setBackgroundColor('#ffffff');
+      }
+    } catch (e) {
+      console.warn('Telegram WebApp init ogohlantirish:', e);
+    }
+  }
+
+  // Foydalanuvchi ekranga birinchi marta teginganda to'liq ekranga kirishni kafolatlash
+  function ensureFullscreenMode() {
+    if (tg && !tg.isFullscreen && typeof tg.requestFullscreen === 'function') {
+      try {
+        tg.requestFullscreen();
+      } catch (e) {}
+    }
+  }
+  window.addEventListener('touchstart', ensureFullscreenMode, { passive: true, once: true });
+  window.addEventListener('click', ensureFullscreenMode, { once: true });
+
+  // Telegram Top Clearance va Safe Area (Ustma-ust tushishni 100% oldini olish)
+  let lastSafeTop = 0;
+  let lastSafeBottom = 0;
+  function updateSafeArea() {
+    try {
+      const isTg = Boolean(window.Telegram?.WebApp?.initData || window.Telegram?.WebApp?.platform);
+      const isFullscreen = Boolean(tg?.isFullscreen);
+
+      const contentTop = tg?.contentSafeAreaInset?.top || 0;
+      const safeTop = tg?.safeAreaInset?.top || 0;
+
+      let finalTop = 14; // Standart desktop brauzer uchun
+
+      if (contentTop > 0) {
+        // Telegram floating tugmalari pastki chegarasidan 6px xavfsiz oraliq
+        finalTop = Math.max(contentTop + 6, 78);
+      } else if (safeTop > 0) {
+        // Safe area (notch/status bar) + Telegram floating tugmalari balandligi (~44px)
+        finalTop = safeTop + (isFullscreen ? 44 : 20);
+      } else if (isTg) {
+        // Telegram ichida insetlar kechikib kelsa xavfsiz standart
+        finalTop = isFullscreen ? 88 : 64;
+      }
+
+      if (finalTop !== lastSafeTop) {
+        lastSafeTop = finalTop;
+        document.documentElement.style.setProperty('--app-safe-top', `${finalTop}px`);
+      }
+
+      const contentBottom = tg?.contentSafeAreaInset?.bottom || 0;
+      const safeBottom = tg?.safeAreaInset?.bottom || 0;
+      let finalBottom = Math.max(contentBottom, safeBottom, 16);
+      if (finalBottom !== lastSafeBottom) {
+        lastSafeBottom = finalBottom;
+        document.documentElement.style.setProperty('--app-safe-bottom', `${finalBottom}px`);
+      }
+    } catch (e) {}
+  }
+  updateSafeArea();
+  tg?.onEvent?.('safeAreaChanged', updateSafeArea);
+  tg?.onEvent?.('contentSafeAreaChanged', updateSafeArea);
+  tg?.onEvent?.('fullscreenChanged', () => {
+    updateSafeArea();
+  });
+  tg?.onEvent?.('fullscreenFailed', () => {
+    tg?.expand?.();
+    updateSafeArea();
+  });
+  tg?.onEvent?.('viewportChanged', updateSafeArea);
+
+  function updateHeaderHeight() {
+    const header = document.getElementById('mobileHeader');
+    if (header && !header.classList.contains('hidden')) {
+      const h = header.offsetHeight;
+      if (h > 0) {
+        document.documentElement.style.setProperty('--header-height', `${h}px`);
+      }
+    }
+  }
+  window.addEventListener('resize', updateHeaderHeight);
+  window.addEventListener('orientationchange', updateHeaderHeight);
+
+  // Haptic feedback yordamchisi
+  function triggerHaptic(type = 'light') {
+    try {
+      if (tg?.HapticFeedback) {
+        tg.HapticFeedback.impactOccurred(type);
+      } else if (navigator.vibrate) {
+        navigator.vibrate(25);
+      }
+    } catch (err) {}
+  }
+
+  // Narxni har doim AQSH dollari ($ USD) formatida chiqarish
+  function formatPrice(amount) {
+    if (!amount) return '$0';
+    return '$' + amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  }
+
+  // Tavsif matnidagi parametrlarni toza ajratib olish (emojilarsiz)
+  function parseSpecs(desc) {
+    if (!desc) return [];
+    const lines = desc.split('\n');
+    const specs = [];
+    lines.forEach(line => {
+      const clean = line.replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F1E6}-\u{1F1FF}\u{1F191}-\u{1F251}\u{1F004}\u{1F0CF}\u{1F170}-\u{1F171}\u{1F17E}-\u{1F17F}\u{1F18E}\u{3030}\u{2B50}\u{2B55}\u{2934}\u{2935}\u{25AA}\u{25AB}\u{25FE}\u{25FD}\u{25FB}\u{25FC}\u{25B6}\u{25C0}\u{1F200}-\u{1F251}\u{20E3}\u{FE0F}]/gu, '').trim();
+      if (clean.includes(':')) {
+        const parts = clean.split(':');
+        const key = parts[0].trim();
+        const val = parts.slice(1).join(':').trim();
+        const lowerKey = key.toLowerCase();
+        if (
+          key && val &&
+          !lowerKey.includes('narx') &&
+          !lowerKey.includes('menejer') &&
+          !lowerKey.includes('telefon') &&
+          !lowerKey.includes('kanal') &&
+          !lowerKey.includes('lokatsiya') &&
+          !lowerKey.includes('bog’lanish') &&
+          !lowerKey.includes('bog\'lanish')
+        ) {
+          specs.push({ key, val });
+        }
+      } else if (clean.toLowerCase().includes('kafolat')) {
+        specs.push({ key: 'Kafolat', val: clean });
+      }
+    });
+    return specs;
+  }
+
+  // ==========================================================================
+  // KO'P TILLILIK TIZIMI (I18N: UZ / RU / EN)
+  // ==========================================================================
+  const I18N = {
+    uz: {
+      lang_name: "Oʻzbek tili",
+      lang_code: "UZ",
+      nav_home: "Bosh sahifa",
+      nav_catalog: "Katalog",
+      nav_cart: "Savat",
+      nav_wishlist: "Sevimlilar",
+      nav_profile: "Profil",
+      search_placeholder: "Mahsulotlarni qidirish...",
+      cat_all: "Barchasi",
+      cat_smartphones: "Smartfonlar",
+      cat_laptops: "Noutbuklar",
+      cat_audio: "Quloqchinlar va Audio",
+      cat_watches: "Aqlli soatlar",
+      cat_accessories: "Aksessuarlar",
+      weekly_discounts: "Hafta chegirmalari",
+      see_all: "Hammasini koʻrish",
+      popular_products: "Ommabop tovarlar",
+      filter: "Filtr",
+      filter_title: "Saralash & Filtr",
+      sort_default: "Odatiy (Kanal tartibi)",
+      sort_popular: "Eng ommabop mahsulotlar",
+      sort_price_asc: "Arzonroqdan qimmatroqqa ($)",
+      sort_price_desc: "Qimmatroqdan arzonroqqa ($)",
+      sort_newest: "Eng yangi qoʻshilganlar",
+      apply: "Qoʻllash",
+      add_to_cart: "Savatga",
+      buy_now: "Savatga olish",
+      view_in_channel: "Kanaldan koʻrish",
+      adding: "Qo'shilmoqda...",
+      added: "Qo'shildi!",
+      clear: "Tozalash",
+      checkout: "Buyurtma berish",
+      subtotal: "Tovarlar narxi:",
+      total: "Jami toʻlov:",
+      price_label: "Narxi:",
+      back: "Orqaga",
+      empty_title: "Hech narsa topilmadi",
+      empty_desc: "Qidiruv soʻrovingiz yoki tanlangan toifa boʻyicha mahsulot mavjud emas.",
+      reset_filters: "Filtrlarni tozalash",
+      cart_empty_title: "Savatingiz boʻsh",
+      cart_empty_desc: "Siz hali savatga birorta ham mahsulot qoʻshmadingiz.",
+      wishlist_empty_title: "Sevimlilar roʻyxati boʻsh",
+      wishlist_empty_desc: "Yoqqan mahsulotlaringizning yurakchasini bosib shu yerda saqlab qoʻyishingiz mumkin.",
+      start_shopping: "Mahsulotlarni koʻrish",
+      cart_cleared: "Savatingiz tozalandi",
+      app_settings: "Ilova sozlamalari",
+      theme_label: "Tungi / Kunduzgi rejim",
+      theme_dark_active: "Tungi rejim faol",
+      theme_light_active: "Kunduzgi rejim faol",
+      app_language: "Ilova tili",
+      select_language: "Ilova tili:",
+      support_title: "Bogʻlanish va Qoʻllab-quvvatlash",
+      tg_channel: "Rasmiy Telegram Kanal",
+      tg_manager: "Menejer bilan aloqa (Buyurtma)",
+      phone_call: "Telefon orqali qoʻngʻiroq",
+      guarantee_title: "DEMOSTORE KAFOLATI",
+      guarantee_desc: "Barcha Apple qurilmalari yangi va qadoqlangan holatda yetkaziladi. Toshkent boʻylab 2 soatda, viloyatlarga 1 kunda yetkazib berish mavjud.",
+      work_hours: "Ish vaqti: Har kuni 09:00 dan 22:00 gacha",
+      original_apple: "Asl Apple",
+      customer_badge: "DemoStore mijozi",
+      catalog_title: "Katalog",
+      catalog_subtitle: "Toifani tanlang yoki barcha tovarlarni koʻring",
+      wishlist_title: "Sevimlilar",
+      profile_title: "Profil va Aloqa",
+      profile_subtitle: "Shaxsiy kabinet va qoʻllab-quvvatlash",
+      cart_title: "Savat",
+      items_suffix: "ta mahsulot",
+      saved_suffix: "ta saqlangan mahsulot"
+    },
+    ru: {
+      lang_name: "Русский язык",
+      lang_code: "RU",
+      nav_home: "Главная",
+      nav_catalog: "Каталог",
+      nav_cart: "Корзина",
+      nav_wishlist: "Избранное",
+      nav_profile: "Профиль",
+      search_placeholder: "Поиск товаров...",
+      cat_all: "Все товары",
+      cat_smartphones: "Смартфоны",
+      cat_laptops: "Ноутбуки",
+      cat_audio: "Наушники и аудио",
+      cat_watches: "Умные часы",
+      cat_accessories: "Аксессуары",
+      weekly_discounts: "Скидки недели",
+      see_all: "Все товары",
+      popular_products: "Популярные товары",
+      filter: "Фильтр",
+      filter_title: "Сортировка и фильтр",
+      sort_default: "По умолчанию (порядок канала)",
+      sort_popular: "Самые популярные товары",
+      sort_price_asc: "Сначала дешевле ($)",
+      sort_price_desc: "Сначала дороже ($)",
+      sort_newest: "Сначала новинки",
+      apply: "Применить",
+      add_to_cart: "В корзину",
+      buy_now: "В корзину",
+      view_in_channel: "В канале",
+      adding: "Добавление...",
+      added: "Добавлено!",
+      clear: "Очистить",
+      checkout: "Оформить заказ",
+      subtotal: "Стоимость товаров:",
+      total: "Итого к оплате:",
+      price_label: "Цена:",
+      back: "Назад",
+      empty_title: "Ничего не найдено",
+      empty_desc: "По вашему запросу товары не найдены.",
+      reset_filters: "Сбросить фильтры",
+      cart_empty_title: "Корзина пуста",
+      cart_empty_desc: "Вы еще не добавили ни одного товара в корзину.",
+      wishlist_empty_title: "Список избранного пуст",
+      wishlist_empty_desc: "Нажмите на сердечко, чтобы сохранить понравившийся товар.",
+      start_shopping: "Перейти к покупкам",
+      cart_cleared: "Корзина очищена",
+      app_settings: "Настройки приложения",
+      theme_label: "Тёмная / Светлая тема",
+      theme_dark_active: "Тёмная тема активна",
+      theme_light_active: "Светлая тема активна",
+      app_language: "Язык интерфейса",
+      select_language: "Язык приложения:",
+      support_title: "Связь и поддержка",
+      tg_channel: "Официальный Telegram канал",
+      tg_manager: "Связь с менеджером (Заказ)",
+      phone_call: "Звонок по телефону",
+      guarantee_title: "ГАРАНТИЯ DEMOSTORE",
+      guarantee_desc: "Все устройства Apple доставляются новыми и запечатанными. Доставка по Ташкенту за 2 часа, в регионы — за 1 день.",
+      work_hours: "Режим работы: Ежедневно с 09:00 до 22:00",
+      original_apple: "Оригинал Apple",
+      customer_badge: "Клиент DemoStore",
+      catalog_title: "Каталог",
+      catalog_subtitle: "Выберите категорию или посмотрите все товары",
+      wishlist_title: "Избранное",
+      profile_title: "Профиль и контакты",
+      profile_subtitle: "Личный кабинет и поддержка",
+      cart_title: "Корзина",
+      items_suffix: "товаров",
+      saved_suffix: "сохраненных товаров"
+    },
+    en: {
+      lang_name: "English",
+      lang_code: "EN",
+      nav_home: "Home",
+      nav_catalog: "Catalog",
+      nav_cart: "Cart",
+      nav_wishlist: "Favorites",
+      nav_profile: "Profile",
+      search_placeholder: "Search products...",
+      cat_all: "All Products",
+      cat_smartphones: "Smartphones",
+      cat_laptops: "Laptops",
+      cat_audio: "Headphones & Audio",
+      cat_watches: "Smart Watches",
+      cat_accessories: "Accessories",
+      weekly_discounts: "Weekly Deals",
+      see_all: "See all",
+      popular_products: "Popular Products",
+      filter: "Filter",
+      filter_title: "Sort & Filter",
+      sort_default: "Default (Channel order)",
+      sort_popular: "Most Popular",
+      sort_price_asc: "Price: Low to High ($)",
+      sort_price_desc: "Price: High to Low ($)",
+      sort_newest: "Newest Arrivals",
+      apply: "Apply",
+      add_to_cart: "Add to Cart",
+      buy_now: "Add to Cart",
+      view_in_channel: "In Channel",
+      adding: "Adding...",
+      added: "Added!",
+      clear: "Clear",
+      checkout: "Proceed to Checkout",
+      subtotal: "Products total:",
+      total: "Grand total:",
+      price_label: "Price:",
+      back: "Back",
+      empty_title: "No products found",
+      empty_desc: "No items match your search or selected filter.",
+      reset_filters: "Reset filters",
+      cart_empty_title: "Your cart is empty",
+      cart_empty_desc: "You haven't added any products to your cart yet.",
+      wishlist_empty_title: "Favorites is empty",
+      wishlist_empty_desc: "Tap the heart on any product to save it here.",
+      start_shopping: "Browse Products",
+      cart_cleared: "Cart has been cleared",
+      app_settings: "App Settings",
+      theme_label: "Dark / Light Mode",
+      theme_dark_active: "Dark Mode Active",
+      theme_light_active: "Light Mode Active",
+      app_language: "Language",
+      select_language: "Language:",
+      support_title: "Contact & Support",
+      tg_channel: "Official Telegram Channel",
+      tg_manager: "Contact Manager (Order)",
+      phone_call: "Phone Call",
+      guarantee_title: "DEMOSTORE GUARANTEE",
+      guarantee_desc: "All Apple devices are delivered brand new and sealed. Express delivery across Tashkent within 2 hours, regions within 1 day.",
+      work_hours: "Working hours: Daily 09:00 to 22:00",
+      original_apple: "100% Genuine",
+      customer_badge: "DemoStore Customer",
+      catalog_title: "Catalog",
+      catalog_subtitle: "Select a category or browse all devices",
+      wishlist_title: "Favorites",
+      profile_title: "Profile & Support",
+      profile_subtitle: "Personal account and help center",
+      cart_title: "Shopping Cart",
+      items_suffix: "items",
+      saved_suffix: "saved items"
+    }
+  };
+
+  // Holat (State)
+  const state = {
+    lang: localStorage.getItem('demostore_lang') || 'uz',
+    selectedCategory: 0,
+    selectedSort: 'default',
+    searchQuery: '',
+    products: [],
+    isLoading: false,
+    selectedProduct: null,
+    wishlist: new Set(),
+    cart: {}, // { [productId]: { product, qty } }
+    currentTab: 'home', // 'home', 'catalog', 'cart', 'wishlist', 'profile', 'product-detail'
+    previousTab: 'home'
+  };
+
+  function t(key) {
+    const lang = state.lang || 'uz';
+    return I18N[lang]?.[key] || I18N.uz[key] || key;
+  }
+
+  // LocalStorage dan Wishlist va Savatni o'qish
+  try {
+    const savedWish = JSON.parse(localStorage.getItem('demostore_wishlist') || '[]');
+    state.wishlist = new Set(savedWish);
+  } catch (e) {}
+
+  try {
+    const savedCart = JSON.parse(localStorage.getItem('demostore_cart') || '{}');
+    state.cart = savedCart;
+  } catch (e) {}
+
+  // ==========================================================================
+  // DOM ELEMENTLARI
+  // ==========================================================================
+  // 1. Asosiy Bo'limlar (App Sections)
+  const sections = {
+    home: document.getElementById('sectionHome'),
+    catalog: document.getElementById('sectionCatalog'),
+    cart: document.getElementById('sectionCart'),
+    wishlist: document.getElementById('sectionWishlist'),
+    profile: document.getElementById('sectionProfile'),
+    'product-detail': document.getElementById('sectionProductDetail')
+  };
+
+  const mobileDockEl = document.getElementById('mobileDock');
+  const dockItems = document.querySelectorAll('.dock-item');
+
+  // Header elementlari
+  const backdropEl = document.getElementById('drawerBackdrop');
+  const leftDrawerEl = document.getElementById('leftNavDrawer');
+  const bottomFilterEl = document.getElementById('bottomFilterDrawer');
+  const btnOpenMenuEl = document.getElementById('btnOpenMenu');
+  const btnCloseMenuEl = document.getElementById('btnCloseMenu');
+  const btnOpenFilterEl = document.getElementById('btnOpenFilter');
+  const btnCloseFilterEl = document.getElementById('btnCloseFilter');
+  const btnApplyFilterEl = document.getElementById('btnApplyFilter');
+  const btnToggleThemeEl = document.getElementById('btnToggleTheme');
+  const btnHeaderCartEl = document.getElementById('btnHeaderCart');
+  const headerCartBadgeEl = document.getElementById('headerCartBadge');
+  const dockCartBadgeEl = document.getElementById('dockCartBadge');
+  const dockWishBadgeEl = document.getElementById('dockWishBadge');
+  const searchInputEl = document.getElementById('searchInput');
+  const clearSearchBtnEl = document.getElementById('clearSearchBtn');
+  const logoBtnEl = document.getElementById('logoBtn');
+  const toastEl = document.getElementById('toast');
+  const toastMsgEl = document.getElementById('toastMsg');
+
+  // Til boshqaruvi elementlari
+  const btnLangSwitchEl = document.getElementById('btnLangSwitch');
+  const currentLangLabelEl = document.getElementById('currentLangLabel');
+  const currentProfileLangLabelEl = document.getElementById('currentProfileLangLabel');
+  const drawerLangChips = document.querySelectorAll('.drawer-lang-selector .lang-chip');
+  const profileLangBtns = document.querySelectorAll('.profile-lang-chips .profile-lang-btn');
+
+  // Hafta chegirmalari slayderi elementlari
+  const discountsSliderSectionEl = document.getElementById('discountsSliderSection');
+  const dealsTitleGroupEl = document.getElementById('dealsTitleGroup');
+  const btnDiscountsSeeAllEl = document.getElementById('btnDiscountsSeeAll');
+  const discountsTrackEl = document.getElementById('discountsTrack');
+
+  // Bosh Sahifa elementlari
+  const sectionTitleEl = document.getElementById('sectionTitle');
+  const resultsCountEl = document.getElementById('resultsCount');
+  const productsGridEl = document.getElementById('productsGrid');
+  const emptyStateEl = document.getElementById('emptyState');
+  const resetFiltersBtnEl = document.getElementById('resetFiltersBtn');
+
+  // Katalog elementlari
+  const catalogCategorySliderEl = document.getElementById('catalogCategorySlider');
+  const catalogSectionTitleEl = document.getElementById('catalogSectionTitle');
+  const catalogResultsCountEl = document.getElementById('catalogResultsCount');
+  const catalogProductsGridEl = document.getElementById('catalogProductsGrid');
+
+  // Savat elementlari
+  const cartSectionSubtitleEl = document.getElementById('cartSectionSubtitle');
+  const btnClearCartEl = document.getElementById('btnClearCart');
+  const cartSectionContentEl = document.getElementById('cartSectionContent');
+  const cartSectionItemsListEl = document.getElementById('cartSectionItemsList');
+  const cartSubtotalPriceEl = document.getElementById('cartSubtotalPrice');
+  const cartFinalTotalPriceEl = document.getElementById('cartFinalTotalPrice');
+  const btnCheckoutSectionEl = document.getElementById('btnCheckoutSection');
+  const cartSectionEmptyEl = document.getElementById('cartSectionEmpty');
+  const btnStartShoppingEl = document.getElementById('btnStartShopping');
+
+  // Sevimlilar elementlari
+  const wishlistSectionSubtitleEl = document.getElementById('wishlistSectionSubtitle');
+  const wishlistProductsGridEl = document.getElementById('wishlistProductsGrid');
+  const wishlistSectionEmptyEl = document.getElementById('wishlistSectionEmpty');
+  const btnBrowseProductsEl = document.getElementById('btnBrowseProducts');
+
+  // Profil elementlari
+  const profileAvatarEl = document.getElementById('profileAvatar');
+  const profileUserNameEl = document.getElementById('profileUserName');
+  const profileUserHandleEl = document.getElementById('profileUserHandle');
+  const statCartCountEl = document.getElementById('statCartCount');
+  const statWishCountEl = document.getElementById('statWishCount');
+  const rowToggleThemeEl = document.getElementById('rowToggleTheme');
+  const currentThemeLabelEl = document.getElementById('currentThemeLabel');
+  const statCartBoxEl = document.getElementById('statCartBox');
+  const statWishBoxEl = document.getElementById('statWishBox');
+
+  // Mahsulot batafsil elementlari
+  const pdBackBtnEl = document.getElementById('pdBackBtn');
+  const pdWishlistBtnEl = document.getElementById('pdWishlistBtn');
+  const pdBodyContentEl = document.getElementById('pdBodyContent');
+  const pdBottomPriceEl = document.getElementById('pdBottomPrice');
+  const pdAddToCartBtnEl = document.getElementById('pdAddToCartBtn');
+  const pdBtnTextEl = document.getElementById('pdBtnText');
+  const pdChannelIconBtnEl = document.getElementById('pdChannelIconBtn');
+
+  // ==========================================================================
+  // TILNI QO'LLASH (APPLY LANGUAGE DYNAMICALLY)
+  // ==========================================================================
+  function applyLanguage(lang) {
+    if (!I18N[lang]) lang = 'uz';
+    state.lang = lang;
+    localStorage.setItem('demostore_lang', lang);
+
+    // Header til yorlig'i
+    if (currentLangLabelEl) currentLangLabelEl.textContent = I18N[lang].lang_code;
+
+    // Profil sozlamalari til yorlig'i
+    if (currentProfileLangLabelEl) currentProfileLangLabelEl.textContent = I18N[lang].lang_name;
+
+    // Yon menyu chiplari
+    document.querySelectorAll('.drawer-lang-selector .lang-chip').forEach(chip => {
+      chip.classList.toggle('active', chip.dataset.lang === lang);
+    });
+
+    // Profil bo'limidagi chiplar
+    document.querySelectorAll('.profile-lang-chips .profile-lang-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.lang === lang);
+    });
+
+    // Qidiruv input placeholderi
+    if (searchInputEl) searchInputEl.placeholder = t('search_placeholder');
+
+    // Barcha data-i18n elementlarini matn bilan to'ldirish
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const k = el.dataset.i18n;
+      if (k && I18N[lang][k]) {
+        el.textContent = I18N[lang][k];
+      }
+    });
+
+    // Mobil dock tugmalari yozuvlari
+    const dockHome = document.querySelector('#dockHome span');
+    if (dockHome) dockHome.textContent = t('nav_home');
+    const dockCatalog = document.querySelector('#dockCatalog span');
+    if (dockCatalog) dockCatalog.textContent = t('nav_catalog');
+    const dockCart = document.querySelector('#dockCart span');
+    if (dockCart) dockCart.textContent = t('nav_cart');
+    const dockWishlist = document.querySelector('#dockWishlist span');
+    if (dockWishlist) dockWishlist.textContent = t('nav_wishlist');
+    const dockProfile = document.querySelector('#dockProfile span');
+    if (dockProfile) dockProfile.textContent = t('nav_profile');
+
+    // Mahsulot batafsil tugmasi yozuvi
+    if (pdBtnTextEl) pdBtnTextEl.textContent = t('buy_now');
+
+    // Agar mahsulotlar mavjud bo'lsa, joriy bo'limni yangilash
+    if (state.products && state.products.length > 0) {
+      renderDiscountsSlider();
+      if (state.currentTab === 'catalog') renderCatalog();
+      else if (state.currentTab === 'cart') renderCartSection();
+      else if (state.currentTab === 'wishlist') renderWishlistSection();
+      else if (state.currentTab === 'profile') renderProfileSection();
+      else renderProducts(true);
+    }
+  }
+
+  // ==========================================================================
+  // HAFTA CHEGIRMALARI SLAYDERINI CHIZISH (BLACK STORE USLUBI)
+  // ==========================================================================
+  function escapeHtml(str) {
+    return String(str || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function renderDiscountsSlider() {
+    if (!discountsTrackEl || !state.products || state.products.length === 0) return;
+
+    // Dastlabki 8 ta mahsulotni haftalik chegirmalarga olamiz
+    const discountItems = state.products.slice(0, 8);
+    const discountRates = [15, 20, 12, 18, 25, 16, 22, 10];
+
+    let html = '';
+    discountItems.forEach((p, idx) => {
+      const rate = discountRates[idx % discountRates.length];
+      const oldPrice = Math.round(p.price / (1 - rate / 100));
+      const isFav = state.wishlist.has(p.id);
+
+      html += `
+        <div class="deal-card" data-id="${p.id}">
+          <div class="deal-image-box">
+            <span class="deal-discount-badge">↓ -${rate}%</span>
+            <button class="deal-wishlist-btn ${isFav ? 'active' : ''}" data-id="${p.id}" aria-label="${t('nav_wishlist')}">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="${isFav ? '#ef4444' : 'none'}" stroke="currentColor" stroke-width="2">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+              </svg>
+            </button>
+            <img src="${p.image_url}" alt="${escapeHtml(p.name)}" class="deal-img" loading="lazy" />
+          </div>
+          <div class="deal-content">
+            <div class="deal-price-block">
+              <div class="deal-current-price">${formatPrice(p.price)}</div>
+              <div class="deal-old-price-row">
+                <span class="deal-old-price">${formatPrice(oldPrice)}</span>
+                <span class="deal-drop-tag">-${rate}%</span>
+              </div>
+            </div>
+            <h3 class="deal-title" title="${escapeHtml(p.name)}">${escapeHtml(p.name)}</h3>
+            <div class="deal-footer-action">
+              <button class="deal-cart-btn btn-buy" data-id="${p.id}">
+                <span class="deal-cart-icon">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+                </span>
+                <span>${t('add_to_cart')}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+
+    discountsTrackEl.innerHTML = html;
+
+    // Kartochka bosilganda to'liq modal ochish
+    discountsTrackEl.querySelectorAll('.deal-card').forEach(card => {
+      card.addEventListener('click', (e) => {
+        if (e.target.closest('.deal-wishlist-btn') || e.target.closest('.deal-cart-btn')) return;
+        const pid = parseInt(card.dataset.id, 10);
+        const prod = state.products.find(x => x.id === pid);
+        if (prod) openProductModal(prod);
+      });
+    });
+
+    // Sevimlilar (Wishlist) bosilishi
+    discountsTrackEl.querySelectorAll('.deal-wishlist-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const pid = parseInt(btn.dataset.id, 10);
+        const prod = state.products.find(x => x.id === pid);
+        if (prod) toggleWishlist(prod, e);
+      });
+    });
+
+    // Savatga olish (Mikro-animatsiya bilan)
+    discountsTrackEl.querySelectorAll('.deal-cart-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const pid = parseInt(btn.dataset.id, 10);
+        const prod = state.products.find(x => x.id === pid);
+        if (prod) handleAddToCart(prod, btn);
+      });
+    });
+
+    setupDealsSliderSwipe();
+  }
+
+  // Sichqoncha va sensor bilan erkin surish (Touch & Mouse Drag Swipe)
+  function setupDealsSliderSwipe() {
+    if (!discountsTrackEl || discountsTrackEl.dataset.dragInit === 'true') return;
+    discountsTrackEl.dataset.dragInit = 'true';
+
+    let isDown = false;
+    let startX = 0;
+    let scrollLeft = 0;
+
+    discountsTrackEl.addEventListener('mousedown', (e) => {
+      isDown = true;
+      discountsTrackEl.classList.add('is-dragging');
+      startX = e.pageX - discountsTrackEl.offsetLeft;
+      scrollLeft = discountsTrackEl.scrollLeft;
+    });
+
+    const stopDrag = () => {
+      if (!isDown) return;
+      isDown = false;
+      discountsTrackEl.classList.remove('is-dragging');
+    };
+
+    discountsTrackEl.addEventListener('mouseleave', stopDrag);
+    discountsTrackEl.addEventListener('mouseup', stopDrag);
+    discountsTrackEl.addEventListener('mousemove', (e) => {
+      if (!isDown) return;
+      e.preventDefault();
+      const x = e.pageX - discountsTrackEl.offsetLeft;
+      const walk = (x - startX) * 1.5;
+      discountsTrackEl.scrollLeft = scrollLeft - walk;
+    });
+  }
+
+  // ==========================================================================
+  // 2. BO'LIMLARNI BOSHQARISH VA ROUTING (TAB SWITCHING)
+  // ==========================================================================
+  function switchTab(tabKey, categoryId = null) {
+    if (!sections[tabKey]) return;
+    triggerHaptic('light');
+    closeAllDrawers();
+
+    if (state.currentTab !== 'product-detail' && tabKey !== 'product-detail') {
+      state.previousTab = state.currentTab;
+    }
+    state.currentTab = tabKey;
+
+    // Pastki dockdagi faol tugmani belgilash
+    dockItems.forEach(d => {
+      d.classList.toggle('active', d.dataset.tab === tabKey);
+    });
+
+    // Bo'limlarni almashtirish
+    Object.keys(sections).forEach(key => {
+      const sec = sections[key];
+      if (sec) {
+        if (key === tabKey) {
+          sec.classList.remove('hidden');
+          sec.classList.add('active');
+        } else {
+          sec.classList.remove('active');
+          sec.classList.add('hidden');
+        }
+      }
+    });
+
+    // Mahsulot batafsil ko'rishda Telegram native BackButton ko'rsatiladi
+    const mobileHeaderEl = document.getElementById('mobileHeader');
+    const mainContentEl = document.getElementById('mainContent');
+    if (tabKey === 'product-detail') {
+      mobileHeaderEl?.classList.add('hidden');
+      mobileDockEl?.classList.add('hidden');
+      if (mainContentEl) mainContentEl.style.paddingTop = 'var(--app-safe-top, 12px)';
+      if (tg?.BackButton) {
+        tg.BackButton.show();
+        tg.BackButton.onClick(handleBackClick);
+      }
+    } else {
+      mobileHeaderEl?.classList.remove('hidden');
+      mobileDockEl?.classList.remove('hidden');
+      if (mainContentEl) mainContentEl.style.paddingTop = '';
+      if (tg?.BackButton) {
+        tg.BackButton.hide();
+      }
+      setTimeout(updateHeaderHeight, 10);
+    }
+
+    // Har bir bo'limga mos render
+    if (tabKey === 'home') {
+      state.selectedCategory = 0;
+      renderProducts();
+    } else if (tabKey === 'catalog') {
+      if (categoryId !== null) {
+        state.selectedCategory = categoryId;
+      }
+      catalogCategorySliderEl?.querySelectorAll('.category-pill').forEach(pill => {
+        pill.classList.toggle('active', parseInt(pill.dataset.category, 10) === state.selectedCategory);
+      });
+      renderCatalog();
+    } else if (tabKey === 'cart') {
+      renderCartSection();
+    } else if (tabKey === 'wishlist') {
+      renderWishlistSection();
+    } else if (tabKey === 'profile') {
+      renderProfileSection();
+    }
+
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }
+
+  function handleBackClick() {
+    switchTab(state.previousTab || 'home');
+  }
+
+  pdBackBtnEl?.addEventListener('click', handleBackClick);
+
+  // ==========================================================================
+  // 3. MIKRO-ANIMATSIYALAR TIZIMI (PREMIUM MICRO-ANIMATIONS)
+  // ==========================================================================
+  // 1. Savat tugmasi va nishonini elastik sakratish (Spring jump animation)
+  function triggerCartJump() {
+    const bottomCartTab = document.querySelector('.mobile-dock .dock-item[data-tab="cart"]');
+    const badges = document.querySelectorAll('.dock-badge, .cart-badge');
+
+    if (bottomCartTab) {
+      bottomCartTab.classList.remove('bottom-cart-jump-anim');
+      void bottomCartTab.offsetWidth; // DOM reflow
+      bottomCartTab.classList.add('bottom-cart-jump-anim');
+      setTimeout(() => {
+        bottomCartTab.classList.remove('bottom-cart-jump-anim');
+      }, 850);
+    }
+
+    if (btnHeaderCartEl) {
+      btnHeaderCartEl.classList.remove('bottom-cart-jump-anim');
+      void btnHeaderCartEl.offsetWidth; // DOM reflow
+      btnHeaderCartEl.classList.add('bottom-cart-jump-anim');
+      setTimeout(() => {
+        btnHeaderCartEl.classList.remove('bottom-cart-jump-anim');
+      }, 850);
+    }
+
+    badges.forEach(badge => {
+      badge.classList.remove('badge-pop-anim');
+      void badge.offsetWidth; // DOM reflow
+      badge.classList.add('badge-pop-anim');
+      setTimeout(() => {
+        badge.classList.remove('badge-pop-anim');
+      }, 650);
+    });
+  }
+
+  // 2. Tugmaning 3 bosqichli interaktiv animatsiyasi (Stateful Add to Cart)
+  function animateCartButton(btn) {
+    if (!btn || btn.dataset.animating === 'true') return;
+    btn.dataset.animating = 'true';
+    const originalContent = btn.innerHTML;
+
+    // 1-bosqich: Spinner (Qo'shilmoqda... ~300ms)
+    btn.innerHTML = `<span class="btn-spinner"></span> ${t('adding')}`;
+
+    // 2-bosqich: Yashil ptichka va "Qo'shildi!" (~750ms)
+    setTimeout(() => {
+      btn.classList.add('is-success');
+      btn.innerHTML = `
+        <svg class="checkmark-pop-anim" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:4px;">
+          <circle cx="12" cy="12" r="9.5" fill="rgba(16, 185, 129, 0.15)"></circle>
+          <polyline points="8 12 11 15 16 9"></polyline>
+        </svg>
+        <span>${t('added')}</span>
+      `;
+
+      // 3-bosqich: Asl holatiga silliq qaytish
+      setTimeout(() => {
+        btn.classList.remove('is-success');
+        btn.innerHTML = originalContent;
+        btn.dataset.animating = 'false';
+      }, 750);
+    }, 300);
+  }
+
+  // 3. Telegram kanaldagi postni ochish funksiyasi
+  function openChannelPost(postUrl, productId) {
+    if (!postUrl) return;
+    triggerHaptic('light');
+
+    // Bazada statistika (views_count) ni oshirish
+    if (productId) {
+      try {
+        fetch(`/api/products/${productId}/click`, { method: 'POST' }).catch(() => {});
+      } catch (e) {}
+    }
+
+    // Telegram ilovasi ichida to'g'ridan-to'g'ri kanal postiga o'tish
+    if (window.Telegram?.WebApp?.openTelegramLink && postUrl.includes('t.me')) {
+      window.Telegram.WebApp.openTelegramLink(postUrl);
+    } else {
+      window.open(postUrl, '_blank');
+    }
+  }
+
+  // 4. Universal Savatga qo'shish funksiyasi
+  function handleAddToCart(product, btn) {
+    triggerHaptic('medium');
+    const pid = product.id;
+    if (state.cart[pid]) {
+      state.cart[pid].qty += 1;
+    } else {
+      state.cart[pid] = { product, qty: 1 };
+    }
+    saveCart();
+
+    // A) Tugmani jonlantirish (Spinner -> Yashil Ptichka -> Asl holat)
+    if (btn) animateCartButton(btn);
+
+    // B) Bosilishi bilan bir vaqtda savat va nishon darhol elastik sakraydi (uchuvchi rasmsiz)
+    triggerCartJump();
+  }
+
+  // ==========================================================================
+  // 4. SAVAT (CART) MANTIQI VA BO'LIMI
+  // ==========================================================================
+  function changeCartQty(pid, delta) {
+    triggerHaptic('light');
+    if (!state.cart[pid]) return;
+    state.cart[pid].qty += delta;
+    if (state.cart[pid].qty <= 0) {
+      delete state.cart[pid];
+    }
+    saveCart();
+    renderCartSection();
+  }
+
+  function saveCart() {
+    try {
+      localStorage.setItem('demostore_cart', JSON.stringify(state.cart));
+    } catch (e) {}
+    updateCartBadges();
+  }
+
+  function updateCartBadges() {
+    const totalCount = Object.values(state.cart).reduce((sum, item) => sum + item.qty, 0);
+    if (headerCartBadgeEl) {
+      headerCartBadgeEl.textContent = totalCount > 0 ? totalCount.toString() : '';
+      headerCartBadgeEl.classList.toggle('hidden', totalCount === 0);
+      headerCartBadgeEl.style.display = totalCount > 0 ? 'inline-flex' : 'none';
+    }
+    if (dockCartBadgeEl) {
+      dockCartBadgeEl.textContent = totalCount > 0 ? totalCount.toString() : '';
+      dockCartBadgeEl.classList.toggle('hidden', totalCount === 0);
+      dockCartBadgeEl.style.display = totalCount > 0 ? 'inline-flex' : 'none';
+    }
+    if (statCartCountEl) {
+      statCartCountEl.textContent = totalCount.toString();
+    }
+  }
+
+  function renderCartSection() {
+    if (!cartSectionContentEl || !cartSectionEmptyEl) return;
+    const items = Object.values(state.cart);
+    const totalCount = items.reduce((sum, i) => sum + i.qty, 0);
+
+    if (cartSectionSubtitleEl) {
+      cartSectionSubtitleEl.textContent = `${totalCount} ta mahsulot tanlandi`;
+    }
+
+    if (items.length === 0) {
+      cartSectionContentEl.classList.add('hidden');
+      cartSectionEmptyEl.classList.remove('hidden');
+      btnClearCartEl?.classList.add('hidden');
+      return;
+    }
+
+    cartSectionEmptyEl.classList.add('hidden');
+    cartSectionContentEl.classList.remove('hidden');
+    btnClearCartEl?.classList.remove('hidden');
+
+    let total = 0;
+    cartSectionItemsListEl.innerHTML = items.map(item => {
+      const p = item.product;
+      const subtotal = p.price * item.qty;
+      total += subtotal;
+      const brand = p.name.toLowerCase().includes('macbook') || p.name.toLowerCase().includes('iphone') ? 'APPLE' : 'PREMIUM';
+
+      return `
+        <div class="cart-section-item" data-id="${p.id}">
+          <img src="${p.image_url}" alt="${p.name}" class="cart-section-item-img" />
+          <div class="cart-section-item-info">
+            <span class="cart-section-item-brand">${brand}</span>
+            <h4 class="cart-section-item-name">${p.name}</h4>
+            <div class="cart-section-item-price">${formatPrice(p.price)}</div>
+          </div>
+          <div class="cart-section-item-actions">
+            <button class="cart-delete-item-btn" data-id="${p.id}" aria-label="Oʻchirish">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+              </svg>
+            </button>
+            <div class="cart-qty-pill">
+              <button class="btn-minus" data-id="${p.id}">-</button>
+              <span>${item.qty}</span>
+              <button class="btn-plus" data-id="${p.id}">+</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    if (cartSubtotalPriceEl) cartSubtotalPriceEl.textContent = formatPrice(total);
+    if (cartFinalTotalPriceEl) cartFinalTotalPriceEl.textContent = formatPrice(total);
+
+    // Savatdagi tugmalar hodisalari
+    cartSectionItemsListEl.querySelectorAll('.btn-minus').forEach(btn => {
+      btn.addEventListener('click', () => changeCartQty(parseInt(btn.dataset.id, 10), -1));
+    });
+    cartSectionItemsListEl.querySelectorAll('.btn-plus').forEach(btn => {
+      btn.addEventListener('click', () => changeCartQty(parseInt(btn.dataset.id, 10), 1));
+    });
+    cartSectionItemsListEl.querySelectorAll('.cart-delete-item-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const pid = parseInt(btn.dataset.id, 10);
+        delete state.cart[pid];
+        saveCart();
+        renderCartSection();
+      });
+    });
+  }
+
+  // Savatni tozalash tugmasi
+  btnClearCartEl?.addEventListener('click', () => {
+    triggerHaptic('medium');
+    state.cart = {};
+    saveCart();
+    renderCartSection();
+    showToast('Savatingiz tozalandi');
+  });
+
+  btnStartShoppingEl?.addEventListener('click', () => {
+    switchTab('catalog');
+  });
+
+  // Telegram orqali savat buyurtmasini jo'natish
+  btnCheckoutSectionEl?.addEventListener('click', () => {
+    triggerHaptic('heavy');
+    const items = Object.values(state.cart);
+    if (items.length === 0) return;
+
+    let total = 0;
+    let text = "Assalomu alaykum! Men DemoStore mini-ilovasi orqali quyidagi buyurtmani rasmiylashtirmoqchiman:\n\n";
+    items.forEach((item, idx) => {
+      const p = item.product;
+      const subtotal = p.price * item.qty;
+      total += subtotal;
+      text += `${idx + 1}. ${p.name} — ${item.qty} dona x ${formatPrice(p.price)} = ${formatPrice(subtotal)}\n`;
+    });
+    text += `\nJami summa: ${formatPrice(total)}\n\nIltimos, yetkazib berish boʻyicha maʼlumot bering.`;
+
+    const encoded = encodeURIComponent(text);
+    const tgUrl = `https://t.me/SmartBook_menejer?text=${encoded}`;
+    window.open(tgUrl, '_blank');
+  });
+
+  // ==========================================================================
+  // 5. SEVIMLILAR (WISHLIST) MANTIQI VA BO'LIMI
+  // ==========================================================================
+  function toggleWishlist(product, e) {
+    if (e) e.stopPropagation();
+    triggerHaptic('medium');
+    const pid = product.id;
+    if (state.wishlist.has(pid)) {
+      state.wishlist.delete(pid);
+    } else {
+      state.wishlist.add(pid);
+    }
+    saveWishlist();
+
+    // Yurakcha tugmasi aktiv bo'lsa pop animatsiyasi ishlaydi
+    document.querySelectorAll(`.wishlist-btn[data-id="${pid}"]`).forEach(btn => {
+      btn.classList.toggle('active', state.wishlist.has(pid));
+    });
+
+    if (state.currentTab === 'wishlist') {
+      renderWishlistSection();
+    } else {
+      renderProducts();
+    }
+  }
+
+  function saveWishlist() {
+    try {
+      localStorage.setItem('demostore_wishlist', JSON.stringify(Array.from(state.wishlist)));
+    } catch (e) {}
+    updateWishlistBadge();
+  }
+
+  function updateWishlistBadge() {
+    const count = state.wishlist.size;
+    if (dockWishBadgeEl) {
+      dockWishBadgeEl.textContent = count > 0 ? count.toString() : '';
+      dockWishBadgeEl.classList.toggle('hidden', count === 0);
+      dockWishBadgeEl.style.display = count > 0 ? 'inline-flex' : 'none';
+    }
+    if (statWishCountEl) {
+      statWishCountEl.textContent = count.toString();
+    }
+  }
+
+  function renderWishlistSection() {
+    if (!wishlistProductsGridEl || !wishlistSectionEmptyEl) return;
+    const favProducts = state.products.filter(p => state.wishlist.has(p.id));
+
+    if (wishlistSectionSubtitleEl) {
+      wishlistSectionSubtitleEl.textContent = `${favProducts.length} ta saqlangan mahsulot`;
+    }
+
+    if (favProducts.length === 0) {
+      wishlistProductsGridEl.innerHTML = '';
+      wishlistSectionEmptyEl.classList.remove('hidden');
+      return;
+    }
+
+    wishlistSectionEmptyEl.classList.add('hidden');
+    let html = '';
+    favProducts.forEach(p => {
+      const brand = p.name.toLowerCase().includes('macbook') || p.name.toLowerCase().includes('iphone') ? 'APPLE' : 'PREMIUM';
+      html += `
+        <article class="product-card" data-id="${p.id}">
+          <div class="card-media">
+            <button class="wishlist-btn active" data-id="${p.id}" aria-label="Sevimlilar">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="#ef4444" stroke="#ef4444" stroke-width="2">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+              </svg>
+            </button>
+            <img src="${p.image_url}" alt="${p.name}" class="product-img" loading="lazy" />
+          </div>
+          <div class="card-body">
+            <span class="product-brand">${brand}</span>
+            <h3 class="product-title">${p.name}</h3>
+            <div class="price-wrap">
+              <span class="price-current">${formatPrice(p.price)}</span>
+            </div>
+            <div class="card-actions-stack">
+              <button class="btn-buy btn-add-cart" data-id="${p.id}">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+                <span>Savatga</span>
+              </button>
+              ${p.post_url ? `
+                <button class="btn-channel-link" data-post-url="${p.post_url}" data-id="${p.id}">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m22 2-7 20-4-9-9-4Z"></path>
+                    <path d="M22 2 11 13"></path>
+                  </svg>
+                  <span>Kanaldan koʻrish</span>
+                </button>
+              ` : ''}
+            </div>
+          </div>
+        </article>
+      `;
+    });
+
+    wishlistProductsGridEl.innerHTML = html;
+
+    wishlistProductsGridEl.querySelectorAll('.product-card').forEach(card => {
+      card.addEventListener('click', (e) => {
+        if (e.target.closest('.wishlist-btn') || e.target.closest('.btn-add-cart') || e.target.closest('.btn-channel-link')) return;
+        const pid = parseInt(card.dataset.id, 10);
+        const prod = state.products.find(x => x.id === pid);
+        if (prod) openProductModal(prod);
+      });
+    });
+
+    wishlistProductsGridEl.querySelectorAll('.btn-channel-link').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const pid = parseInt(btn.dataset.id, 10);
+        const postUrl = btn.dataset.postUrl;
+        openChannelPost(postUrl, pid);
+      });
+    });
+
+    wishlistProductsGridEl.querySelectorAll('.wishlist-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const pid = parseInt(btn.dataset.id, 10);
+        const prod = state.products.find(x => x.id === pid);
+        if (prod) {
+          toggleWishlist(prod, e);
+          renderWishlistSection();
+        }
+      });
+    });
+
+    wishlistProductsGridEl.querySelectorAll('.btn-add-cart').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const pid = parseInt(btn.dataset.id, 10);
+        const prod = state.products.find(x => x.id === pid);
+        if (prod) handleAddToCart(prod, btn);
+      });
+    });
+  }
+
+  btnBrowseProductsEl?.addEventListener('click', () => {
+    switchTab('home');
+  });
+
+  // ==========================================================================
+  // 6. KATALOG BO'LIMI (CATALOG SECTION)
+  // ==========================================================================
+  catalogCategorySliderEl?.querySelectorAll('.category-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      triggerHaptic('light');
+      const catId = parseInt(pill.dataset.category, 10);
+      catalogCategorySliderEl.querySelectorAll('.category-pill').forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      state.selectedCategory = catId;
+      renderCatalog();
+    });
+  });
+
+  function renderCatalog() {
+    if (!catalogProductsGridEl) return;
+    let prods = state.products;
+    if (state.selectedCategory > 0) {
+      prods = prods.filter(p => p.category_id === state.selectedCategory);
+    }
+
+    const catKeys = {
+      0: 'cat_all',
+      1: 'cat_smartphones',
+      2: 'cat_laptops',
+      3: 'cat_audio',
+      4: 'cat_watches',
+      5: 'cat_accessories'
+    };
+    const titleKey = catKeys[state.selectedCategory];
+
+    if (catalogSectionTitleEl) {
+      catalogSectionTitleEl.textContent = titleKey ? t(titleKey) : t('cat_all');
+    }
+    if (catalogResultsCountEl) {
+      catalogResultsCountEl.textContent = `${prods.length} ${t('items_suffix')}`;
+    }
+
+    if (prods.length === 0) {
+      catalogProductsGridEl.innerHTML = `
+        <div style="grid-column: 1 / -1; text-align: center; padding: 40px 16px; color: var(--text-sub);">
+          ${t('empty_desc')}
+        </div>
+      `;
+      return;
+    }
+
+    let html = '';
+    prods.forEach(p => {
+      const isFav = state.wishlist.has(p.id);
+      const brand = p.name.toLowerCase().includes('macbook') || p.name.toLowerCase().includes('iphone') ? 'APPLE' : 'PREMIUM';
+      html += `
+        <article class="product-card" data-id="${p.id}">
+          <div class="card-media">
+            <button class="wishlist-btn ${isFav ? 'active' : ''}" data-id="${p.id}" aria-label="Sevimlilar">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="${isFav ? '#ef4444' : 'none'}" stroke="currentColor" stroke-width="2">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+              </svg>
+            </button>
+            <img src="${p.image_url}" alt="${p.name}" class="product-img" loading="lazy" />
+          </div>
+          <div class="card-body">
+            <span class="product-brand">${brand}</span>
+            <h3 class="product-title">${p.name}</h3>
+            <div class="price-wrap">
+              <span class="price-current">${formatPrice(p.price)}</span>
+            </div>
+            <div class="card-actions-stack">
+              <button class="btn-buy btn-add-cart" data-id="${p.id}">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+                <span>${t('add_to_cart')}</span>
+              </button>
+              ${p.post_url ? `
+                <button class="btn-channel-link" data-post-url="${p.post_url}" data-id="${p.id}">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m22 2-7 20-4-9-9-4Z"></path>
+                    <path d="M22 2 11 13"></path>
+                  </svg>
+                  <span>${t('view_in_channel')}</span>
+                </button>
+              ` : ''}
+            </div>
+          </div>
+        </article>
+      `;
+    });
+
+    catalogProductsGridEl.innerHTML = html;
+
+    catalogProductsGridEl.querySelectorAll('.product-card').forEach(card => {
+      card.addEventListener('click', (e) => {
+        if (e.target.closest('.wishlist-btn') || e.target.closest('.btn-add-cart') || e.target.closest('.btn-channel-link')) return;
+        const pid = parseInt(card.dataset.id, 10);
+        const prod = state.products.find(x => x.id === pid);
+        if (prod) openProductModal(prod);
+      });
+    });
+
+    catalogProductsGridEl.querySelectorAll('.btn-channel-link').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const pid = parseInt(btn.dataset.id, 10);
+        const postUrl = btn.dataset.postUrl;
+        openChannelPost(postUrl, pid);
+      });
+    });
+
+    catalogProductsGridEl.querySelectorAll('.wishlist-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const pid = parseInt(btn.dataset.id, 10);
+        const prod = state.products.find(x => x.id === pid);
+        if (prod) toggleWishlist(prod, e);
+      });
+    });
+
+    catalogProductsGridEl.querySelectorAll('.btn-add-cart').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const pid = parseInt(btn.dataset.id, 10);
+        const prod = state.products.find(x => x.id === pid);
+        if (prod) handleAddToCart(prod, btn);
+      });
+    });
+  }
+
+  // ==========================================================================
+  // 7. PROFIL BO'LIMI (PROFILE SECTION)
+  // ==========================================================================
+  function renderProfileSection() {
+    const user = tg?.initDataUnsafe?.user;
+    if (user) {
+      if (profileUserNameEl) {
+        const name = [user.first_name, user.last_name].filter(Boolean).join(' ');
+        profileUserNameEl.textContent = name || 'Hurmatli mijoz';
+      }
+      if (profileUserHandleEl) {
+        profileUserHandleEl.textContent = user.username ? `@${user.username}` : `ID: ${user.id}`;
+      }
+      if (profileAvatarEl) {
+        if (user.photo_url) {
+          profileAvatarEl.innerHTML = `<img src="${user.photo_url}" alt="Avatar" class="profile-avatar-img" />`;
+        } else {
+          const initials = (user.first_name ? user.first_name[0] : 'D') + (user.last_name ? user.last_name[0] : 'S');
+          profileAvatarEl.textContent = initials.toUpperCase();
+        }
+      }
+    }
+
+    const cartCount = Object.values(state.cart).reduce((sum, i) => sum + i.qty, 0);
+    if (statCartCountEl) statCartCountEl.textContent = cartCount.toString();
+    if (statWishCountEl) statWishCountEl.textContent = state.wishlist.size.toString();
+
+    const isLight = document.documentElement.classList.contains('light');
+    if (currentThemeLabelEl) {
+      currentThemeLabelEl.textContent = isLight ? 'Kunduzgi rejim faol' : 'Tungi rejim faol';
+    }
+  }
+
+  statCartBoxEl?.addEventListener('click', () => switchTab('cart'));
+  statWishBoxEl?.addEventListener('click', () => switchTab('wishlist'));
+
+  // ==========================================================================
+  // 8. MAHSULOT BATAFSIL BO'LIMI (PRODUCT DETAIL FULL VIEW)
+  // ==========================================================================
+  function openProductModal(prod) {
+    triggerHaptic('medium');
+    state.selectedProduct = prod;
+
+    let images = [];
+    if (Array.isArray(prod.gallery_images) && prod.gallery_images.length > 0) {
+      images = prod.gallery_images;
+    } else if (typeof prod.gallery_images === 'string') {
+      try { images = JSON.parse(prod.gallery_images); } catch (e) { images = [prod.image_url]; }
+    } else {
+      images = [prod.image_url];
+    }
+    if (images.length === 0 && prod.image_url) images = [prod.image_url];
+
+    const specs = parseSpecs(prod.description);
+    const isFav = state.wishlist.has(prod.id);
+
+    if (pdWishlistBtnEl) {
+      pdWishlistBtnEl.classList.toggle('active', isFav);
+    }
+    if (pdBottomPriceEl) {
+      pdBottomPriceEl.textContent = formatPrice(prod.price);
+    }
+
+    let galleryHTML = `
+      <div class="modal-gallery-wrap">
+        <div class="modal-gallery-track" id="pdGalleryTrack">
+          ${images.map((img, i) => `
+            <div class="gallery-slide" data-index="${i}">
+              <img src="${img}" alt="${prod.name}" />
+            </div>
+          `).join('')}
+        </div>
+        ${images.length > 1 ? `
+          <div class="gallery-counter"><span id="pdGalleryCounter">1</span> / ${images.length}</div>
+          <button class="gallery-arrow arrow-prev" id="pdGalleryPrevBtn" aria-label="Oldingi rasm">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"></path></svg>
+          </button>
+          <button class="gallery-arrow arrow-next" id="pdGalleryNextBtn" aria-label="Keyingi rasm">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 18 6-6-6-6"></path></svg>
+          </button>
+          <div class="gallery-dots" id="pdGalleryDots">
+            ${images.map((_, i) => `<span class="dot ${i === 0 ? 'active' : ''}"></span>`).join('')}
+          </div>
+        ` : ''}
+      </div>
+    `;
+
+    pdBodyContentEl.innerHTML = `
+      ${galleryHTML}
+      <div style="margin-top: 10px;">
+        <span class="product-brand" style="font-size:0.76rem; font-weight:800; color:var(--accent-yellow); letter-spacing:0.06em;">APPLE</span>
+        <h2 class="modal-product-title" style="margin-top:4px;">${prod.name}</h2>
+        <div class="modal-price-box">
+          <div class="modal-price-val">${formatPrice(prod.price)}</div>
+        </div>
+      </div>
+      
+      ${specs.length > 0 ? `
+        <div class="specs-container">
+          <div class="specs-title">Asosiy parametrlar va xususiyatlar</div>
+          <div class="specs-list">
+            ${specs.map(s => `
+              <div class="spec-row">
+                <span class="spec-key">${s.key}</span>
+                <span class="spec-val">${s.val}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      ` : ''}
+
+      ${prod.post_url ? `
+        <div class="pd-channel-box">
+          <button class="btn-channel-pd" id="pdChannelViewBtn" data-post-url="${prod.post_url}">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m22 2-7 20-4-9-9-4Z"></path>
+              <path d="M22 2 11 13"></path>
+            </svg>
+            <span>Telegram kanaldan koʻrish</span>
+          </button>
+        </div>
+      ` : ''}
+
+      <div class="store-guarantee-card" style="margin: 16px 0 24px;">
+        <strong class="guarantee-card-title">1 YILLIK RASMIY KAFOLAT</strong>
+        <p class="guarantee-card-desc">Ushbu Apple qurilmasi yangi va qadoqlangan holda yetkazib beriladi. Toʻlov tovar qoʻlingizga yetgach amalga oshiriladi.</p>
+      </div>
+    `;
+
+    // Kanaldan ko'rish tugmasi hodisasi
+    document.getElementById('pdChannelViewBtn')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (prod.post_url) {
+        openChannelPost(prod.post_url, prod.id);
+      }
+    });
+
+    // Karusel hodisalarini ulash
+    if (images.length > 1) {
+      const track = document.getElementById('pdGalleryTrack');
+      const prevBtn = document.getElementById('pdGalleryPrevBtn');
+      const nextBtn = document.getElementById('pdGalleryNextBtn');
+      const counter = document.getElementById('pdGalleryCounter');
+      const dots = document.querySelectorAll('#pdGalleryDots .dot');
+      let currentIndex = 0;
+
+      function updateSlide(idx) {
+        if (idx < 0) idx = images.length - 1;
+        if (idx >= images.length) idx = 0;
+        currentIndex = idx;
+        const slideWidth = track.clientWidth;
+        track.scrollTo({ left: slideWidth * idx, behavior: 'smooth' });
+        if (counter) counter.textContent = (idx + 1).toString();
+        dots.forEach((d, i) => d.classList.toggle('active', i === idx));
+      }
+
+      prevBtn?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        triggerHaptic('light');
+        updateSlide(currentIndex - 1);
+      });
+
+      nextBtn?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        triggerHaptic('light');
+        updateSlide(currentIndex + 1);
+      });
+
+      track?.addEventListener('scroll', () => {
+        const slideWidth = track.clientWidth;
+        if (slideWidth > 0) {
+          const newIdx = Math.round(track.scrollLeft / slideWidth);
+          if (newIdx !== currentIndex && newIdx >= 0 && newIdx < images.length) {
+            currentIndex = newIdx;
+            if (counter) counter.textContent = (newIdx + 1).toString();
+            dots.forEach((d, i) => d.classList.toggle('active', i === newIdx));
+          }
+        }
+      });
+    }
+
+    switchTab('product-detail');
+  }
+
+  pdWishlistBtnEl?.addEventListener('click', () => {
+    if (state.selectedProduct) {
+      toggleWishlist(state.selectedProduct);
+      const isFav = state.wishlist.has(state.selectedProduct.id);
+      pdWishlistBtnEl.classList.toggle('active', isFav);
+    }
+  });
+
+  pdAddToCartBtnEl?.addEventListener('click', () => {
+    if (state.selectedProduct) {
+      handleAddToCart(state.selectedProduct, pdAddToCartBtnEl);
+    }
+  });
+
+  pdChannelIconBtnEl?.addEventListener('click', () => {
+    if (state.selectedProduct?.post_url) {
+      openChannelPost(state.selectedProduct.post_url, state.selectedProduct.id);
+    }
+  });
+
+  // ==========================================================================
+  // 9. MAHSULOTLARNI YUKLASH (API) & MEMOIZED RENDER
+  // ==========================================================================
+  async function loadProducts(silent = false) {
+    if (!silent && state.products.length === 0) {
+      state.isLoading = true;
+      renderSkeleton();
+    }
+
+    try {
+      const params = new URLSearchParams();
+      if (state.selectedCategory > 0) {
+        params.append('category_id', state.selectedCategory);
+      }
+      if (state.selectedSort && state.selectedSort !== 'default') {
+        params.append('sort', state.selectedSort);
+      }
+      if (state.searchQuery.trim()) {
+        params.append('search', state.searchQuery.trim());
+      }
+
+      const res = await fetch(`/api/products?${params.toString()}`);
+      if (!res.ok) throw new Error('Mahsulotlar yuklanmadi');
+      const products = await res.json();
+      state.products = products;
+      renderProducts();
+      renderDiscountsSlider();
+    } catch (err) {
+      console.error('Mahsulotlar yuklashda xatolik:', err);
+      if (!silent && state.products.length === 0) {
+        state.products = [];
+        renderProducts();
+        renderDiscountsSlider();
+      }
+    } finally {
+      state.isLoading = false;
+    }
+  }
+
+  function renderSkeleton() {
+    if (!productsGridEl) return;
+    emptyStateEl?.classList.add('hidden');
+    if (resultsCountEl) resultsCountEl.textContent = '...';
+
+    productsGridEl.innerHTML = `
+      <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line skeleton-title"></div><div class="skeleton-line skeleton-price"></div><div class="skeleton-line skeleton-btn"></div></div></div>
+      <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line skeleton-title"></div><div class="skeleton-line skeleton-price"></div><div class="skeleton-line skeleton-btn"></div></div></div>
+    `;
+  }
+
+  // Zero-Flicker Memoized Bosh Sahifa Gridi
+  let lastRenderedSignature = '';
+  function renderProducts(force = false) {
+    if (!productsGridEl) return;
+    const products = state.products;
+
+    if (!products || products.length === 0) {
+      lastRenderedSignature = 'empty_home';
+      productsGridEl.innerHTML = '';
+      emptyStateEl?.classList.remove('hidden');
+      if (resultsCountEl) resultsCountEl.textContent = `0 ${t('items_suffix')}`;
+      return;
+    }
+
+    emptyStateEl?.classList.add('hidden');
+    if (resultsCountEl) resultsCountEl.textContent = `${products.length} ${t('items_suffix')}`;
+
+    const signature = 'home_' + products.map(p => `${p.id}:${p.price}:${state.wishlist.has(p.id)}`).join(',');
+    if (!force && signature === lastRenderedSignature) {
+      return;
+    }
+    lastRenderedSignature = signature;
+
+    let html = '';
+    products.forEach(p => {
+      const isFav = state.wishlist.has(p.id);
+      const brand = p.name.toLowerCase().includes('macbook') || p.name.toLowerCase().includes('iphone') ? 'APPLE' : 'PREMIUM';
+
+      html += `
+        <article class="product-card" data-id="${p.id}">
+          <div class="card-media">
+            <button class="wishlist-btn ${isFav ? 'active' : ''}" data-id="${p.id}" aria-label="Sevimlilar">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="${isFav ? '#ef4444' : 'none'}" stroke="currentColor" stroke-width="2">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+              </svg>
+            </button>
+            <img src="${p.image_url}" alt="${p.name}" class="product-img" loading="lazy" />
+          </div>
+          <div class="card-body">
+            <span class="product-brand">${brand}</span>
+            <h3 class="product-title">${p.name}</h3>
+            <div class="price-wrap">
+              <span class="price-current">${formatPrice(p.price)}</span>
+            </div>
+            <div class="card-actions-stack">
+              <button class="btn-buy btn-add-cart" data-id="${p.id}">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+                <span>${t('add_to_cart')}</span>
+              </button>
+              ${p.post_url ? `
+                <button class="btn-channel-link" data-post-url="${p.post_url}" data-id="${p.id}">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m22 2-7 20-4-9-9-4Z"></path>
+                    <path d="M22 2 11 13"></path>
+                  </svg>
+                  <span>${t('view_in_channel')}</span>
+                </button>
+              ` : ''}
+            </div>
+          </div>
+        </article>
+      `;
+    });
+
+    productsGridEl.innerHTML = html;
+
+    // Kartalar bosilganda batafsil sahifani ochish
+    productsGridEl.querySelectorAll('.product-card').forEach(card => {
+      card.addEventListener('click', (e) => {
+        if (e.target.closest('.wishlist-btn') || e.target.closest('.btn-add-cart') || e.target.closest('.btn-channel-link')) return;
+        const pid = parseInt(card.dataset.id, 10);
+        const prod = state.products.find(x => x.id === pid);
+        if (prod) openProductModal(prod);
+      });
+    });
+
+    // Kanaldan ko'rish tugmasi hodisasi
+    productsGridEl.querySelectorAll('.btn-channel-link').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const pid = parseInt(btn.dataset.id, 10);
+        const postUrl = btn.dataset.postUrl;
+        openChannelPost(postUrl, pid);
+      });
+    });
+
+    // Yurakcha tugmasi hodisasi
+    productsGridEl.querySelectorAll('.wishlist-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const pid = parseInt(btn.dataset.id, 10);
+        const prod = state.products.find(x => x.id === pid);
+        if (prod) toggleWishlist(prod, e);
+      });
+    });
+
+    // Savatga olish tugmasi hodisasi (Mikro-animatsiyalar bilan)
+    productsGridEl.querySelectorAll('.btn-add-cart').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const pid = parseInt(btn.dataset.id, 10);
+        const prod = state.products.find(x => x.id === pid);
+        if (prod) handleAddToCart(prod, btn);
+      });
+    });
+  }
+
+  // ==========================================================================
+  // 10. HODISALAR VA TUGMALARNI ULASH
+  // ==========================================================================
+  // Pastki Dock hodisalari
+  dockItems.forEach(item => {
+    item.addEventListener('click', () => {
+      const tab = item.dataset.tab;
+      if (tab) switchTab(tab);
+    });
+  });
+
+  // Header elementlari
+  logoBtnEl?.addEventListener('click', (e) => {
+    e.preventDefault();
+    switchTab('home');
+  });
+
+  btnHeaderCartEl?.addEventListener('click', () => {
+    switchTab('cart');
+  });
+
+
+  // Doimiy Oq / Kunduzgi Rejim
+  function initTheme() {
+    document.documentElement.classList.add('light');
+    const splashScreen = document.getElementById('splash-screen');
+    if (!splashScreen || splashScreen.classList.contains('curtain-open') || splashScreen.style.display === 'none') {
+      try {
+        if (tg?.setHeaderColor) tg.setHeaderColor('#ffffff');
+        if (tg?.setBackgroundColor) tg.setBackgroundColor('#ffffff');
+      } catch (e) {}
+    }
+  }
+
+  // Drawers (Menyu & Filtr)
+  function openLeftMenu() {
+    triggerHaptic('light');
+    closeAllDrawers();
+    leftDrawerEl?.classList.add('active');
+    backdropEl?.classList.add('active');
+  }
+
+  function openFilter() {
+    triggerHaptic('light');
+    closeAllDrawers();
+    bottomFilterEl?.classList.add('active');
+    backdropEl?.classList.add('active');
+  }
+
+  function closeAllDrawers() {
+    leftDrawerEl?.classList.remove('active');
+    bottomFilterEl?.classList.remove('active');
+    backdropEl?.classList.remove('active');
+  }
+
+  btnOpenMenuEl?.addEventListener('click', openLeftMenu);
+  btnCloseMenuEl?.addEventListener('click', closeAllDrawers);
+  btnOpenFilterEl?.addEventListener('click', openFilter);
+  btnCloseFilterEl?.addEventListener('click', closeAllDrawers);
+  backdropEl?.addEventListener('click', closeAllDrawers);
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeAllDrawers();
+  });
+
+  // Qidiruv
+  let debounceTimer = null;
+  searchInputEl?.addEventListener('input', (e) => {
+    const val = e.target.value;
+    state.searchQuery = val;
+    clearSearchBtnEl?.classList.toggle('hidden', val.length === 0);
+
+    if (state.currentTab !== 'home' && state.currentTab !== 'catalog') {
+      switchTab('home');
+    }
+
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+      loadProducts();
+    }, 320);
+  });
+
+  clearSearchBtnEl?.addEventListener('click', () => {
+    triggerHaptic('light');
+    if (searchInputEl) searchInputEl.value = '';
+    state.searchQuery = '';
+    clearSearchBtnEl?.classList.add('hidden');
+    loadProducts();
+  });
+
+  resetFiltersBtnEl?.addEventListener('click', () => {
+    triggerHaptic('medium');
+    state.selectedCategory = 0;
+    state.selectedSort = 'default';
+    state.searchQuery = '';
+    if (searchInputEl) searchInputEl.value = '';
+    clearSearchBtnEl?.classList.add('hidden');
+    catalogCategorySliderEl?.querySelectorAll('.category-pill').forEach(p => {
+      p.classList.toggle('active', p.dataset.category === '0');
+    });
+    loadProducts();
+  });
+
+  // Saralash (Sort)
+  btnApplyFilterEl?.addEventListener('click', () => {
+    triggerHaptic('medium');
+    const checked = bottomFilterEl?.querySelector('input[name="sort"]:checked');
+    if (checked) {
+      state.selectedSort = checked.value;
+    }
+    closeAllDrawers();
+    loadProducts();
+  });
+
+  // Chap Yon Menyu (Sidebar) linklari
+  leftDrawerEl?.querySelectorAll('.nav-link-row').forEach(link => {
+    link.addEventListener('click', (e) => {
+      const action = link.dataset.action;
+      if (!action) return;
+      e.preventDefault();
+      closeAllDrawers();
+
+      if (action === 'all') {
+        switchTab('home');
+      } else if (action === 'cat-1') {
+        switchTab('catalog', 1);
+      } else if (action === 'cat-2') {
+        switchTab('catalog', 2);
+      } else if (action === 'cat-3') {
+        switchTab('catalog', 3);
+      } else if (action === 'wishlist') {
+        switchTab('wishlist');
+      } else if (action === 'cart') {
+        switchTab('cart');
+      } else if (action === 'contact') {
+        switchTab('profile');
+      }
+    });
+  });
+
+  // Toast
+  let toastTimer = null;
+  function showToast(msg) {
+    if (!toastEl || !toastMsgEl) return;
+    toastMsgEl.textContent = msg;
+    toastEl.classList.remove('hidden');
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => {
+      toastEl.classList.remove('show');
+      toastEl.classList.add('hidden');
+    }, 2200);
+  }
+
+  // Til almashtirish hodisalari
+  btnLangSwitchEl?.addEventListener('click', () => {
+    triggerHaptic('light');
+    const langs = ['uz', 'ru', 'en'];
+    const currentIdx = langs.indexOf(state.lang);
+    const nextLang = langs[(currentIdx + 1) % langs.length];
+    applyLanguage(nextLang);
+  });
+
+  document.querySelectorAll('.drawer-lang-selector .lang-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      triggerHaptic('light');
+      applyLanguage(chip.dataset.lang);
+    });
+  });
+
+  document.querySelectorAll('.profile-lang-chips .profile-lang-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      triggerHaptic('light');
+      applyLanguage(btn.dataset.lang);
+    });
+  });
+
+  // Hafta chegirmalari navigatsiyasi (Katalogga o'tish)
+  dealsTitleGroupEl?.addEventListener('click', () => {
+    switchTab('catalog');
+  });
+
+  btnDiscountsSeeAllEl?.addEventListener('click', () => {
+    switchTab('catalog');
+  });
+
+  // ==========================================================================
+  // PARDA (CURTAIN REVEAL) INTRO ANIMATSIYASI
+  // ==========================================================================
+  function initSplashScreen() {
+    const splashScreen = document.getElementById('splash-screen');
+    const splashSkipBtn = document.getElementById('splashSkipBtn');
+
+    if (!splashScreen) return;
+
+    // Har safar ilova ochilganda kirish animatsiyasini to'liq faollashtirish
+    splashScreen.style.display = 'flex';
+    splashScreen.classList.remove('curtain-open');
+    splashScreen.style.pointerEvents = 'auto';
+
+    if (tg?.setHeaderColor) {
+      try {
+        tg.setHeaderColor('#09090b');
+        tg.setBackgroundColor('#09090b');
+      } catch (e) {}
+    }
+
+    let isDismissed = false;
+    function openCurtains() {
+      if (isDismissed) return;
+      isDismissed = true;
+
+      triggerHaptic('light');
+
+      // Do'kon interfeysi ochilishi bilan Telegram panelini oq fonga o'tkazish
+      if (tg?.setHeaderColor) {
+        try {
+          tg.setHeaderColor('#ffffff');
+          tg.setBackgroundColor('#ffffff');
+        } catch (e) {}
+      }
+
+      // Pardalarni ikki tarafga ochish (logo yo'q bo'ladi, chap va o'ng pardalar suriladi)
+      splashScreen.classList.add('curtain-open');
+      splashScreen.style.pointerEvents = 'none';
+
+      // Parda ochilib bo'lgach (850ms), elementni butunlay yopish
+      setTimeout(() => {
+        splashScreen.style.display = 'none';
+      }, 850);
+    }
+
+    // O'tkazib yuborish (Skip) tugmasi yoki ekranga teginish bilan darhol ochish
+    splashSkipBtn?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openCurtains();
+    });
+
+    splashScreen.addEventListener('click', () => {
+      openCurtains();
+    });
+
+    // 1.3 soniya logo va do'kon nomi to'liq ko'rsatilgach pardalar avtomatik ikki tarafga ochiladi
+    setTimeout(openCurtains, 1300);
+  }
+
+  // ==========================================================================
+  // INITSIALIZATSIYA
+  // ==========================================================================
+  function boot() {
+    initSplashScreen();
+    initTheme();
+    updateSafeArea();
+    updateHeaderHeight();
+    applyLanguage(state.lang);
+    updateWishlistBadge();
+    updateCartBadges();
+    loadProducts();
+
+    // 60 soniyalik sokin fon yangilanishi
+    setInterval(() => {
+      if (!state.isLoading && !state.searchQuery.trim() && state.currentTab === 'home') {
+        loadProducts(true);
+      }
+    }, 60000);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', boot);
+  } else {
+    boot();
+  }
+})();

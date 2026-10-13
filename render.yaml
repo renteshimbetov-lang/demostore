@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: demostore
+    runtime: python
+    region: frankfurt
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python main_store.py
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: BOT_TOKEN
+        sync: false
+      - key: ADMIN_IDS
+        sync: false
+      - key: CHANNEL_ID
+        sync: false
+      - key: CHANNEL_USERNAME
+        sync: false
+      - key: CHANNEL_URL
+        sync: false
+      - key: STORE_NAME
+        value: Demo Store
+      - key: SUPPORT_PHONE
+        value: "+998901234567"
+      - key: SUPPORT_USERNAME
+        value: "@demostore_support"
+      - key: USD_RATE
+        value: "12800"
+      - key: DATABASE_PATH
+        value: demostore.db

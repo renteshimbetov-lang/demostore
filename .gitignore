@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+.env.local
+.env.*
+.DS_Store
+temp_photos/
+channel_all_photos/
+remove_bg

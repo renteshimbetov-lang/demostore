@@ -1,0 +1,3103 @@
+/* ==========================================================================
+   DEMOSTORE DESIGN SYSTEM — MOBILE-FIRST TELEGRAM MINI APP
+   100% Sof Vektor SVG Ikonkalar (Nol emojilar)
+   Valyuta: Faqat AQSH dollari ($ USD)
+   Mavzu: Deep Jet Black (#09090b) + Oltin Sariq (#f59e0b) va Kunduzgi Rejim (#f8f9fa)
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800;900&display=swap');
+
+:root,
+html,
+html.light {
+  /* Doimiy Toza Oq rejim (Pure White Background) */
+  --bg-main: #ffffff;
+  --bg-secondary: #ffffff;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f8fafc;
+  --bg-glass: rgba(255, 255, 255, 0.96);
+  
+  --text-main: #09090b;
+  --text-sub: #64748b;
+  --text-muted: #94a3b8;
+  --border-color: rgba(0, 0, 0, 0.08);
+
+  /* Oltin / Sariq aksentlar */
+  --accent-yellow: #f59e0b;
+  --accent-yellow-light: #fbbf24;
+  --accent-yellow-dark: #d97706;
+  --yellow-glow: rgba(245, 158, 11, 0.28);
+
+  /* Tipografiya */
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-heading: 'Outfit', sans-serif;
+
+  /* Radiuslar */
+  --radius-sm: 8px;
+  --radius-card: 18px;
+  --radius-full: 9999px;
+
+  /* Animatsiya */
+  --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-smooth: 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Telegram iOS / Android Xavfsiz oraliqlar (Top clearance) */
+  --app-safe-top: max(
+    var(--tg-content-safe-area-inset-top, 0px),
+    calc(var(--tg-safe-area-inset-top, 0px) + 38px),
+    calc(env(safe-area-inset-top, 0px) + 38px),
+    14px
+  );
+  --app-safe-bottom: max(
+    var(--tg-content-safe-area-inset-bottom, 0px),
+    var(--tg-safe-area-inset-bottom, 0px),
+    env(safe-area-inset-bottom, 0px),
+    16px
+  );
+
+  /* Tugmalar (Doimiy QORA fon, oq yozuv) */
+  --btn-main-bg: #09090b;
+  --btn-main-text: #ffffff;
+  --btn-main-border: #09090b;
+  --btn-main-hover-bg: #18181b;
+}
+
+/* Reset va bazaviy qoidalar */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  min-height: var(--tg-viewport-stable-height, 100vh);
+  overflow-x: hidden;
+  overscroll-behavior-y: none;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  background-color: var(--bg-main);
+  font-family: var(--font-body);
+  color: var(--text-main);
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+}
+
+/* ==========================================================================
+   TELEGRAM MINI APP PARDA (CURTAIN REVEAL) INTRO ANIMATSIYASI
+   ========================================================================== */
+#splash-screen,
+.splash-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: transparent;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+  pointer-events: auto;
+}
+
+/* Chap va o'ng parda panellari */
+.curtain-panel {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 50.5%;
+  background: linear-gradient(145deg, #09090b 0%, #121217 55%, #0e0e12 100%);
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+  transition: transform 0.82s cubic-bezier(0.77, 0, 0.175, 1);
+  z-index: 1;
+}
+
+.curtain-left {
+  left: 0;
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: none;
+}
+
+.curtain-right {
+  right: 0;
+  border-left: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: none;
+}
+
+/* Pardalarning ikki tarafga surilib ochilishi */
+.splash-screen.curtain-open {
+  pointer-events: none !important;
+}
+
+.splash-screen.curtain-open .curtain-left {
+  transform: translate3d(-102%, 0, 0);
+  transition: transform 0.8s cubic-bezier(0.77, 0, 0.175, 1);
+}
+
+.splash-screen.curtain-open .curtain-right {
+  transform: translate3d(102%, 0, 0);
+  transition: transform 0.8s cubic-bezier(0.77, 0, 0.175, 1);
+}
+
+/* Parda ochilayotganda markazdagi logo yo'q bo'ladi */
+.splash-screen.curtain-open .splash-center-content {
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.86);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+.splash-center-content {
+  position: absolute;
+  z-index: 2;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  pointer-events: none;
+  width: 90%;
+  max-width: 320px;
+  opacity: 1;
+  transition: opacity 0.45s cubic-bezier(0.4, 0, 0.2, 1), transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: opacity, transform;
+}
+
+/* Logo qutisi va animatsiyasi */
+.splash-logo-box {
+  position: relative;
+  width: 90px;
+  height: 98px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  animation: splashLogoEntrance 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.splash-logo-img {
+  width: 82px;
+  height: auto;
+  max-height: 96px;
+  object-fit: contain;
+  display: block;
+  filter: drop-shadow(0 6px 24px rgba(255, 255, 255, 0.35));
+  animation: splashLogoPulse 2.4s ease-in-out infinite;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.splash-logo-svg {
+  width: 76px;
+  height: 76px;
+  filter: drop-shadow(0 4px 20px rgba(255, 255, 255, 0.25));
+  animation: splashLogoPulse 2.4s ease-in-out infinite;
+}
+
+.splash-logo-glow {
+  position: absolute;
+  inset: -14px;
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.22) 0%, rgba(255, 255, 255, 0.12) 35%, transparent 70%);
+  border-radius: 50%;
+  filter: blur(14px);
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Do'kon nomi chiqib kelishi */
+.splash-brand-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  animation: splashBrandEntrance 0.85s 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.splash-brand-title {
+  font-family: var(--font-heading);
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #ffffff;
+  line-height: 1.1;
+  text-shadow: 0 4px 18px rgba(0, 0, 0, 0.6);
+}
+
+.splash-brand-dot {
+  color: var(--accent-yellow);
+  text-shadow: 0 0 14px var(--yellow-glow);
+}
+
+.splash-brand-subtitle {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  color: #a1a1aa;
+  text-transform: uppercase;
+}
+
+/* O'tkazib yuborish (Skip) tugmasi */
+.splash-skip-btn {
+  position: absolute;
+  top: max(env(safe-area-inset-top, 16px), 20px);
+  right: 16px;
+  z-index: 100000;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  padding: 8px 14px;
+  border-radius: 9999px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  letter-spacing: -0.01em;
+  transition: transform 0.2s ease, background 0.2s ease, opacity 0.2s ease;
+}
+
+.splash-skip-btn:active {
+  transform: scale(0.94);
+  background: rgba(0, 0, 0, 0.8);
+}
+
+/* Animatsiya keyframelar */
+@keyframes splashLogoEntrance {
+  0% {
+    opacity: 0;
+    transform: scale(0.65) translateY(18px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes splashLogoPulse {
+  0%, 100% {
+    transform: scale(1);
+    filter: drop-shadow(0 4px 20px rgba(255, 255, 255, 0.25));
+  }
+  50% {
+    transform: scale(1.035);
+    filter: drop-shadow(0 6px 26px rgba(245, 158, 11, 0.35));
+  }
+}
+
+@keyframes splashBrandEntrance {
+  0% {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+#app {
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  max-width: 600px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  background-color: var(--bg-main);
+  padding-bottom: calc(90px + env(safe-area-inset-bottom, 0px));
+}
+
+/* ==========================================================================
+   1. MOBIL HEADER (Telegram Native 'Yopish' va '...' dan to'liq himoyalangan)
+   ========================================================================== */
+.mobile-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  z-index: 1000;
+  background: var(--bg-glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border-color);
+  padding-top: var(--app-safe-top);
+  padding-left: 16px;
+  padding-right: 16px;
+  padding-bottom: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  transition: background-color 0.25s ease;
+}
+
+.main-content {
+  width: 100%;
+  padding-top: var(--header-height, calc(var(--app-safe-top) + 112px));
+}
+
+.header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.brand-logo {
+  text-decoration: none;
+  display: inline-block;
+}
+
+.brand-logo .logo-text {
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--text-main);
+  letter-spacing: -0.4px;
+}
+
+.brand-logo .logo-dot {
+  color: var(--accent-yellow);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.icon-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-full);
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  transition: var(--transition);
+}
+
+.icon-btn:active {
+  transform: scale(0.92);
+}
+
+.close-btn {
+  border-color: transparent;
+  font-size: 1.1rem;
+}
+
+/* Badge (Savatdagi mahsulotlar soni) */
+.badge {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  background: #ef4444;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.4);
+}
+
+/* Qidiruv maydoni */
+.search-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-wrap .search-icon {
+  position: absolute;
+  left: 14px;
+  color: var(--text-sub);
+  pointer-events: none;
+}
+
+.search-input {
+  width: 100%;
+  height: 42px;
+  padding: 0 38px 0 42px;
+  border-radius: var(--radius-full);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  font-family: var(--font-body);
+  font-size: 0.88rem;
+  outline: none;
+  transition: var(--transition);
+}
+
+.search-input::placeholder {
+  color: var(--text-muted);
+}
+
+.search-input:focus {
+  border-color: var(--accent-yellow);
+  box-shadow: 0 0 12px var(--yellow-glow);
+}
+
+.search-clear-btn {
+  position: absolute;
+  right: 12px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--border-color);
+  color: var(--text-sub);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+/* ==========================================================================
+   2. GORIZONTAL TOIFALAR (Category Pills)
+   ========================================================================== */
+.category-slider {
+  display: flex;
+  gap: 8px;
+  padding: 12px 16px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.category-slider::-webkit-scrollbar {
+  display: none;
+}
+
+.category-pill {
+  padding: 8px 16px;
+  border-radius: var(--radius-full);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-sub);
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.category-pill:active {
+  transform: scale(0.95);
+}
+
+.category-pill.active {
+  background: var(--btn-main-bg);
+  color: var(--btn-main-text);
+  border-color: var(--btn-main-border);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+  font-weight: 700;
+}
+
+/* ==========================================================================
+   3. MAHSULOTLAR GRIDI (2 Ustunli Mobile Layout)
+   ========================================================================== */
+.products-section {
+  padding: 0 16px;
+}
+
+.section-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding-top: 4px;
+}
+
+.section-title-wrap {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.section-title {
+  font-family: var(--font-heading);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.results-count-badge {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.filter-trigger-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.filter-trigger-btn:active {
+  transform: scale(0.94);
+}
+
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+}
+
+.product-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-card);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.18s ease;
+  cursor: pointer;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.product-card:active {
+  transform: scale(0.98) translateZ(0);
+}
+
+.card-media {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  background: rgba(255, 255, 255, 0.02);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  overflow: hidden;
+}
+
+html.light .card-media {
+  background: #f8fafc;
+}
+
+.product-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 12px;
+  transition: transform 0.3s ease;
+}
+
+.product-card:hover .product-img {
+  transform: scale(1.03);
+}
+
+.discount-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: #ef4444;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 6px;
+  z-index: 2;
+}
+
+.wishlist-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
+  background: var(--bg-glass);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--border-color);
+  color: var(--text-sub);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 3;
+  transition: var(--transition);
+}
+
+.wishlist-btn:active {
+  transform: scale(0.85);
+}
+
+.wishlist-btn.active {
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.wishlist-btn.active svg {
+  fill: #ef4444;
+  stroke: #ef4444;
+}
+
+.card-body {
+  padding: 10px 12px 14px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.product-brand {
+  font-size: 0.68rem;
+  color: var(--accent-yellow);
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.product-title {
+  font-size: 0.84rem;
+  font-weight: 600;
+  margin: 3px 0 8px;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  height: 2.6em;
+  color: var(--text-main);
+}
+
+.price-wrap {
+  margin-top: auto;
+  margin-bottom: 10px;
+}
+
+.price-current {
+  display: block;
+  font-family: var(--font-heading);
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--text-main);
+  letter-spacing: -0.2px;
+}
+
+.btn-buy {
+  background: var(--btn-main-bg) !important;
+  color: var(--btn-main-text) !important;
+  border: 1px solid var(--btn-main-border) !important;
+  border-radius: 12px;
+  padding: 9px;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.btn-buy:active {
+  transform: scale(0.96);
+  opacity: 0.85;
+}
+
+.card-actions-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+  width: 100%;
+}
+
+.btn-channel-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  height: 34px;
+  border-radius: 12px;
+  background: rgba(36, 161, 222, 0.1);
+  border: 1px solid rgba(36, 161, 222, 0.3);
+  color: #24a1de;
+  font-family: var(--font-body);
+  font-size: 0.74rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.btn-channel-link:active {
+  transform: scale(0.96);
+  background: rgba(36, 161, 222, 0.22);
+}
+
+html.light .btn-channel-link {
+  background: rgba(36, 161, 222, 0.08);
+  border-color: rgba(36, 161, 222, 0.35);
+  color: #0284c7;
+}
+
+/* ==========================================================================
+   4. iOS FLOATING DOCK (Zero Scroll Jitter Suzuvchi Panel)
+   ========================================================================== */
+.mobile-dock {
+  position: fixed;
+  bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  left: 14px;
+  right: 14px;
+  margin: 0 auto;
+  max-width: 410px;
+  height: 60px;
+  background: var(--bg-glass);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 4px 6px;
+  z-index: 999;
+}
+
+html.light .mobile-dock {
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+.dock-item {
+  background: transparent;
+  border: none;
+  color: var(--text-sub);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  flex: 1;
+  height: 48px;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 500;
+  transition: var(--transition);
+}
+
+.dock-item:active {
+  transform: scale(0.92);
+}
+
+.dock-item.active {
+  color: var(--text-main);
+  background: rgba(255, 255, 255, 0.1);
+  font-weight: 700;
+}
+
+html.light .dock-item.active {
+  background: rgba(0, 0, 0, 0.07);
+}
+
+.dock-icon-wrap {
+  position: relative;
+  display: inline-flex;
+}
+
+.dock-badge {
+  top: -4px;
+  right: -8px;
+}
+
+/* ==========================================================================
+   5. DRAWERS & BACKDROP (Side Drawer & Bottom Sheet)
+   ========================================================================== */
+.drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: var(--transition);
+}
+
+.drawer-backdrop.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.drawer {
+  position: fixed;
+  background: var(--bg-secondary);
+  z-index: 1001;
+  transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+  color: var(--text-main);
+}
+
+/* Chap Drawer (Sidebar) */
+.drawer-left {
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 290px;
+  max-width: 85vw;
+  transform: translateX(-100%);
+  display: flex;
+  flex-direction: column;
+  padding-top: max(env(safe-area-inset-top, 0px), 16px);
+  padding-bottom: max(env(safe-area-inset-bottom, 0px), 16px);
+  box-shadow: none;
+  visibility: hidden;
+  pointer-events: none;
+  transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.32s ease, box-shadow 0.32s ease;
+}
+
+.drawer-left.active {
+  transform: translateX(0);
+  visibility: visible;
+  pointer-events: auto;
+  box-shadow: 10px 0 30px rgba(0, 0, 0, 0.3);
+}
+
+/* Bottom Sheet Drawer */
+.drawer-bottom {
+  bottom: 0;
+  left: 0;
+  right: 0;
+  max-height: 82vh;
+  border-radius: 24px 24px 0 0;
+  transform: translateY(100%);
+  padding-bottom: max(env(safe-area-inset-bottom, 0px), 20px);
+  box-shadow: none;
+  visibility: hidden;
+  pointer-events: none;
+  transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.32s ease, box-shadow 0.32s ease;
+}
+
+.drawer-bottom.active {
+  transform: translateY(0);
+  visibility: visible;
+  pointer-events: auto;
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.drawer-drag-pill {
+  width: 42px;
+  height: 4px;
+  border-radius: 99px;
+  background: var(--border-color);
+  margin: 12px auto 0;
+}
+
+.drawer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.drawer-title {
+  font-family: var(--font-heading);
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.drawer-body {
+  padding: 20px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.drawer-brand-card {
+  padding: 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  margin-bottom: 16px;
+}
+
+.drawer-brand-name {
+  font-family: var(--font-heading);
+  font-size: 1rem;
+  color: var(--accent-yellow);
+  display: block;
+}
+
+.drawer-brand-desc {
+  font-size: 0.78rem;
+  color: var(--text-sub);
+  margin-top: 4px;
+}
+
+.nav-links-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.nav-link-row {
+  color: var(--text-main);
+  text-decoration: none;
+  font-size: 0.92rem;
+  font-weight: 500;
+  padding: 10px 12px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: var(--transition);
+}
+
+.nav-link-row:active, .nav-link-row:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--accent-yellow);
+}
+
+html.light .nav-link-row:active, html.light .nav-link-row:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+/* Filtr radio ro'yxati */
+.filter-opt {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.filter-radio-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  font-size: 0.92rem;
+  color: var(--text-main);
+}
+
+.filter-radio-row input[type="radio"] {
+  accent-color: var(--accent-yellow);
+  width: 18px;
+  height: 18px;
+}
+
+/* ==========================================================================
+   6. SAVAT DARCHASI (Cart Items & Summary)
+   ========================================================================== */
+.cart-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 48vh;
+  overflow-y: auto;
+  margin-bottom: 16px;
+}
+
+.cart-item-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  padding: 10px 12px;
+  border-radius: 14px;
+}
+
+.cart-item-img {
+  width: 54px;
+  height: 54px;
+  object-fit: contain;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.cart-item-details {
+  flex: 1;
+}
+
+.cart-item-name {
+  font-size: 0.84rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.cart-item-price {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--accent-yellow);
+  margin-top: 4px;
+}
+
+.cart-qty-ctrl {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.qty-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  background: var(--border-color);
+  color: var(--text-main);
+  border: none;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.cart-empty {
+  text-align: center;
+  padding: 30px 10px;
+  color: var(--text-sub);
+}
+
+.cart-summary {
+  border-top: 1px solid var(--border-color);
+  padding-top: 14px;
+}
+
+.cart-summary-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.95rem;
+}
+
+.cart-total-price {
+  font-size: 1.25rem;
+  font-family: var(--font-heading);
+  color: var(--accent-yellow);
+}
+
+/* ==========================================================================
+   7. MODALLAR (Product Detail & Contact Modal)
+   ========================================================================== */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 1050;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--transition-normal);
+}
+
+.modal-backdrop.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.modal-sheet {
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  max-height: 90dvh;
+  background: var(--bg-secondary);
+  border-radius: 26px 26px 0 0;
+  border: 1px solid var(--border-color);
+  border-bottom: none;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: max(env(safe-area-inset-bottom, 0px), 24px);
+  transform: translateY(100%);
+  transition: transform var(--transition-smooth);
+}
+
+.modal-backdrop.active .modal-sheet {
+  transform: translateY(0);
+}
+
+.modal-header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 18px 6px;
+  position: sticky;
+  top: 0;
+  background: var(--bg-secondary);
+  z-index: 10;
+}
+
+.modal-grabber {
+  width: 40px;
+  height: 4px;
+  background: var(--border-color);
+  border-radius: 2px;
+  margin: 0 auto;
+}
+
+.modal-close-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--border-color);
+  color: var(--text-sub);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.modal-close-btn:hover {
+  color: var(--text-main);
+}
+
+.modal-body {
+  padding: 16px 20px 24px;
+}
+
+/* Modal Gallery Carousel */
+.modal-gallery-wrap {
+  position: relative;
+  width: 100%;
+  height: 270px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 18px;
+  margin-bottom: 16px;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+}
+
+html.light .modal-gallery-wrap {
+  background: #f8fafc;
+}
+
+.modal-gallery-track {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+}
+
+.modal-gallery-track::-webkit-scrollbar {
+  display: none;
+}
+
+.gallery-slide {
+  flex: 0 0 100%;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  scroll-snap-align: center;
+  padding: 12px;
+}
+
+.gallery-slide img {
+  max-width: 96%;
+  max-height: 96%;
+  object-fit: contain;
+  border-radius: 14px;
+}
+
+.gallery-counter {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(0, 0, 0, 0.7);
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+.gallery-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6);
+  color: #ffffff;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 5;
+}
+
+.gallery-arrow.arrow-prev { left: 10px; }
+.gallery-arrow.arrow-next { right: 10px; }
+
+.gallery-dots {
+  position: absolute;
+  bottom: 10px;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.gallery-dots .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.gallery-dots .dot.active {
+  width: 18px;
+  border-radius: 4px;
+  background: var(--accent-yellow);
+}
+
+/* Modal ichki matn va parametrlari */
+.modal-product-title {
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  font-weight: 800;
+  line-height: 1.25;
+  margin-bottom: 8px;
+  color: var(--text-main);
+}
+
+.modal-price-box {
+  margin-bottom: 16px;
+}
+
+.modal-price-val {
+  font-family: var(--font-heading);
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: var(--accent-yellow);
+}
+
+.specs-container {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin-bottom: 20px;
+}
+
+.specs-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.specs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.spec-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  padding-bottom: 6px;
+}
+
+.spec-key { color: var(--text-sub); }
+.spec-val { color: var(--text-main); font-weight: 600; text-align: right; }
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-tg-order {
+  flex: 1;
+  background: var(--accent-yellow);
+  color: #000000;
+  border: none;
+  border-radius: 14px;
+  padding: 14px;
+  font-family: var(--font-heading);
+  font-size: 0.95rem;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-decoration: none;
+  box-shadow: 0 4px 16px var(--yellow-glow);
+}
+
+.btn-tg-order:active {
+  transform: scale(0.97);
+}
+
+.btn-add-cart-modal {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+/* Aloqa Modali */
+.contact-modal-title {
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+
+.contact-modal-sub {
+  font-size: 0.85rem;
+  color: var(--text-sub);
+  margin-bottom: 20px;
+}
+
+.contact-links-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.contact-link-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  text-decoration: none;
+  color: var(--text-main);
+  transition: var(--transition);
+}
+
+.contact-link-card:active {
+  transform: scale(0.97);
+  border-color: var(--accent-yellow);
+}
+
+.contact-icon-box {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.contact-icon-box svg { width: 20px; height: 20px; }
+.contact-icon-box.tg-box { background: rgba(36, 161, 222, 0.15); color: #24a1de; }
+.contact-icon-box.menejer-box { background: var(--yellow-glow); color: var(--accent-yellow); }
+.contact-icon-box.phone-box { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
+
+.contact-card-info strong { display: block; font-size: 0.92rem; }
+.contact-card-info span { font-size: 0.78rem; color: var(--text-sub); }
+
+/* ==========================================================================
+   8. BO'SH HOLAT VA SKELETON
+   ========================================================================== */
+.empty-state {
+  text-align: center;
+  padding: 40px 16px;
+}
+
+.empty-icon-wrap {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-sub);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 14px;
+}
+
+.empty-icon-wrap svg { width: 28px; height: 28px; }
+.empty-title { font-family: var(--font-heading); font-size: 1.1rem; font-weight: 700; margin-bottom: 6px; }
+.empty-description { font-size: 0.82rem; color: var(--text-sub); max-width: 280px; margin: 0 auto; }
+
+/* Skeleton */
+.skeleton-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-card);
+  overflow: hidden;
+  height: 240px;
+  display: flex;
+  flex-direction: column;
+}
+
+.skeleton-img {
+  aspect-ratio: 1/1;
+  background: rgba(255, 255, 255, 0.04);
+  animation: pulse 1.5s infinite;
+}
+
+.skeleton-body {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.skeleton-line {
+  height: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 6px;
+  animation: pulse 1.5s infinite;
+}
+
+.skeleton-title { width: 85%; }
+.skeleton-price { width: 50%; height: 16px; }
+.skeleton-btn { width: 100%; height: 32px; border-radius: 10px; margin-top: auto; }
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 0.2; }
+}
+
+/* Toast Bildirishnoma */
+.toast {
+  position: fixed;
+  bottom: calc(85px + env(safe-area-inset-bottom, 0px));
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(9, 9, 11, 0.95);
+  color: #ffffff;
+  padding: 10px 20px;
+  border-radius: var(--radius-full);
+  font-size: 0.82rem;
+  font-weight: 600;
+  z-index: 2000;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+
+html.light .toast {
+  background: rgba(255, 255, 255, 0.98);
+  color: #09090b;
+}
+
+.toast.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Mavzu Ikonkalari (Dark/Light Switch) */
+.theme-icon {
+  display: block;
+  transition: transform 0.25s ease;
+}
+
+html.light .sun-icon {
+  display: none !important;
+}
+
+html.light .moon-icon {
+  display: block !important;
+}
+
+html:not(.light) .moon-icon {
+  display: none !important;
+}
+
+html:not(.light) .sun-icon {
+  display: block !important;
+}
+
+/* ==========================================================================
+   9. TO'LIQ BO'LIMLAR TIZIMI (DEDICATED APP SECTIONS)
+   ========================================================================== */
+.app-section {
+  display: none;
+  width: 100%;
+  animation: fadeInSection 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  padding-bottom: calc(85px + env(safe-area-inset-bottom, 0px));
+}
+
+.app-section.active {
+  display: block;
+}
+
+@keyframes fadeInSection {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Bo'lim Sarlavhalari (Page Head) */
+.section-page-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 16px 16px;
+}
+
+.page-head-title-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.page-head-title {
+  font-family: var(--font-heading);
+  font-size: 1.45rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text-main);
+  margin: 0;
+}
+
+.page-head-subtitle {
+  font-size: 0.8rem;
+  color: var(--text-sub);
+  font-weight: 500;
+}
+
+.clear-cart-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  padding: 6px 12px;
+  border-radius: var(--radius-full);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.clear-cart-btn:active {
+  transform: scale(0.94);
+}
+
+/* 2. KATALOG BO'LIMI PLITKALARI (Catalog Tiles) */
+.catalog-tiles-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  padding: 0 16px;
+  margin-bottom: 14px;
+}
+
+.catalog-tile-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 14px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  text-align: left;
+  cursor: pointer;
+  transition: var(--transition);
+  color: var(--text-main);
+  position: relative;
+  overflow: hidden;
+}
+
+.catalog-tile-card:active {
+  transform: scale(0.96);
+}
+
+.catalog-tile-card.active {
+  border-color: var(--accent-yellow);
+  background: rgba(245, 158, 11, 0.08);
+}
+
+.catalog-tile-card.active .catalog-tile-icon-box {
+  background: var(--accent-yellow);
+  color: #000000;
+}
+
+.catalog-tile-icon-box {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-yellow);
+  transition: var(--transition);
+}
+
+html.light .catalog-tile-icon-box {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.catalog-tile-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.catalog-tile-name {
+  font-family: var(--font-heading);
+  font-size: 0.92rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.catalog-tile-desc {
+  font-size: 0.72rem;
+  color: var(--text-sub);
+  line-height: 1.25;
+}
+
+.catalog-products-wrap {
+  padding: 0;
+}
+
+/* 3. SAVAT BO'LIMI (Cart Section) */
+.cart-section-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0 16px;
+  margin-bottom: 16px;
+}
+
+.cart-section-item {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: var(--transition);
+}
+
+.cart-section-item-img {
+  width: 70px;
+  height: 70px;
+  border-radius: 12px;
+  object-fit: cover;
+  background: #000000;
+  border: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+.cart-section-item-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.cart-section-item-brand {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--accent-yellow);
+  text-transform: uppercase;
+}
+
+.cart-section-item-name {
+  font-family: var(--font-heading);
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0;
+}
+
+.cart-section-item-price {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--accent-yellow);
+}
+
+.cart-section-item-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.cart-qty-pill {
+  display: flex;
+  align-items: center;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-full);
+  padding: 2px 4px;
+  gap: 6px;
+}
+
+.cart-qty-pill button {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-main);
+  font-weight: 700;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+html.light .cart-qty-pill button {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.cart-qty-pill button:active {
+  transform: scale(0.9);
+}
+
+.cart-qty-pill span {
+  font-size: 0.88rem;
+  font-weight: 700;
+  min-width: 18px;
+  text-align: center;
+}
+
+.cart-delete-item-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-sub);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+}
+
+.cart-delete-item-btn:hover,
+.cart-delete-item-btn:active {
+  color: #ef4444;
+}
+
+.cart-checkout-card {
+  margin: 0 16px 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 18px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cart-summary-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.88rem;
+  color: var(--text-sub);
+}
+
+.cart-summary-line strong {
+  color: var(--text-main);
+  font-weight: 600;
+}
+
+.free-badge {
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.guarantee-text {
+  color: var(--accent-yellow);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.cart-divider {
+  height: 1px;
+  background: var(--border-color);
+  margin: 4px 0;
+}
+
+.cart-summary-line.total-line {
+  font-size: 1rem;
+  color: var(--text-main);
+  font-weight: 700;
+}
+
+.cart-total-price-large {
+  font-family: var(--font-heading);
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: var(--accent-yellow);
+}
+
+.btn-checkout-large {
+  margin-top: 6px;
+  padding: 14px;
+  font-size: 0.96rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.cart-guarantee-note {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 0.74rem;
+  color: var(--text-sub);
+  margin-top: 2px;
+}
+
+/* Bo'sh Holatlar (Empty Box) */
+.section-empty-box {
+  padding: 48px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.empty-icon-circle {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  color: var(--accent-yellow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.empty-box-title {
+  font-family: var(--font-heading);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0 0 6px 0;
+}
+
+.empty-box-desc {
+  font-size: 0.84rem;
+  color: var(--text-sub);
+  max-width: 280px;
+  line-height: 1.45;
+  margin: 0 0 20px 0;
+}
+
+.btn-start-shopping {
+  width: auto;
+  padding: 12px 28px;
+}
+
+/* 4. PROFIL BO'LIMI (Profile Section) */
+.profile-card {
+  margin: 0 16px 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 18px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.profile-avatar-circle {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent-yellow), #d97706);
+  color: #000000;
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.profile-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.profile-user-name {
+  font-family: var(--font-heading);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0;
+}
+
+.profile-user-handle {
+  font-size: 0.8rem;
+  color: var(--text-sub);
+}
+
+.profile-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--accent-yellow);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  font-size: 0.68rem;
+  font-weight: 700;
+  width: fit-content;
+}
+
+.profile-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin: 0 16px 20px;
+}
+
+.profile-stat-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  padding: 12px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 3px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.profile-stat-box:active {
+  transform: scale(0.96);
+}
+
+.stat-number {
+  font-family: var(--font-heading);
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--accent-yellow);
+}
+
+.stat-label {
+  font-size: 0.72rem;
+  color: var(--text-sub);
+}
+
+.profile-menu-group {
+  margin: 0 16px 20px;
+}
+
+.profile-group-title {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-sub);
+  font-weight: 700;
+  margin: 0 0 8px 4px;
+}
+
+.profile-action-row {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.profile-action-row:active {
+  transform: scale(0.98);
+}
+
+.action-row-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.action-icon-box {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--accent-yellow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+html.light .action-icon-box {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.action-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.action-info strong {
+  font-size: 0.88rem;
+  color: var(--text-main);
+}
+
+.action-info span {
+  font-size: 0.75rem;
+  color: var(--text-sub);
+}
+
+.theme-switch-indicator {
+  width: 44px;
+  height: 24px;
+  background: var(--border-color);
+  border-radius: var(--radius-full);
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  transition: var(--transition);
+}
+
+.switch-pill {
+  width: 20px;
+  height: 20px;
+  background: var(--text-main);
+  border-radius: 50%;
+  transition: var(--transition);
+  transform: translateX(0);
+}
+
+html.light .theme-switch-indicator {
+  background: var(--accent-yellow);
+}
+
+html.light .switch-pill {
+  transform: translateX(20px);
+  background: #000000;
+}
+
+.chevron-icon {
+  color: var(--text-sub);
+  opacity: 0.6;
+}
+
+.store-guarantee-card {
+  margin: 0 16px 20px;
+  padding: 16px;
+  background: rgba(245, 158, 11, 0.06);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.guarantee-card-title {
+  font-family: var(--font-heading);
+  font-size: 0.82rem;
+  letter-spacing: 0.06em;
+  color: var(--accent-yellow);
+}
+
+.guarantee-card-desc {
+  font-size: 0.78rem;
+  color: var(--text-sub);
+  line-height: 1.4;
+  margin: 0;
+}
+
+.guarantee-workhours {
+  font-size: 0.74rem;
+  color: var(--text-main);
+  font-weight: 600;
+}
+
+/* 5. MAHSULOT BATAFSIL KO'RISH BO'LIMI (Product Detail Full View) */
+.product-detail-section {
+  padding-bottom: calc(105px + env(safe-area-inset-bottom, 0px)) !important;
+}
+
+.pd-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 16px 14px;
+  margin-bottom: 4px;
+}
+
+.pd-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  padding: 8px 14px;
+  border-radius: var(--radius-full);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.pd-back-btn:active {
+  transform: scale(0.94);
+}
+
+.pd-wishlist-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-sub);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.pd-wishlist-btn.active {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.pd-wishlist-btn.active svg {
+  fill: #ef4444;
+}
+
+.pd-body {
+  padding: 0 16px;
+}
+
+.pd-bottom-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--bg-glass);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-top: 1px solid var(--border-color);
+  padding: 12px 16px calc(14px + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  z-index: 1000;
+}
+
+.pd-price-box {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pd-price-label {
+  font-size: 0.72rem;
+  color: var(--text-sub);
+}
+
+.pd-price-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pd-price-cart-icon {
+  width: 20px;
+  height: 20px;
+  color: var(--accent-yellow);
+  flex-shrink: 0;
+}
+
+.pd-price-val {
+  font-family: var(--font-heading);
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--accent-yellow);
+  letter-spacing: -0.01em;
+}
+
+.pd-add-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 20px;
+  font-size: 0.95rem;
+}
+
+.pd-channel-box {
+  margin: 14px 0 18px;
+}
+
+.btn-channel-pd {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 13px 18px;
+  border-radius: var(--radius-full);
+  background: linear-gradient(135deg, rgba(36, 161, 222, 0.18), rgba(36, 161, 222, 0.08));
+  border: 1.5px solid rgba(36, 161, 222, 0.4);
+  color: #24a1de;
+  font-family: var(--font-body);
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(36, 161, 222, 0.15);
+  transition: var(--transition);
+}
+
+.btn-channel-pd:active {
+  transform: scale(0.98);
+  background: rgba(36, 161, 222, 0.28);
+}
+
+html.light .btn-channel-pd {
+  color: #0284c7;
+  border-color: rgba(2, 132, 199, 0.4);
+}
+
+.pd-bottom-btn-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.btn-channel-icon-pd {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  background: rgba(36, 161, 222, 0.12);
+  border: 1.5px solid rgba(36, 161, 222, 0.35);
+  color: #24a1de;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: var(--transition);
+}
+
+.btn-channel-icon-pd:active {
+  transform: scale(0.94);
+  background: rgba(36, 161, 222, 0.25);
+}
+
+/* ==========================================================================
+   MICRO-ANIMATIONS: SAVAT, TUGMALAR VA ELEMENTLAR
+   ========================================================================== */
+/* 1. Spinner (Aylanuvchi loader) */
+.btn-spinner {
+  display: inline-block;
+  width: 15px;
+  height: 15px;
+  border: 2px solid rgba(0, 0, 0, 0.25);
+  border-top-color: #000000;
+  border-radius: 50%;
+  animation: btnSpinnerRotate 0.6s linear infinite;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+@keyframes btnSpinnerRotate {
+  to { transform: rotate(360deg); }
+}
+
+/* 2. Yashil Ptichka Sakrashi (Success Checkmark Pop) */
+@keyframes checkmarkPop {
+  0% { transform: scale(0.2); opacity: 0; }
+  60% { transform: scale(1.3); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.checkmark-pop-anim {
+  animation: checkmarkPop 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+/* Tugmaning "Qo'shildi" yashil holati */
+.btn-buy.is-success {
+  background: rgba(16, 185, 129, 0.16) !important;
+  border: 1.5px solid #10b981 !important;
+  color: #10b981 !important;
+  box-shadow: 0 4px 18px rgba(16, 185, 129, 0.35) !important;
+  pointer-events: none;
+}
+
+/* 3. MOBIL DOCK SAVATCHASINING BALAND ELASTIK SAKRASHI */
+@keyframes mobileCartSpringJump {
+  0% {
+    transform: scale(1, 1) translateY(0);
+  }
+  15% {
+    /* Siqilish (pastga tayyorgarlik) */
+    transform: scale(1.22, 0.75) translateY(4px);
+  }
+  35% {
+    /* Yuqoriga elastik baland sakrash */
+    transform: scale(0.88, 1.3) translateY(-18px) rotate(-8deg);
+    color: #fbbf24;
+    filter: drop-shadow(0 8px 16px rgba(245, 158, 11, 0.75));
+  }
+  50% {
+    /* Cho'qqida yengil burilish */
+    transform: scale(1.18, 0.9) translateY(-10px) rotate(6deg);
+    color: #fbbf24;
+    filter: drop-shadow(0 6px 12px rgba(245, 158, 11, 0.6));
+  }
+  68% {
+    transform: scale(0.95, 1.08) translateY(-2px) rotate(-3deg);
+  }
+  82% {
+    transform: scale(1.06, 0.96) translateY(1px) rotate(1deg);
+  }
+  100% {
+    transform: scale(1, 1) translateY(0) rotate(0deg);
+    filter: none;
+  }
+}
+.bottom-cart-jump-anim {
+  animation: mobileCartSpringJump 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+  transform-origin: center bottom !important;
+  will-change: transform, filter !important;
+}
+
+/* 4. HISOB-KITOB NISHONI (BADGE) NING SHISHIB SAKRASHI */
+@keyframes badgeSpringPop {
+  0% {
+    transform: scale(0.3);
+    opacity: 0.3;
+  }
+  45% {
+    transform: scale(1.65);
+    background: #fbbf24 !important;
+    color: #000000 !important;
+    box-shadow: 0 0 16px rgba(245, 158, 11, 1), 0 0 6px #ffffff;
+  }
+  75% {
+    transform: scale(0.9);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  }
+}
+.badge-pop-anim {
+  animation: badgeSpringPop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+}
+
+/* 5. SEVIMLILAR YURAKCHASI SAKRASHI (HEART BEAT) */
+@keyframes heartPopAnimation {
+  0% { transform: scale(1); }
+  25% { transform: scale(1.38); }
+  50% { transform: scale(0.9); }
+  75% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+.wishlist-btn.active svg,
+.pd-wishlist-btn.active svg {
+  fill: #ef4444 !important;
+  stroke: #ef4444 !important;
+  animation: heartPopAnimation 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* 6. FLY TO CART (Parvoz qiluvchi klon rasm) */
+.flying-product-clone {
+  position: fixed;
+  z-index: 99999;
+  border-radius: 12px;
+  pointer-events: none;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
+  transition: all 0.75s cubic-bezier(0.2, 0.8, 0.2, 1);
+  object-fit: cover;
+}
+
+.hidden { display: none !important; }
+
+/* ==========================================================================
+   TIL ALMASHTIRGICH (MULTI-LANGUAGE SWITCHER)
+   ========================================================================== */
+.lang-switch-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 36px;
+  padding: 0 10px;
+  border-radius: var(--radius-full);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.lang-switch-btn:active {
+  transform: scale(0.94);
+  background: var(--border-color);
+}
+.lang-globe-icon {
+  color: var(--accent-yellow);
+}
+.lang-label {
+  letter-spacing: 0.5px;
+}
+
+/* Yon menyudagi til tanlagich */
+.drawer-lang-selector {
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  background: var(--bg-card);
+  border-radius: 14px;
+  border: 1px solid var(--border-color);
+}
+.drawer-lang-title {
+  display: block;
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+.drawer-lang-chips {
+  display: flex;
+  gap: 6px;
+}
+.lang-chip {
+  flex: 1;
+  padding: 7px 0;
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  color: var(--text-sub);
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  text-align: center;
+}
+.lang-chip.active {
+  background: var(--btn-main-bg);
+  color: var(--btn-main-text);
+  border-color: var(--btn-main-border);
+}
+
+/* Profil bo'limidagi til chiplari */
+.profile-lang-chips {
+  display: flex;
+  gap: 4px;
+}
+.profile-lang-btn {
+  padding: 5px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  color: var(--text-sub);
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.profile-lang-btn.active {
+  background: var(--btn-main-bg);
+  color: var(--btn-main-text);
+  border-color: var(--btn-main-border);
+}
+
+/* ==========================================================================
+   HAFTA CHEGIRMALARI (BLACK STORE USLUBIDAGI GORIZONTAL DEALS SLIDER)
+   Uzum Market / Black Store uslubidagi qora hashamatli gradient konteyner,
+   oltin nurlanish effekti, oqlangan kartalar va silliq suriluvchi lenta
+   ========================================================================== */
+.discounts-slider-section {
+  width: 100%;
+  padding: 10px 14px 16px 14px;
+  margin-bottom: 4px;
+}
+
+.deals-card-container {
+  background: linear-gradient(145deg, #09090b 0%, #15151a 50%, #0d0d12 100%);
+  border-radius: 22px;
+  padding: 18px 16px 20px 16px;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.42), 0 0 32px rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Fon oltin nurlanish effekti (Black Store Signature Ambient Glow) */
+.deals-card-container::before {
+  content: '';
+  position: absolute;
+  top: -75px;
+  right: -75px;
+  width: 220px;
+  height: 220px;
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.18) 0%, rgba(251, 191, 36, 0.04) 50%, transparent 75%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* Header qismi */
+.deals-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+  position: relative;
+  z-index: 2;
+  width: 100%;
+}
+
+.deals-title-group {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #ffffff;
+  user-select: none;
+  min-width: 0;
+  flex: 1;
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.deals-title-group:hover {
+  transform: translateX(2px);
+}
+
+.deals-header-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: #fbbf24;
+  flex-shrink: 0;
+}
+.deals-header-badge svg {
+  width: 16px;
+  height: 16px;
+}
+
+.deals-section-title {
+  font-family: var(--font-heading);
+  font-size: 1.18rem;
+  font-weight: 800;
+  color: #fafafa;
+  letter-spacing: -0.3px;
+  margin: 0;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.deals-header-right {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* Chapga/o'ngga strelkalar foydalanuvchi talabi bilan olib tashlandi */
+.deals-nav-arrows,
+.discounts-controls .discounts-nav-arrow {
+  display: none !important;
+}
+
+/* "Hammasini ko'rish" tugmasi (Black Store uslubidagi nozik oyna effekti) */
+.deals-see-all-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #e4e4e7;
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-decoration: none;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+.deals-see-all-link:hover, .deals-see-all-link:active {
+  background: rgba(245, 158, 11, 0.18);
+  border-color: rgba(245, 158, 11, 0.4);
+  color: #fbbf24;
+  transform: scale(0.97);
+}
+.deals-see-all-link svg {
+  width: 12px;
+  height: 12px;
+}
+
+.deals-see-all-link .see-all-desktop {
+  display: inline;
+}
+.deals-see-all-link .see-all-mobile {
+  display: none;
+}
+
+/* Gorizontal Slayder Lenta (Horizontal Slider Track) */
+.deals-slider-track {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  padding: 4px 2px 10px 2px;
+  cursor: grab;
+  user-select: none;
+  scrollbar-width: none;
+}
+.deals-slider-track.is-dragging {
+  cursor: grabbing;
+  scroll-behavior: auto;
+  scroll-snap-type: none;
+}
+.deals-slider-track::-webkit-scrollbar {
+  display: none;
+}
+
+/* ==========================================================================
+   KARTA DIZAYNI (BLACK STORE / UZUM MARKET USLUBIDAGI PRESIZIYALI DEAL KARTASI)
+   ========================================================================== */
+.deal-card {
+  flex: 0 0 168px;
+  width: 168px;
+  min-width: 168px;
+  scroll-snap-align: start;
+  background: #ffffff;
+  color: #0f172a;
+  border-radius: 17px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s ease;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.14);
+  position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.85);
+}
+.deal-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
+}
+.deal-card:active {
+  transform: scale(0.98);
+}
+
+/* Rasm qutisi va nishonlar */
+.deal-image-box {
+  position: relative;
+  width: 100%;
+  height: 138px;
+  background: #f8fafc;
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 9px;
+}
+.deal-image-box img,
+.deal-image-box .deal-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 8px;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+}
+.deal-card:hover .deal-image-box img,
+.deal-card:hover .deal-image-box .deal-img {
+  transform: scale(1.06);
+}
+
+/* Qizil chegirma nishoni (↓ -20%) */
+.deal-discount-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 2;
+  background: #e11d48;
+  color: #ffffff;
+  font-family: var(--font-heading);
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 3px 7px;
+  border-radius: 7px;
+  box-shadow: 0 2px 6px rgba(225, 29, 72, 0.35);
+  letter-spacing: -0.2px;
+}
+
+/* Sevimlilar yurak tugmasi */
+.deal-wishlist-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  padding: 0;
+}
+.deal-wishlist-btn:hover {
+  color: #e11d48;
+  transform: scale(1.1);
+  background: #ffffff;
+}
+.deal-wishlist-btn.active {
+  color: #e11d48;
+  background: #fff1f2;
+}
+
+/* Karta matnlari va narxlar */
+.deal-content {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.deal-price-block {
+  margin-bottom: 5px;
+}
+
+.deal-current-price {
+  font-family: var(--font-heading);
+  font-size: 1.06rem;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.2;
+  letter-spacing: -0.3px;
+}
+
+.deal-old-price-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 2px;
+  font-size: 0.74rem;
+}
+
+.deal-old-price {
+  color: #94a3b8;
+  text-decoration: line-through;
+  font-weight: 500;
+}
+
+.deal-drop-tag {
+  color: #e11d48;
+  font-weight: 700;
+  font-size: 0.74rem;
+}
+
+.deal-title {
+  font-size: 0.78rem;
+  font-weight: 550;
+  color: #334155;
+  line-height: 1.32;
+  margin: 0 0 9px 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  height: 2.65em;
+}
+
+.deal-footer-action {
+  margin-top: auto;
+}
+
+/* Savatga tugmasi (Black Store uslubidagi nozik va ixcham yagona tugma) */
+.deal-cart-btn {
+  width: 100%;
+  border: 1px solid #09090b;
+  background: #09090b;
+  color: #ffffff;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 0.78rem;
+  padding: 8px 10px;
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.deal-cart-btn:hover {
+  background: #27272a;
+  color: #ffffff;
+  border-color: #3f3f46;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.22);
+}
+.deal-cart-btn:active {
+  transform: scale(0.97);
+}
+.deal-cart-btn.is-success {
+  background: #10b981 !important;
+  border-color: #10b981 !important;
+  color: #ffffff !important;
+}
+.deal-cart-icon {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* ==========================================================================
+   TUNGI REJIM MOSLASHUVI (DARK MODE ADAPTATION — BLACK STORE SPEC)
+   ========================================================================== */
+html:not(.light) .deal-card {
+  background: #141419;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fafafa;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+}
+html:not(.light) .deal-card:hover {
+  border-color: rgba(255, 255, 255, 0.22);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.7);
+}
+html:not(.light) .deal-image-box {
+  background: #0d0d12;
+}
+html:not(.light) .deal-current-price {
+  color: #fafafa;
+}
+html:not(.light) .deal-old-price {
+  color: #71717a;
+}
+html:not(.light) .deal-title {
+  color: #d4d4d8;
+}
+html:not(.light) .deal-wishlist-btn {
+  background: rgba(255, 255, 255, 0.1);
+  color: #a1a1aa;
+}
+html:not(.light) .deal-wishlist-btn:hover {
+  background: #ffffff;
+  color: #e11d48;
+}
+html:not(.light) .deal-wishlist-btn.active {
+  background: rgba(225, 29, 72, 0.25);
+  color: #fb7185;
+}
+html:not(.light) .deal-cart-btn:not(.is-success) {
+  background: #ffffff !important;
+  color: #09090b !important;
+  border: 1px solid #ffffff !important;
+  box-shadow: 0 4px 14px rgba(255, 255, 255, 0.14) !important;
+}
+html:not(.light) .deal-cart-btn:not(.is-success) svg {
+  color: #09090b !important;
+  stroke: #09090b !important;
+}
+html:not(.light) .deal-cart-btn:not(.is-success) span {
+  color: #09090b !important;
+  font-weight: 700 !important;
+}
+html:not(.light) .deal-cart-btn:not(.is-success):hover {
+  background: #e4e4e7 !important;
+  border-color: #d4d4d8 !important;
+}
+
+/* Mobil moslashuv */
+@media (max-width: 768px) {
+  .discounts-slider-section {
+    padding: 2px 12px 14px 12px;
+  }
+  .deals-card-container {
+    border-radius: 18px;
+    padding: 14px 12px 16px 12px;
+  }
+  .deals-header {
+    margin-bottom: 12px;
+    gap: 8px;
+  }
+  .deals-header-badge {
+    width: 26px !important;
+    height: 26px !important;
+    border-radius: 8px !important;
+  }
+  .deals-header-badge svg {
+    width: 14px !important;
+    height: 14px !important;
+  }
+  .deals-section-title {
+    font-size: 1.05rem !important;
+    letter-spacing: -0.2px;
+  }
+  .deals-see-all-link {
+    font-size: 0.74rem !important;
+    padding: 4px 10px !important;
+    gap: 3px !important;
+  }
+  .deal-card {
+    flex: 0 0 156px;
+    width: 156px;
+    min-width: 156px;
+    padding: 9px;
+    border-radius: 15px;
+  }
+  .deal-image-box {
+    height: 130px;
+    border-radius: 11px;
+    margin-bottom: 7px;
+  }
+  .deal-current-price {
+    font-size: 0.98rem !important;
+  }
+  .deal-old-price-row {
+    font-size: 0.72rem !important;
+    gap: 4px;
+  }
+  .deal-title {
+    font-size: 0.75rem !important;
+    height: 2.5em !important;
+    line-height: 1.25 !important;
+    margin-bottom: 8px !important;
+  }
+  .deal-cart-btn {
+    font-size: 0.75rem !important;
+    padding: 7px 8px !important;
+    border-radius: 10px !important;
+  }
+}
+
+@media (max-width: 420px) {
+  .deals-see-all-link .see-all-desktop {
+    display: none;
+  }
+  .deals-see-all-link .see-all-mobile {
+    display: inline;
+  }
+}
+
+
+
