@@ -85,10 +85,10 @@ async def migrate():
             await pg_db.pool.execute("""
                 INSERT INTO products (
                     id, category_id, name, description, price, image_url, gallery_images,
-                    is_available, channel_id, message_id, media_group_id, post_url,
+                    photo_file_id, is_available, channel_id, message_id, media_group_id, post_url,
                     views_count, is_active
                 ) VALUES (
-                    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
+                    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15
                 )
                 ON CONFLICT (id) DO UPDATE SET
                     category_id = EXCLUDED.category_id,
@@ -97,6 +97,7 @@ async def migrate():
                     price = EXCLUDED.price,
                     image_url = EXCLUDED.image_url,
                     gallery_images = EXCLUDED.gallery_images,
+                    photo_file_id = COALESCE(EXCLUDED.photo_file_id, products.photo_file_id),
                     is_available = EXCLUDED.is_available,
                     channel_id = EXCLUDED.channel_id,
                     message_id = EXCLUDED.message_id,
@@ -106,9 +107,10 @@ async def migrate():
                     is_active = EXCLUDED.is_active;
             """, 
                 p['id'], new_cat_id, p['name'], p.get('description'), p.get('price', 0),
-                p.get('image_url'), p.get('gallery_images'), p.get('is_available', 1),
-                p.get('channel_id'), p.get('message_id'), p.get('media_group_id'),
-                p.get('post_url'), p.get('views_count', 0), p.get('is_active', 1)
+                p.get('image_url'), p.get('gallery_images'), p.get('photo_file_id'),
+                p.get('is_available', 1), p.get('channel_id'), p.get('message_id'),
+                p.get('media_group_id'), p.get('post_url'), p.get('views_count', 0),
+                p.get('is_active', 1)
             )
 
         # 4. Buyurtmalarni ko'chirish

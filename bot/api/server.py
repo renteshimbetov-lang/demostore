@@ -1,7 +1,71 @@
+import asyncio
 import json
+import logging
 import os
+import time
+from typing import Dict, Optional, Tuple
+import aiohttp
 from aiohttp import web
+from bot.config import config
 from bot.database.db import Database
+
+logger = logging.getLogger("APIServer")
+
+# Telegram rasm proksi uchun server xotirasi keshi (kamida 12 soat)
+_photo_cache: Dict[str, Tuple[bytes, str, float]] = {}  # file_id -> (bytes, content_type, expires_at)
+_photo_locks: Dict[str, asyncio.Lock] = {}
+_cache_lock = asyncio.Lock()
+
+def _get_fallback_image(webapp_dir: str) -> Tuple[bytes, str]:
+    """Standart zaxira rasmni (apple_3d_logo.png) yuklash"""
+    candidates = [
+        os.path.join(webapp_dir, "static", "apple_3d_logo.png"),
+        os.path.join(webapp_dir, "apple_3d_logo.png"),
+    ]
+    for p in candidates:
+        if os.path.exists(p):
+            try:
+                with open(p, "rb") as f:
+                    return f.read(), "image/png"
+            except Exception:
+                pass
+    # 1x1 transparent PNG fallback if file is not found
+    return (
+        b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15c4\x00\x00\x00\nIDATx\x9cc\x00\x01\x00\x00\x05\x00\x01\r\n-\xb4\x00\x00\x00\x00IEND\xaeB`\x82',
+        "image/png"
+    )
+
+async def _fetch_telegram_photo(file_id: str, bot_token: str) -> Optional[Tuple[bytes, str]]:
+    """Telegram API orqali rasmni xavfsiz yuklab olish"""
+    if not bot_token or not file_id:
+        return None
+    api_url = f"https://api.telegram.org/bot{bot_token}/getFile?file_id={file_id}"
+    connector = aiohttp.TCPConnector(ssl=False)
+    timeout = aiohttp.ClientTimeout(total=10)
+    try:
+        async with aiohttp.ClientSession(connector=connector, timeout=timeout) as session:
+            async with session.get(api_url) as resp:
+                if resp.status != 200:
+                    return None
+                data = await resp.json()
+                if not data.get("ok"):
+                    return None
+                file_path = data.get("result", {}).get("file_path")
+                if not file_path:
+                    return None
+
+            download_url = f"https://api.telegram.org/file/bot{bot_token}/{file_path}"
+            async with session.get(download_url) as file_resp:
+                if file_resp.status != 200:
+                    return None
+                img_bytes = await file_resp.read()
+                content_type = file_resp.headers.get("Content-Type", "image/jpeg")
+                if not content_type.startswith("image/"):
+                    content_type = "image/jpeg"
+                return img_bytes, content_type
+    except Exception as e:
+        logger.warning(f"Telegram rasm olishda xatolik ({file_id}): {e}")
+        return None
 
 def create_web_app(db: Database, webapp_dir: str) -> web.Application:
     app = web.Application()
@@ -16,8 +80,11 @@ def create_web_app(db: Database, webapp_dir: str) -> web.Application:
         response.headers["Access-Control-Allow-Origin"] = "*"
         response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
         response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
-        # Static rasmlar uchun tezkor kesh (scroll paytida qayta yuklanib miltillamasligi uchun)
-        if request.path.startswith("/static/products/") or any(request.path.endswith(ext) for ext in [".jpg", ".png", ".jpeg", ".webp"]):
+
+        # Rasm proksi va statik rasmlar uchun tezkor kesh
+        if request.path.startswith("/api/photo/"):
+            response.headers["Cache-Control"] = "public, max-age=86400, immutable"
+        elif request.path.startswith("/static/products/") or any(request.path.endswith(ext) for ext in [".jpg", ".png", ".jpeg", ".webp"]):
             response.headers["Cache-Control"] = "public, max-age=604800, immutable"
         else:
             # HTML va dinamik API uchun no-cache
@@ -29,6 +96,82 @@ def create_web_app(db: Database, webapp_dir: str) -> web.Application:
     app.middlewares.append(cors_middleware)
 
     # API Endpoints
+    async def get_photo_proxy(request: web.Request) -> web.Response:
+        """
+        Telegram file_id orqali rasmni xavfsiz proksi qilib berish.
+        BOT_TOKEN oshkor etilmaydi, rasmlar server xotirasida kamida 12 soat keshlanadi.
+        Xatolik bo'lsa 500 emas, standart fallback rasm qaytariladi.
+        """
+        file_id = request.match_info.get("file_id", "").strip()
+        if not file_id:
+            fb_bytes, fb_type = _get_fallback_image(webapp_dir)
+            return web.Response(
+                body=fb_bytes,
+                content_type=fb_type,
+                headers={"Cache-Control": "public, max-age=86400, immutable"}
+            )
+
+        now = time.time()
+        # 1. Tezkor xotira keshi tekshiruvi
+        cached = _photo_cache.get(file_id)
+        if cached:
+            c_bytes, c_type, expires_at = cached
+            if now < expires_at:
+                return web.Response(
+                    body=c_bytes,
+                    content_type=c_type,
+                    headers={"Cache-Control": "public, max-age=86400, immutable"}
+                )
+
+        # 2. Concurrency lock: bir xil rasm uchun Telegramga bittadan ortiq so'rov bormaydi
+        async with _cache_lock:
+            if file_id not in _photo_locks:
+                _photo_locks[file_id] = asyncio.Lock()
+            item_lock = _photo_locks[file_id]
+
+        async with item_lock:
+            # Lock ichida qayta tekshirish
+            cached = _photo_cache.get(file_id)
+            if cached:
+                c_bytes, c_type, expires_at = cached
+                if time.time() < expires_at:
+                    return web.Response(
+                        body=c_bytes,
+                        content_type=c_type,
+                        headers={"Cache-Control": "public, max-age=86400, immutable"}
+                    )
+
+            # Telegramdan yuklab olish
+            res = await _fetch_telegram_photo(file_id, config.bot_token)
+            if res:
+                img_bytes, ctype = res
+                # Kesh hajmini cheklash (maksimal 500 ta rasm)
+                if len(_photo_cache) > 500:
+                    curr_time = time.time()
+                    expired_keys = [k for k, v in _photo_cache.items() if v[2] <= curr_time]
+                    for k in expired_keys:
+                        _photo_cache.pop(k, None)
+                    if len(_photo_cache) > 500:
+                        oldest = sorted(_photo_cache.keys(), key=lambda k: _photo_cache[k][2])
+                        for k in oldest[:100]:
+                            _photo_cache.pop(k, None)
+
+                # 12 soatga keshlaymiz (43200 soniya)
+                _photo_cache[file_id] = (img_bytes, ctype, time.time() + 43200)
+                return web.Response(
+                    body=img_bytes,
+                    content_type=ctype,
+                    headers={"Cache-Control": "public, max-age=86400, immutable"}
+                )
+            else:
+                # Telegram xatosi yoki yaroqsiz file_id bo'lsa 500 bermasdan zaxira rasm qaytaramiz
+                fb_bytes, fb_type = _get_fallback_image(webapp_dir)
+                return web.Response(
+                    body=fb_bytes,
+                    content_type=fb_type,
+                    headers={"Cache-Control": "public, max-age=300"}
+                )
+
     async def get_categories(request: web.Request) -> web.Response:
         categories = await db.get_categories()
         return web.json_response(categories)
@@ -57,14 +200,20 @@ def create_web_app(db: Database, webapp_dir: str) -> web.Application:
         current_rate = await get_cbu_usd_rate()
 
         for p in products:
+            # Agar photo_file_id mavjud bo'lsa rasm proksi manzilini biriktirish
+            if p.get("photo_file_id"):
+                p["image_url"] = f"/api/photo/{p['photo_file_id']}"
+            elif not p.get("image_url"):
+                p["image_url"] = "/static/apple_3d_logo.png"
+
             raw_g = p.get("gallery_images")
             if isinstance(raw_g, str):
                 try:
                     p["gallery_images"] = json.loads(raw_g)
                 except Exception:
-                    p["gallery_images"] = [p["image_url"]] if p.get("image_url") else []
+                    p["gallery_images"] = [p["image_url"]]
             elif not raw_g:
-                p["gallery_images"] = [p["image_url"]] if p.get("image_url") else []
+                p["gallery_images"] = [p["image_url"]]
 
             p["current_usd_rate"] = current_rate
             p["price_uzs"] = convert_usd_to_uzs(p.get("price", 0), current_rate)
@@ -96,6 +245,7 @@ def create_web_app(db: Database, webapp_dir: str) -> web.Application:
         })
 
     # Marshrutlarni ro'yxatdan o'tkazish
+    app.router.add_get("/api/photo/{file_id}", get_photo_proxy)
     app.router.add_get("/api/categories", get_categories)
     app.router.add_get("/api/currency", get_currency)
     app.router.add_get("/api/products", get_products)

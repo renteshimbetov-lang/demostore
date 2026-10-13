@@ -1,8 +1,6 @@
 import asyncio
 import logging
-from pathlib import Path
 from typing import Dict, List, Optional
-from PIL import Image
 from aiogram import Router, Bot
 from aiogram.types import Message
 
@@ -32,101 +30,29 @@ def setup_channel_router(db: Database, bot: Bot) -> Router:
         clean_chat_id = str(chat.id).replace("-100", "")
         return f"https://t.me/c/{clean_chat_id}/{msg_id}"
 
-    async def get_photo_url(message: Message) -> str:
-        """Postdagi rasmni aniqlash va Telegram fayl URL manzilini olish"""
-        if not message.photo:
-            return ""
+    def extract_photo_file_id(message: Message) -> Optional[str]:
+        """Xabardan rasm file_id sini xavfsiz ajratib olish (photo yoki rasm hujjat)"""
         try:
-            largest_photo = message.photo[-1]
-            file_info = await bot.get_file(largest_photo.file_id)
-            if file_info.file_path:
-                token = bot.token
-                return f"https://api.telegram.org/file/bot{token}/{file_info.file_path}"
+            if message.photo:
+                return message.photo[-1].file_id
+            if message.document and message.document.mime_type and message.document.mime_type.startswith("image/"):
+                return message.document.file_id
         except Exception as e:
-            logger.warning(f"Rasm URL olishda xatolik: {e}")
-        return ""
+            logger.warning(f"File ID ajratishda xatolik: {e}")
+        return None
 
-    async def download_and_crop_image(file_id: str, raw_dest: Path, out_dest: Path) -> bool:
-        """Rasmni yuklab olib 1:1 kvadrat formatda sifatli saqlash"""
-        try:
-            file_info = await bot.get_file(file_id)
-            if not file_info.file_path:
-                return False
-            
-            with open(raw_dest, "wb") as f:
-                await bot.download_file(file_info.file_path, destination=f)
-            
-            if raw_dest.exists():
-                img = Image.open(raw_dest)
-                if img.mode != "RGB":
-                    img = img.convert("RGB")
-                w, h = img.size
-                if h > w:
-                    y_start = int(h * 0.06)
-                    y_end = y_start + w
-                    if y_end > h:
-                        y_end = h
-                        y_start = h - w
-                    crop_box = (0, y_start, w, y_end)
-                    img_cropped = img.crop(crop_box)
-                elif w > h:
-                    x_start = (w - h) // 2
-                    crop_box = (x_start, 0, x_start + h, h)
-                    img_cropped = img.crop(crop_box)
-                else:
-                    img_cropped = img
-                
-                img_cropped.save(out_dest, "JPEG", quality=95)
-                return True
-        except Exception as e:
-            logger.warning(f"Rasm qayta ishlashda xatolik ({raw_dest.name}): {e}")
-        return False
-
-    async def process_media_images_in_background(product_id: int, messages: List[Message]):
-        """Barcha 2-4 ta rasmni orqa fonda galereyaga va asosiy 1:1 kvadrat formatga saqlash"""
-        try:
-            base_dir = Path(__file__).resolve().parent.parent.parent
-            channel_photos_dir = base_dir / "channel_all_photos"
-            products_dir = base_dir / "webapp" / "static" / "products"
-            gallery_dir = base_dir / "webapp" / "static" / "gallery"
-            
-            channel_photos_dir.mkdir(parents=True, exist_ok=True)
-            products_dir.mkdir(parents=True, exist_ok=True)
-            gallery_dir.mkdir(parents=True, exist_ok=True)
-
-            primary_url = ""
-            gallery_urls = []
-
-            # Rasmli xabarlarni tartib bilan olish
-            photo_messages = [m for m in messages if m.photo]
-            for idx, msg in enumerate(photo_messages):
-                largest_photo = msg.photo[-1]
-                raw_dest = channel_photos_dir / f"msg_{msg.message_id}.jpg"
-
-                if idx == 0:
-                    # 1-rasm: Mahsulotning asosiy 1:1 rasmi
-                    out_jpg = products_dir / f"prod_{product_id}.jpg"
-                    success = await download_and_crop_image(largest_photo.file_id, raw_dest, out_jpg)
-                    if success:
-                        primary_url = f"/static/products/prod_{product_id}.jpg"
-                        gallery_urls.append(primary_url)
-                else:
-                    # 2, 3, 4-rasmlar: Galereya rasmlari
-                    gallery_dest = gallery_dir / f"prod_{product_id}_photo_{idx + 1}.jpg"
-                    success = await download_and_crop_image(largest_photo.file_id, raw_dest, gallery_dest)
-                    if success:
-                        gallery_urls.append(f"/static/gallery/prod_{product_id}_photo_{idx + 1}.jpg")
-
-            if primary_url and gallery_urls:
-                await db.update_product_gallery(product_id, primary_url, gallery_urls)
-                logger.info(f"Mahsulot #{product_id} uchun {len(gallery_urls)} ta rasm galereyaga muvaffaqiyatli saqlandi!")
-            elif primary_url:
-                await db.update_product_image(product_id, primary_url)
-        except Exception as e:
-            logger.warning(f"Galereya rasmlarini qayta ishlashda xatolik (#{product_id}): {e}")
+    def extract_all_photo_file_ids(messages: List[Message]) -> List[str]:
+        """Bir nechta xabarlardan barcha rasm file_id larini tartib bilan olish"""
+        file_ids: List[str] = []
+        for msg in messages:
+            fid = extract_photo_file_id(msg)
+            if fid and fid not in file_ids:
+                file_ids.append(fid)
+        return file_ids
 
     async def save_product_from_messages(main_msg: Message, all_messages: List[Message]):
         """Bir yoki bir nechta xabardan (albomdan) mahsulotni yaratish yoki yangilash"""
+        import json
         raw_text = (main_msg.caption or main_msg.text or "").strip()
         channel_id = str(main_msg.chat.id)
         message_id = main_msg.message_id
@@ -138,7 +64,19 @@ def setup_channel_router(db: Database, bot: Bot) -> Router:
             return
 
         name, description, price = parse_channel_post_content(raw_text)
-        image_url = await get_photo_url(main_msg)
+
+        # Telegram file_id larini ajratib olish (diskka hech narsa yuklanmaydi)
+        file_ids = extract_all_photo_file_ids(all_messages)
+        primary_file_id = file_ids[0] if file_ids else None
+
+        if primary_file_id:
+            image_url = f"/api/photo/{primary_file_id}"
+            gallery_urls = [f"/api/photo/{fid}" for fid in file_ids]
+        else:
+            image_url = "/static/apple_3d_logo.png"
+            gallery_urls = ["/static/apple_3d_logo.png"]
+
+        gallery_images_json = json.dumps(gallery_urls)
         post_url = build_post_url(main_msg)
 
         async with _db_write_lock:
@@ -150,14 +88,15 @@ def setup_channel_router(db: Database, bot: Bot) -> Router:
                 price=price,
                 image_url=image_url,
                 post_url=post_url,
-                media_group_id=main_msg.media_group_id
+                media_group_id=main_msg.media_group_id,
+                photo_file_id=primary_file_id,
+                gallery_images=gallery_images_json
             )
 
-        logger.info(f"Kanal posti qabul qilindi! Mahsulot ID: {product_id}, Nomi: {name}, Narxi: ${price}, Rasmlar soni: {len(all_messages)}")
-
-        # Rasmlarni yuklab olib galereya bilan birga saqlash
-        if any(m.photo for m in all_messages):
-            asyncio.create_task(process_media_images_in_background(product_id, all_messages))
+        logger.info(
+            f"Kanal posti qabul qilindi! Mahsulot ID: {product_id}, Nomi: {name}, "
+            f"Narxi: ${price}, Rasmlar (file_id): {len(file_ids)} ta"
+        )
 
     async def _process_debounced_media_group(mg_id: str):
         """Albomning barcha 2-4 ta rasmi Telegramdan kelib bo'lgach (1.2s debounce) qayta ishlash"""

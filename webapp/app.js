@@ -610,6 +610,16 @@
       .replace(/'/g, '&#39;');
   }
 
+  const FALLBACK_IMAGE_URL = '/static/apple_3d_logo.png';
+
+  function getProductImageUrl(prod) {
+    if (!prod) return FALLBACK_IMAGE_URL;
+    if (prod.photo_file_id) return '/api/photo/' + prod.photo_file_id;
+    if (prod.image_url && String(prod.image_url).trim()) return prod.image_url;
+    if (prod.image && String(prod.image).trim()) return prod.image;
+    return FALLBACK_IMAGE_URL;
+  }
+
   function renderDiscountsSlider() {
     if (!discountsTrackEl || !state.products || state.products.length === 0) return;
 
@@ -632,7 +642,7 @@
                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
               </svg>
             </button>
-            <img src="${p.image_url}" alt="${escapeHtml(p.name)}" class="deal-img" loading="lazy" />
+            <img src="${getProductImageUrl(p)}" alt="${escapeHtml(p.name)}" class="deal-img" loading="lazy" onerror="this.onerror=null; this.src='${FALLBACK_IMAGE_URL}';" />
           </div>
           <div class="deal-content">
             <div class="deal-price-block">
@@ -979,7 +989,7 @@
 
       return `
         <div class="cart-section-item" data-id="${p.id}">
-          <img src="${p.image_url}" alt="${p.name}" class="cart-section-item-img" />
+          <img src="${getProductImageUrl(p)}" alt="${escapeHtml(p.name)}" class="cart-section-item-img" onerror="this.onerror=null; this.src='${FALLBACK_IMAGE_URL}';" />
           <div class="cart-section-item-info">
             <span class="cart-section-item-brand">${brand}</span>
             <h4 class="cart-section-item-name">${p.name}</h4>
@@ -1131,7 +1141,7 @@
                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
               </svg>
             </button>
-            <img src="${p.image_url}" alt="${p.name}" class="product-img" loading="lazy" />
+            <img src="${getProductImageUrl(p)}" alt="${escapeHtml(p.name)}" class="product-img" loading="lazy" onerror="this.onerror=null; this.src='${FALLBACK_IMAGE_URL}';" />
           </div>
           <div class="card-body">
             <span class="product-brand">${brand}</span>
@@ -1264,7 +1274,7 @@
                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
               </svg>
             </button>
-            <img src="${p.image_url}" alt="${p.name}" class="product-img" loading="lazy" />
+            <img src="${getProductImageUrl(p)}" alt="${escapeHtml(p.name)}" class="product-img" loading="lazy" onerror="this.onerror=null; this.src='${FALLBACK_IMAGE_URL}';" />
           </div>
           <div class="card-body">
             <span class="product-brand">${brand}</span>
@@ -1376,13 +1386,26 @@
 
     let images = [];
     if (Array.isArray(prod.gallery_images) && prod.gallery_images.length > 0) {
-      images = prod.gallery_images;
+      images = prod.gallery_images.filter(Boolean);
     } else if (typeof prod.gallery_images === 'string') {
-      try { images = JSON.parse(prod.gallery_images); } catch (e) { images = [prod.image_url]; }
-    } else {
-      images = [prod.image_url];
+      try {
+        const parsed = JSON.parse(prod.gallery_images);
+        if (Array.isArray(parsed)) images = parsed.filter(Boolean);
+      } catch (e) {
+        images = [];
+      }
     }
-    if (images.length === 0 && prod.image_url) images = [prod.image_url];
+    if (images.length === 0) {
+      images = [getProductImageUrl(prod)];
+    } else {
+      images = images.map(img => {
+        if (!img) return FALLBACK_IMAGE_URL;
+        if (typeof img === 'string' && !img.startsWith('/') && !img.startsWith('http')) {
+          return '/api/photo/' + img;
+        }
+        return img;
+      });
+    }
 
     const specs = parseSpecs(prod.description);
     const isFav = state.wishlist.has(prod.id);
@@ -1399,7 +1422,7 @@
         <div class="modal-gallery-track" id="pdGalleryTrack">
           ${images.map((img, i) => `
             <div class="gallery-slide" data-index="${i}">
-              <img src="${img}" alt="${prod.name}" />
+              <img src="${img}" alt="${escapeHtml(prod.name)}" onerror="this.onerror=null; this.src='${FALLBACK_IMAGE_URL}';" />
             </div>
           `).join('')}
         </div>
@@ -1633,7 +1656,7 @@
                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
               </svg>
             </button>
-            <img src="${p.image_url}" alt="${p.name}" class="product-img" loading="lazy" />
+            <img src="${getProductImageUrl(p)}" alt="${escapeHtml(p.name)}" class="product-img" loading="lazy" onerror="this.onerror=null; this.src='${FALLBACK_IMAGE_URL}';" />
           </div>
           <div class="card-body">
             <span class="product-brand">${brand}</span>

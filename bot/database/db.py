@@ -77,7 +77,9 @@ class Database:
             min_size=1,
             max_size=10,
             ssl=ssl_arg,
-            command_timeout=30.0
+            command_timeout=30.0,
+            statement_cache_size=0,
+            max_cached_statement_lifetime=0
         )
 
         async with self.pool.acquire() as conn:
@@ -111,6 +113,7 @@ class Database:
                     price INTEGER NOT NULL,
                     image_url TEXT,
                     gallery_images TEXT,
+                    photo_file_id VARCHAR(255),
                     is_available INTEGER DEFAULT 1,
                     channel_id TEXT,
                     message_id BIGINT,
@@ -125,6 +128,7 @@ class Database:
             # Mavjud mahsulotlar jadvali uchun ustunlar migratsiyasi
             await conn.execute("""
                 ALTER TABLE products ADD COLUMN IF NOT EXISTS gallery_images TEXT;
+                ALTER TABLE products ADD COLUMN IF NOT EXISTS photo_file_id VARCHAR(255);
                 ALTER TABLE products ADD COLUMN IF NOT EXISTS channel_id TEXT;
                 ALTER TABLE products ADD COLUMN IF NOT EXISTS message_id BIGINT;
                 ALTER TABLE products ADD COLUMN IF NOT EXISTS media_group_id TEXT;
@@ -234,6 +238,7 @@ class Database:
                     price INTEGER NOT NULL,
                     image_url TEXT,
                     gallery_images TEXT,
+                    photo_file_id TEXT,
                     is_available INTEGER DEFAULT 1,
                     channel_id TEXT,
                     message_id INTEGER,
@@ -284,6 +289,7 @@ class Database:
             columns = [row[1] for row in await cursor.fetchall()]
             new_columns = {
                 "gallery_images": "TEXT",
+                "photo_file_id": "TEXT",
                 "channel_id": "TEXT",
                 "message_id": "INTEGER",
                 "media_group_id": "TEXT",
@@ -596,7 +602,9 @@ class Database:
         image_url: str,
         post_url: str,
         media_group_id: Optional[str] = None,
-        category_id: Optional[int] = None
+        category_id: Optional[int] = None,
+        photo_file_id: Optional[str] = None,
+        gallery_images: Optional[str] = None
     ) -> int:
         """Kanal postidan mahsulotni qo'shish yoki yangilash"""
         if not category_id:
@@ -629,20 +637,24 @@ class Database:
                     UPDATE products 
                     SET category_id = $1, name = $2, description = $3, price = $4, 
                         image_url = CASE WHEN $5 != '' THEN $5 ELSE image_url END,
-                        post_url = $6, media_group_id = $7, is_active = 1, is_available = 1
-                    WHERE channel_id = $8 AND message_id = $9;
-                """, category_id, name, description, price, image_url, post_url, media_group_id, str(channel_id), int(message_id))
+                        post_url = $6, media_group_id = $7,
+                        photo_file_id = CASE WHEN $8 IS NOT NULL AND $8 != '' THEN $8 ELSE photo_file_id END,
+                        gallery_images = CASE WHEN $9 IS NOT NULL AND $9 != '' THEN $9 ELSE gallery_images END,
+                        is_active = 1, is_available = 1
+                    WHERE channel_id = $10 AND message_id = $11;
+                """, category_id, name, description, price, image_url, post_url, media_group_id, photo_file_id, gallery_images, str(channel_id), int(message_id))
                 return existing['id']
             else:
                 prod_id = await self.pool.fetchval("""
                     INSERT INTO products (
                         category_id, name, description, price, image_url, 
                         channel_id, message_id, media_group_id, post_url, 
+                        photo_file_id, gallery_images,
                         views_count, is_active, is_available
                     )
-                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 0, 1, 1)
+                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 0, 1, 1)
                     RETURNING id;
-                """, category_id, name, description, price, image_url, str(channel_id), int(message_id), media_group_id, post_url)
+                """, category_id, name, description, price, image_url, str(channel_id), int(message_id), media_group_id, post_url, photo_file_id, gallery_images)
                 return prod_id
         else:
             async with aiosqlite.connect(self.db_path) as db:
@@ -651,9 +663,16 @@ class Database:
                         UPDATE products 
                         SET category_id = ?, name = ?, description = ?, price = ?, 
                             image_url = CASE WHEN ? != '' THEN ? ELSE image_url END,
-                            post_url = ?, media_group_id = ?, is_active = 1, is_available = 1
+                            post_url = ?, media_group_id = ?,
+                            photo_file_id = CASE WHEN ? IS NOT NULL AND ? != '' THEN ? ELSE photo_file_id END,
+                            gallery_images = CASE WHEN ? IS NOT NULL AND ? != '' THEN ? ELSE gallery_images END,
+                            is_active = 1, is_available = 1
                         WHERE channel_id = ? AND message_id = ?;
-                    """, (category_id, name, description, price, image_url, image_url, post_url, media_group_id, str(channel_id), int(message_id)))
+                    """, (
+                        category_id, name, description, price, image_url, post_url, media_group_id,
+                        photo_file_id, photo_file_id, gallery_images, gallery_images,
+                        str(channel_id), int(message_id)
+                    ))
                     await db.commit()
                     return existing['id']
                 else:
@@ -661,12 +680,14 @@ class Database:
                         INSERT INTO products (
                             category_id, name, description, price, image_url, 
                             channel_id, message_id, media_group_id, post_url, 
+                            photo_file_id, gallery_images,
                             views_count, is_active, is_available
                         )
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 1, 1);
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 1, 1);
                     """, (
                         category_id, name, description, price, image_url,
-                        str(channel_id), int(message_id), media_group_id, post_url
+                        str(channel_id), int(message_id), media_group_id, post_url,
+                        photo_file_id, gallery_images
                     ))
                     await db.commit()
                     return cur.lastrowid
@@ -764,18 +785,18 @@ class Database:
                 """, (image_url, gallery_json, product_id))
                 await db.commit()
 
-    async def add_product(self, category_id: int, name: str, description: str, price: int, image_url: str):
+    async def add_product(self, category_id: int, name: str, description: str, price: int, image_url: str, photo_file_id: Optional[str] = None):
         if self.is_postgres:
             await self.pool.execute("""
-                INSERT INTO products (category_id, name, description, price, image_url, is_active, is_available)
-                VALUES ($1, $2, $3, $4, $5, 1, 1);
-            """, category_id, name, description, price, image_url)
+                INSERT INTO products (category_id, name, description, price, image_url, photo_file_id, is_active, is_available)
+                VALUES ($1, $2, $3, $4, $5, $6, 1, 1);
+            """, category_id, name, description, price, image_url, photo_file_id)
         else:
             async with aiosqlite.connect(self.db_path) as db:
                 await db.execute("""
-                    INSERT INTO products (category_id, name, description, price, image_url, is_active, is_available)
-                    VALUES (?, ?, ?, ?, ?, 1, 1);
-                """, (category_id, name, description, price, image_url))
+                    INSERT INTO products (category_id, name, description, price, image_url, photo_file_id, is_active, is_available)
+                    VALUES (?, ?, ?, ?, ?, ?, 1, 1);
+                """, (category_id, name, description, price, image_url, photo_file_id))
                 await db.commit()
 
     # --- Cart operations ---
