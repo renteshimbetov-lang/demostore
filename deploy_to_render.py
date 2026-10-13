@@ -69,8 +69,13 @@ def check_status():
 def trigger_deploy(clear_cache=False):
     payload = {"clearCache": "clear" if clear_cache else "do_not_clear"}
     status, res = _request(f"/services/{SERVICE_ID}/deploys", method="POST", data=payload)
-    if status in (200, 201, 202) and isinstance(res, dict):
-        dep_id = res.get("id") or res.get("deploy", {}).get("id")
+    if status in (200, 201, 202):
+        dep_id = res.get("id") or res.get("deploy", {}).get("id") if isinstance(res, dict) else None
+        if not dep_id:
+            time.sleep(2)
+            _, l_res = _request(f"/services/{SERVICE_ID}/deploys?limit=1")
+            if isinstance(l_res, list) and l_res:
+                dep_id = l_res[0].get("deploy", {}).get("id")
         print(f"Deploy muvaffaqiyatli yuborildi! Deploy ID: {dep_id}")
         print("Deploy jarayoni kuzatilmoqda...")
         for _ in range(60):
