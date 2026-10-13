@@ -1,7 +1,9 @@
+import asyncio
 import json
+import logging
 from aiogram import Router, F, Bot
 from aiogram.filters import Command
-from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton, InputMediaPhoto
 from aiogram.fsm.context import FSMContext
 
 from bot.config import config
@@ -368,6 +370,78 @@ def setup_admin_router(db: Database, bot: Bot) -> Router:
     # =========================================================================
     # 1. Kanalga yangi post tayyorlash va chop etish (Admin Chat)
     # =========================================================================
+    _admin_mg_buffers: dict = {}
+    _admin_mg_tasks: dict = {}
+
+    def extract_admin_photos(msgs: list) -> list:
+        fids = []
+        for m in msgs:
+            if m.photo:
+                fid = m.photo[-1].file_id
+                if fid not in fids:
+                    fids.append(fid)
+        return fids
+
+    async def _send_admin_draft_preview(user_id: int, state: FSMContext, msgs: list):
+        main_msg = next((m for m in msgs if (m.caption or m.text or "").strip()), msgs[0])
+        raw_text = (main_msg.caption or main_msg.text or "").strip()
+        if not raw_text:
+            await bot.send_message(
+                chat_id=user_id,
+                text="⚠️ Iltimos, mahsulot rasmi bilan birga uning nomi va narxini ham yozib yuboring.\nBekor qilish uchun <code>/cancel</code> deb yozing.",
+                parse_mode="HTML"
+            )
+            return
+
+        name, description, price = parse_channel_post_content(raw_text)
+        file_ids = extract_admin_photos(msgs)
+
+        # Rasm tanlash mantig'i:
+        # 1-rasm odatda yon tarafdan olingan bo'ladi.
+        # Keyingi (2-rasm) esa to'g'ridan olingan bo'ladi!
+        # Agar keyingi rasm bo'lmasa, 1-rasm (yon tarafdan olingani) olinadi.
+        if len(file_ids) >= 2:
+            primary_fid = file_ids[1]  # Keyingi to'g'ridan olingan rasm
+            ordered_fids = [file_ids[1], file_ids[0], *file_ids[2:]]
+        elif file_ids:
+            primary_fid = file_ids[0]
+            ordered_fids = file_ids
+        else:
+            primary_fid = None
+            ordered_fids = []
+
+        price_uzs = format_price(price * config.usd_rate)
+        await state.update_data(
+            name=name,
+            description=description,
+            price=price,
+            raw_text=raw_text,
+            photo_file_id=primary_fid,
+            all_photo_file_ids=ordered_fids
+        )
+
+        preview_text = (
+            f"✨ <b>YANGI POST PREVIEW (KO'RISH)</b>\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"📱 <b>Model:</b> {name}\n"
+            f"💵 <b>Narxi:</b> ${price} (≈ {price_uzs})\n\n"
+            f"📋 <b>Kanal posti tavsifi:</b>\n"
+            f"{description}\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"❓ <b>Shuni kanalga va do'konga joylaylikmi?</b>"
+        )
+        confirm_kb = InlineKeyboardMarkup(inline_keyboard=[
+            [
+                InlineKeyboardButton(text="🟢 Ha, kanalga joylash", callback_data="admin_publish_channel_post"),
+                InlineKeyboardButton(text="🔴 Yo'q, bekor qilish", callback_data="admin_cancel_channel_post")
+            ]
+        ])
+
+        if primary_fid:
+            await bot.send_photo(chat_id=user_id, photo=primary_fid, caption=preview_text, reply_markup=confirm_kb, parse_mode="HTML")
+        else:
+            await bot.send_message(chat_id=user_id, text=preview_text, reply_markup=confirm_kb, parse_mode="HTML")
+
     @router.callback_query(F.data == "admin_create_post")
     async def start_create_post(callback: CallbackQuery, state: FSMContext):
         if not is_admin(callback.from_user.id):
@@ -377,7 +451,7 @@ def setup_admin_router(db: Database, bot: Bot) -> Router:
         text = (
             "📢 <b>KANALGA YANGI POST TAYYORLASH</b>\n"
             "━━━━━━━━━━━━━━━━━━━━━━\n"
-            "Mahsulot <b>rasmini</b> va <b>tavsifini</b> (nomi, narxi, parametrlari) yuboring.\n\n"
+            "Mahsulot <b>rasmini</b> (yoki albom rasmlarini) va <b>tavsifini</b> (nomi, narxi, parametrlari) yuboring.\n\n"
             "<i>Misol matn:</i>\n"
             "<code>Apple iPhone 16 Pro Max\n"
             "256GB / Desert Titanium / 100% batareya\n"
@@ -406,48 +480,31 @@ def setup_admin_router(db: Database, bot: Bot) -> Router:
             await message.answer("❌ Post tayyorlash bekor qilindi.", reply_markup=get_admin_menu_inline())
             return
 
-        raw_text = (message.caption or message.text or "").strip()
-        if not raw_text:
-            await message.answer(
-                "⚠️ Iltimos, mahsulot rasmi bilan birga uning nomi va narxini ham yozib yuboring.\n"
-                "Bekor qilish uchun <code>/cancel</code> deb yozing.",
-                parse_mode="HTML"
-            )
+        # Agar bir nechta rasm (media group) bo'lsa, barchasini 0.8 soniya kutib yig'ib olamiz
+        if message.media_group_id:
+            mg_id = str(message.media_group_id)
+            if mg_id not in _admin_mg_buffers:
+                _admin_mg_buffers[mg_id] = []
+            _admin_mg_buffers[mg_id].append(message)
+
+            if mg_id in _admin_mg_tasks and not _admin_mg_tasks[mg_id].done():
+                _admin_mg_tasks[mg_id].cancel()
+
+            async def _process_debounced_admin_mg(mg: str, uid: int):
+                try:
+                    await asyncio.sleep(0.8)
+                    msgs = _admin_mg_buffers.pop(mg, [])
+                    _admin_mg_tasks.pop(mg, None)
+                    if msgs:
+                        msgs.sort(key=lambda m: m.message_id)
+                        await _send_admin_draft_preview(uid, state, msgs)
+                except asyncio.CancelledError:
+                    pass
+
+            _admin_mg_tasks[mg_id] = asyncio.create_task(_process_debounced_admin_mg(mg_id, message.from_user.id))
             return
 
-        name, description, price = parse_channel_post_content(raw_text)
-        photo_file_id = message.photo[-1].file_id if message.photo else None
-        price_uzs = format_price(price * config.usd_rate)
-
-        await state.update_data(
-            name=name,
-            description=description,
-            price=price,
-            raw_text=raw_text,
-            photo_file_id=photo_file_id
-        )
-
-        preview_text = (
-            f"✨ <b>YANGI POST PREVIEW (KO'RISH)</b>\n"
-            f"━━━━━━━━━━━━━━━━━━━━━━\n"
-            f"📱 <b>Model:</b> {name}\n"
-            f"💵 <b>Narxi:</b> ${price} (≈ {price_uzs})\n\n"
-            f"📋 <b>Kanal posti tavsifi:</b>\n"
-            f"{description}\n"
-            f"━━━━━━━━━━━━━━━━━━━━━━\n"
-            f"❓ <b>Shuni kanalga va do'konga joylaylikmi?</b>"
-        )
-        confirm_kb = InlineKeyboardMarkup(inline_keyboard=[
-            [
-                InlineKeyboardButton(text="🟢 Ha, kanalga joylash", callback_data="admin_publish_channel_post"),
-                InlineKeyboardButton(text="🔴 Yo'q, bekor qilish", callback_data="admin_cancel_channel_post")
-            ]
-        ])
-
-        if photo_file_id:
-            await message.answer_photo(photo=photo_file_id, caption=preview_text, reply_markup=confirm_kb, parse_mode="HTML")
-        else:
-            await message.answer(preview_text, reply_markup=confirm_kb, parse_mode="HTML")
+        await _send_admin_draft_preview(message.from_user.id, state, [message])
 
     @router.callback_query(F.data == "admin_publish_channel_post")
     async def publish_channel_post_callback(callback: CallbackQuery, state: FSMContext):
@@ -468,22 +525,32 @@ def setup_admin_router(db: Database, bot: Bot) -> Router:
             f"🛒 <b>Mini ilovada xarid qilish:</b> {config.channel_url}"
         )
 
+        all_photos = data.get("all_photo_file_ids") or ([data["photo_file_id"]] if data.get("photo_file_id") else [])
+
         try:
-            if data.get("photo_file_id"):
+            if len(all_photos) > 1:
+                media = [
+                    InputMediaPhoto(media=fid, caption=channel_caption if i == 0 else "", parse_mode="HTML")
+                    for i, fid in enumerate(all_photos[:10])
+                ]
+                sent_msgs = await bot.send_media_group(chat_id=channel_target, media=media)
+                chan_msg_id = sent_msgs[0].message_id
+            elif data.get("photo_file_id"):
                 sent = await bot.send_photo(
                     chat_id=channel_target,
                     photo=data["photo_file_id"],
                     caption=channel_caption,
                     parse_mode="HTML"
                 )
+                chan_msg_id = sent.message_id
             else:
                 sent = await bot.send_message(
                     chat_id=channel_target,
                     text=channel_caption,
                     parse_mode="HTML"
                 )
+                chan_msg_id = sent.message_id
 
-            chan_msg_id = sent.message_id
             post_url = (
                 f"https://t.me/{config.channel_username}/{chan_msg_id}"
                 if config.channel_username
@@ -491,7 +558,9 @@ def setup_admin_router(db: Database, bot: Bot) -> Router:
             )
 
             # Bazaga va mini ilovaga saqlash
-            img_url = f"/api/photo/{data['photo_file_id']}" if data.get("photo_file_id") else "/static/apple_3d_logo.png"
+            primary_fid = data.get("photo_file_id")
+            img_url = f"/api/photo/{primary_fid}" if primary_fid else "/static/apple_3d_logo.png"
+            gallery_urls = [f"/api/photo/{fid}" for fid in all_photos] if all_photos else [img_url]
             await db.upsert_product_from_channel(
                 channel_id=str(channel_target),
                 message_id=chan_msg_id,
@@ -500,24 +569,18 @@ def setup_admin_router(db: Database, bot: Bot) -> Router:
                 price=data["price"],
                 image_url=img_url,
                 post_url=post_url,
-                photo_file_id=data.get("photo_file_id"),
-                gallery_images=json.dumps([img_url])
+                photo_file_id=primary_fid,
+                gallery_images=json.dumps(gallery_urls)
             )
 
-            res_text = (
-                f"✅ <b>POST KANALGA VA DO'KONGA MUVAFFAQIYATLI JOYLANDI!</b>\n"
-                f"━━━━━━━━━━━━━━━━━━━━━━\n"
-                f"📱 <b>Model:</b> {data['name']}\n"
-                f"💵 <b>Narxi:</b> ${data['price']}\n"
-                f"🔗 <b>Kanal posti:</b> <a href=\"{post_url}\">Kanalda ko'rish</a>\n"
-                f"🛍 <i>Mini ilovada (do'konda) mijozlar uchun darhol faol bo'ldi!</i>"
-            )
+            # Chat toza (clean) turishi uchun tasdiqlash xabarini darhol o'chirib tashlaymiz!
             if callback.message:
-                if callback.message.photo:
-                    await callback.message.edit_caption(caption=res_text, parse_mode="HTML")
-                else:
-                    await callback.message.edit_text(text=res_text, parse_mode="HTML")
-            await callback.answer("✅ Muvaffaqiyatli kanalga joylandi!")
+                try:
+                    await callback.message.delete()
+                except Exception:
+                    pass
+
+            await callback.answer("✅ Kanalga va do'konga muvaffaqiyatli joylandi!", show_alert=True)
         except Exception as e:
             await callback.answer(f"Kanalga yuborishda xatolik: {e}", show_alert=True)
 
@@ -527,13 +590,12 @@ def setup_admin_router(db: Database, bot: Bot) -> Router:
             return
 
         await state.clear()
-        cancel_text = "❌ <b>Post bekor qilindi. Kanalga yoki do'konga joylanmadi.</b>"
         if callback.message:
-            if callback.message.photo:
-                await callback.message.edit_caption(caption=cancel_text, parse_mode="HTML")
-            else:
-                await callback.message.edit_text(text=cancel_text, parse_mode="HTML")
-        await callback.answer("Bekor qilindi.")
+            try:
+                await callback.message.delete()
+            except Exception:
+                pass
+        await callback.answer("❌ Post bekor qilindi.", show_alert=False)
 
     # =========================================================================
     # 2. Kanaldan kelgan postlarni moderatsiya qilish (Approve / Reject)
@@ -547,21 +609,15 @@ def setup_admin_router(db: Database, bot: Bot) -> Router:
         await db.activate_product_by_id(prod_id)
         prod = await db.get_product(prod_id)
         name = prod["name"] if prod else "Mahsulot"
-        price = prod["price"] if prod else 0
 
-        res_text = (
-            f"✅ <b>MAHSULOT TASDIQLANDI VA DO'KONGA JOYLANDI!</b>\n"
-            f"━━━━━━━━━━━━━━━━━━━━━━\n"
-            f"📱 <b>Model:</b> {name}\n"
-            f"💵 <b>Narxi:</b> ${price}\n\n"
-            f"🛍 <i>Mahsulot mini ilovada (do'konda) mijozlar uchun muvaffaqiyatli faollashtirildi!</i>"
-        )
+        # Chat toza (clean) turishi uchun tasdiqlash xabari darhol o'chiriladi!
         if callback.message:
-            if callback.message.photo:
-                await callback.message.edit_caption(caption=res_text, parse_mode="HTML")
-            else:
-                await callback.message.edit_text(text=res_text, parse_mode="HTML")
-        await callback.answer("✅ Do'konga joylandi!")
+            try:
+                await callback.message.delete()
+            except Exception:
+                pass
+
+        await callback.answer(f"✅ '{name}' tasdiqlandi va do'konga joylandi!", show_alert=False)
 
     @router.callback_query(F.data.startswith("chan_reject_"))
     async def reject_channel_post_callback(callback: CallbackQuery):
@@ -575,7 +631,7 @@ def setup_admin_router(db: Database, bot: Bot) -> Router:
 
         del_kb = InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(text="🗑 Kanaldan ham o'chirish", callback_data=f"chan_delmsg_{prod_id}")],
-            [InlineKeyboardButton(text="↩️ Qayta faollashtirish", callback_data=f"chan_approve_{prod_id}")]
+            [InlineKeyboardButton(text="❌ Xabarni tozalash (O'chirish)", callback_data="admin_dismiss_msg")]
         ])
         res_text = (
             f"❌ <b>MAHSULOT RAD ETILDI!</b>\n"
@@ -601,22 +657,25 @@ def setup_admin_router(db: Database, bot: Bot) -> Router:
             try:
                 await bot.delete_message(chat_id=prod["channel_id"], message_id=prod["message_id"])
                 await db.deactivate_product_by_id(prod_id)
-                res_text = (
-                    f"🗑 <b>POST TELEGRAM KANALIDAN HAM O'CHIRILDI!</b>\n"
-                    f"━━━━━━━━━━━━━━━━━━━━━━\n"
-                    f"📱 <b>Model:</b> {prod['name']}\n"
-                    f"Post kanaldan va do'kondan butunlay tozalab tashlandi."
-                )
                 if callback.message:
-                    if callback.message.photo:
-                        await callback.message.edit_caption(caption=res_text, parse_mode="HTML")
-                    else:
-                        await callback.message.edit_text(text=res_text, parse_mode="HTML")
-                await callback.answer("🗑 Kanaldan o'chirildi!", show_alert=True)
+                    try:
+                        await callback.message.delete()
+                    except Exception:
+                        pass
+                await callback.answer("🗑 Post Telegram kanalidan ham o'chirildi!", show_alert=True)
             except Exception as e:
                 await callback.answer(f"O'chirishda xatolik: {e}", show_alert=True)
         else:
             await callback.answer("Post ma'lumotlari topilmadi.", show_alert=True)
+
+    @router.callback_query(F.data == "admin_dismiss_msg")
+    async def dismiss_msg_callback(callback: CallbackQuery):
+        if callback.message:
+            try:
+                await callback.message.delete()
+            except Exception:
+                pass
+        await callback.answer()
 
     # =========================================================================
     # 3. Kanal postlarini qo'lda sinxronlash
@@ -652,35 +711,31 @@ def setup_admin_router(db: Database, bot: Bot) -> Router:
         if not raw_text or not any(k in raw_text.lower() for k in ["$", "usd", "narx", "pro", "iphone", "macbook", "air", "gb"]):
             return
 
-        name, description, price = parse_channel_post_content(raw_text)
-        photo_file_id = message.photo[-1].file_id
-        price_uzs = format_price(price * config.usd_rate)
-
         await state.set_state(AdminStates.waiting_for_channel_post)
-        await state.update_data(
-            name=name,
-            description=description,
-            price=price,
-            raw_text=raw_text,
-            photo_file_id=photo_file_id
-        )
 
-        preview_text = (
-            f"✨ <b>YANGI POST TAYYORLANDI</b>\n"
-            f"━━━━━━━━━━━━━━━━━━━━━━\n"
-            f"📱 <b>Model:</b> {name}\n"
-            f"💵 <b>Narxi:</b> ${price} (≈ {price_uzs})\n\n"
-            f"📋 <b>Kanal posti tavsifi:</b>\n"
-            f"{description}\n"
-            f"━━━━━━━━━━━━━━━━━━━━━━\n"
-            f"❓ <b>Shuni kanalga va do'konga joylaylikmi?</b>"
-        )
-        confirm_kb = InlineKeyboardMarkup(inline_keyboard=[
-            [
-                InlineKeyboardButton(text="🟢 Ha, kanalga joylash", callback_data="admin_publish_channel_post"),
-                InlineKeyboardButton(text="🔴 Yo'q, bekor qilish", callback_data="admin_cancel_channel_post")
-            ]
-        ])
-        await message.reply(preview_text, reply_markup=confirm_kb, parse_mode="HTML")
+        if message.media_group_id:
+            mg_id = str(message.media_group_id)
+            if mg_id not in _admin_mg_buffers:
+                _admin_mg_buffers[mg_id] = []
+            _admin_mg_buffers[mg_id].append(message)
+
+            if mg_id in _admin_mg_tasks and not _admin_mg_tasks[mg_id].done():
+                _admin_mg_tasks[mg_id].cancel()
+
+            async def _process_debounced_admin_mg(mg: str, uid: int):
+                try:
+                    await asyncio.sleep(0.8)
+                    msgs = _admin_mg_buffers.pop(mg, [])
+                    _admin_mg_tasks.pop(mg, None)
+                    if msgs:
+                        msgs.sort(key=lambda m: m.message_id)
+                        await _send_admin_draft_preview(uid, state, msgs)
+                except asyncio.CancelledError:
+                    pass
+
+            _admin_mg_tasks[mg_id] = asyncio.create_task(_process_debounced_admin_mg(mg_id, message.from_user.id))
+            return
+
+        await _send_admin_draft_preview(message.from_user.id, state, [message])
 
     return router

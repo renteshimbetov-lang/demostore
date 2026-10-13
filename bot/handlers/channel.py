@@ -90,19 +90,35 @@ def setup_channel_router(db: Database, bot: Bot) -> Router:
 
         # Telegram file_id larini ajratib olish (diskka hech narsa yuklanmaydi)
         file_ids = extract_all_photo_file_ids(all_messages)
-        primary_file_id = file_ids[0] if file_ids else None
+
+        # Rasm tanlash mantig'i:
+        # 1-rasm ko'pincha yonboshdan/burchakdan olingan bo'ladi.
+        # Keyingi (2-rasm) esa to'g'ridan (front view) olingan bo'ladi!
+        # Agar keyingi rasm bo'lmasa, 1-rasm (yon tarafdan olingani) olinadi.
+        if len(file_ids) >= 2:
+            primary_file_id = file_ids[1]  # Keyingi to'g'ridan olingan rasm
+            ordered_file_ids = [file_ids[1], file_ids[0], *file_ids[2:]]
+        elif file_ids:
+            primary_file_id = file_ids[0]
+            ordered_file_ids = file_ids
+        else:
+            primary_file_id = None
+            ordered_file_ids = []
 
         # Agar kanal ommaviy bo'lsa, Telegram rasmiy CDN manzillarini olish
         from bot.config import config
         chan_user = main_msg.chat.username or config.channel_username
         cdn_photos = fetch_channel_embed_photos(chan_user, message_id) if chan_user else []
 
-        if cdn_photos:
+        if len(cdn_photos) >= 2:
+            image_url = cdn_photos[1]  # Keyingi to'g'ridan olingan rasm
+            gallery_urls = [cdn_photos[1], cdn_photos[0], *cdn_photos[2:]]
+        elif cdn_photos:
             image_url = cdn_photos[0]
             gallery_urls = cdn_photos
         elif primary_file_id:
             image_url = f"/api/photo/{primary_file_id}"
-            gallery_urls = [f"/api/photo/{fid}" for fid in file_ids]
+            gallery_urls = [f"/api/photo/{fid}" for fid in ordered_file_ids]
         else:
             image_url = "/static/apple_3d_logo.png"
             gallery_urls = ["/static/apple_3d_logo.png"]
