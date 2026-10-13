@@ -81,16 +81,21 @@ def create_web_app(db: Database, webapp_dir: str) -> web.Application:
         response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
         response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
 
-        # Rasm proksi va statik rasmlar uchun tezkor kesh
+        # Rasm proksi va statik resurslar uchun tezkor kesh
+        clean_path = request.path.split("?")[0]
         if request.path.startswith("/api/photo/"):
             response.headers["Cache-Control"] = "public, max-age=86400, immutable"
-        elif request.path.startswith("/static/products/") or any(request.path.endswith(ext) for ext in [".jpg", ".png", ".jpeg", ".webp"]):
+        elif request.path.startswith("/static/products/") or any(clean_path.endswith(ext) for ext in [".jpg", ".png", ".jpeg", ".webp", ".svg", ".ico", ".woff", ".woff2"]):
             response.headers["Cache-Control"] = "public, max-age=604800, immutable"
-        else:
+        elif any(clean_path.endswith(ext) for ext in [".css", ".js"]):
+            response.headers["Cache-Control"] = "public, max-age=86400, stale-while-revalidate=604800"
+        elif request.path == "/" or request.path.endswith(".html") or request.path.startswith("/api/"):
             # HTML va dinamik API uchun no-cache
             response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
             response.headers["Pragma"] = "no-cache"
             response.headers["Expires"] = "0"
+        else:
+            response.headers["Cache-Control"] = "public, max-age=86400"
         return response
 
     app.middlewares.append(cors_middleware)

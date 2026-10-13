@@ -10,12 +10,15 @@
   <!-- Telegram Web App SDK -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-  <!-- Google Fonts: Inter & Outfit -->
+  <!-- Google Fonts: Inter & Outfit (Non-blocking) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+  <noscript>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet">
+  </noscript>
   
-  <link rel="stylesheet" href="/static/app.css?v=29.0" />
+  <link rel="stylesheet" href="/static/app.css?v=31.0" />
 </head>
 <body>
   <!-- To'liq ekranli Parda (Curtain Reveal) Kirish Animatsiyasi -->
@@ -35,6 +38,7 @@
           class="splash-logo-img"
           width="82"
           height="95"
+          fetchpriority="high"
         />
         <div class="splash-logo-glow"></div>
       </div>
@@ -90,7 +94,7 @@
         splashEl.style.pointerEvents = 'none';
         setTimeout(function () {
           splashEl.style.display = 'none';
-        }, 850);
+        }, 380);
       }
 
       window.dismissIntroCurtains = openCurtain;
@@ -103,8 +107,8 @@
       }
       splashEl.addEventListener('click', openCurtain);
 
-      // 1.3 soniyadan so'ng parda o'zi avtomatik ochiladi
-      setTimeout(openCurtain, 1300);
+      // Tezkor va silliq parda ochilishi (250ms)
+      setTimeout(openCurtain, 250);
     })();
   </script>
 
@@ -133,7 +137,7 @@
           </a>
           <div class="live-usd-badge" id="liveUsdBadge" title="Markaziy Bank (CBU) jonli kursi">
             <span class="live-usd-dot"></span>
-            <span class="live-usd-text" id="liveUsdText">💵 1$ = 12 850 soʻm</span>
+            <span class="live-usd-text" id="liveUsdText">1$ = 12 850 soʻm</span>
           </div>
         </div>
 
@@ -537,21 +541,17 @@
           <!-- Dinamik chiqariladi -->
         </div>
 
-        <!-- Suzuvchi pastki xarid paneli -->
+        <!-- Suzuvchi pastki xarid paneli (Apple Minimalist) -->
         <div class="pd-bottom-bar" id="pdBottomBar">
           <div class="pd-price-box">
             <span class="pd-price-label">Narxi:</span>
-            <div class="pd-price-row">
-              <svg class="pd-price-cart-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="9" cy="21" r="1"></circle>
-                <circle cx="20" cy="21" r="1"></circle>
-                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-              </svg>
-              <strong class="pd-price-val" id="pdBottomPrice">$0</strong>
+            <div class="pd-bottom-price-stack">
+              <strong class="pd-bottom-usd-val" id="pdBottomPrice">$0</strong>
+              <span class="pd-bottom-uzs-val" id="pdBottomPriceUzs">≈ 0 soʻm</span>
             </div>
           </div>
-          <button class="btn-buy pd-add-btn" id="pdAddToCartBtn">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+          <button class="pd-add-btn" id="pdAddToCartBtn">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
             <span id="pdBtnText">Savatga olish</span>
           </button>
         </div>
@@ -719,6 +719,6 @@
     </div>
   </div>
 
-  <script src="/static/app.js?v=29.0"></script>
+  <script src="/static/app.js?v=30.0"></script>
 </body>
 </html>

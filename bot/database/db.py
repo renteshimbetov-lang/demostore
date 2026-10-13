@@ -669,8 +669,11 @@ class Database:
                             is_active = 1, is_available = 1
                         WHERE channel_id = ? AND message_id = ?;
                     """, (
-                        category_id, name, description, price, image_url, post_url, media_group_id,
-                        photo_file_id, photo_file_id, gallery_images, gallery_images,
+                        category_id, name, description, price, 
+                        image_url, image_url,
+                        post_url, media_group_id,
+                        photo_file_id, photo_file_id, photo_file_id, 
+                        gallery_images, gallery_images, gallery_images,
                         str(channel_id), int(message_id)
                     ))
                     await db.commit()

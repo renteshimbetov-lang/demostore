@@ -48,29 +48,36 @@
       const isTg = Boolean(window.Telegram?.WebApp?.initData || window.Telegram?.WebApp?.platform);
       const isFullscreen = Boolean(tg?.isFullscreen);
 
-      const contentTop = tg?.contentSafeAreaInset?.top || 0;
-      const safeTop = tg?.safeAreaInset?.top || 0;
+      const contentTop = Number(tg?.contentSafeAreaInset?.top) || 0;
+      const safeTop = Number(tg?.safeAreaInset?.top) || 0;
+      const isMobileDevice = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
-      let finalTop = 12; // Standart ixcham oraliq
+      let finalTop = 14;
 
-      if (contentTop > 0) {
-        // Telegram floating tugmalari (content inset)
+      if (contentTop >= 60) {
+        // Telegram Bot API 8.0 content safe area (floating bar included)
         finalTop = contentTop + 4;
       } else if (safeTop > 0) {
-        // Safe area (notch/status bar)
-        finalTop = safeTop + (isFullscreen ? 10 : 4);
+        // Safe area (Notch/Dynamic Island 47-59px) + Telegram native floating bar (44px) = 91-103px
+        finalTop = safeTop + 44;
+      } else if (isTg && isMobileDevice) {
+        // Mobil Telegram mini ilovada insetlar 0 bo'lsa zaxira
+        finalTop = 90;
       } else if (isTg) {
-        // Telegram ichida agar insetlar 0 bo'lsa (Desktop / Mac client)
-        finalTop = isFullscreen ? 16 : 12;
+        // Telegram Desktop
+        finalTop = 18;
+      } else if (isMobileDevice) {
+        finalTop = 14;
       }
 
       if (finalTop !== lastSafeTop) {
         lastSafeTop = finalTop;
         document.documentElement.style.setProperty('--app-safe-top', `${finalTop}px`);
+        updateHeaderHeight();
       }
 
-      const contentBottom = tg?.contentSafeAreaInset?.bottom || 0;
-      const safeBottom = tg?.safeAreaInset?.bottom || 0;
+      const contentBottom = Number(tg?.contentSafeAreaInset?.bottom) || 0;
+      const safeBottom = Number(tg?.safeAreaInset?.bottom) || 0;
       let finalBottom = Math.max(contentBottom, safeBottom, 16);
       if (finalBottom !== lastSafeBottom) {
         lastSafeBottom = finalBottom;
@@ -133,7 +140,7 @@
     if (!textEl) return;
     const rInt = Math.round(rate || state?.currentUsdRate || 12850);
     const rFormatted = rInt.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-    textEl.textContent = `💵 1$ = ${rFormatted} soʻm`;
+    textEl.textContent = `1$ = ${rFormatted} soʻm`;
   }
 
   // Markaziy Bank kursini API orqali olish
@@ -406,14 +413,30 @@
     }
   };
 
+  // Keshdan dastlabki mahsulotlar va dollar kursini o'qish (0ms ochilish)
+  let cachedInitialProducts = [];
+  try {
+    const raw = localStorage.getItem('demostore_cached_products');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) cachedInitialProducts = parsed;
+    }
+  } catch (e) {}
+
+  let cachedInitialRate = 12850;
+  try {
+    const r = parseFloat(localStorage.getItem('demostore_cached_usd_rate'));
+    if (r && !isNaN(r) && r > 1000) cachedInitialRate = r;
+  } catch (e) {}
+
   // Holat (State)
   const state = {
     lang: localStorage.getItem('demostore_lang') || 'uz',
-    currentUsdRate: 12850,
+    currentUsdRate: cachedInitialRate,
     selectedCategory: 0,
     selectedSort: 'default',
     searchQuery: '',
-    products: [],
+    products: cachedInitialProducts,
     isLoading: false,
     selectedProduct: null,
     wishlist: new Set(),
@@ -533,6 +556,7 @@
   const pdWishlistBtnEl = document.getElementById('pdWishlistBtn');
   const pdBodyContentEl = document.getElementById('pdBodyContent');
   const pdBottomPriceEl = document.getElementById('pdBottomPrice');
+  const pdBottomPriceUzsEl = document.getElementById('pdBottomPriceUzs');
   const pdAddToCartBtnEl = document.getElementById('pdAddToCartBtn');
   const pdBtnTextEl = document.getElementById('pdBtnText');
   const pdChannelIconBtnEl = document.getElementById('pdChannelIconBtn');
@@ -648,7 +672,7 @@
                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
               </svg>
             </button>
-            <img src="${getProductImageUrl(p)}" alt="${escapeHtml(p.name)}" class="deal-img" loading="lazy" onerror="this.onerror=null; this.src='${FALLBACK_IMAGE_URL}';" />
+            <img src="${getProductImageUrl(p)}" alt="${escapeHtml(p.name)}" class="deal-img" loading="lazy" decoding="async" onerror="this.onerror=null; this.src='${FALLBACK_IMAGE_URL}';" />
           </div>
           <div class="deal-content">
             <div class="deal-price-block">
@@ -676,39 +700,33 @@
     });
 
     discountsTrackEl.innerHTML = html;
-
-    // Kartochka bosilganda to'liq modal ochish
-    discountsTrackEl.querySelectorAll('.deal-card').forEach(card => {
-      card.addEventListener('click', (e) => {
-        if (e.target.closest('.deal-wishlist-btn') || e.target.closest('.deal-cart-btn')) return;
-        const pid = parseInt(card.dataset.id, 10);
-        const prod = state.products.find(x => x.id === pid);
-        if (prod) openProductModal(prod);
-      });
-    });
-
-    // Sevimlilar (Wishlist) bosilishi
-    discountsTrackEl.querySelectorAll('.deal-wishlist-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const pid = parseInt(btn.dataset.id, 10);
-        const prod = state.products.find(x => x.id === pid);
-        if (prod) toggleWishlist(prod, e);
-      });
-    });
-
-    // Savatga olish (Mikro-animatsiya bilan)
-    discountsTrackEl.querySelectorAll('.deal-cart-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const pid = parseInt(btn.dataset.id, 10);
-        const prod = state.products.find(x => x.id === pid);
-        if (prod) handleAddToCart(prod, btn);
-      });
-    });
-
     setupDealsSliderSwipe();
   }
+
+  // Hafta chegirmalari trek hodisasi (Event Delegation)
+  discountsTrackEl?.addEventListener('click', (e) => {
+    const card = e.target.closest('.deal-card');
+    if (!card) return;
+    const pid = parseInt(card.dataset.id, 10);
+    const prod = state.products.find(x => x.id === pid);
+    if (!prod) return;
+
+    const wishlistBtn = e.target.closest('.deal-wishlist-btn');
+    if (wishlistBtn) {
+      e.stopPropagation();
+      toggleWishlist(prod, e);
+      return;
+    }
+
+    const cartBtn = e.target.closest('.deal-cart-btn');
+    if (cartBtn) {
+      e.stopPropagation();
+      handleAddToCart(prod, cartBtn);
+      return;
+    }
+
+    openProductModal(prod);
+  });
 
   // Sichqoncha va sensor bilan erkin surish (Touch & Mouse Drag Swipe)
   function setupDealsSliderSwipe() {
@@ -1120,7 +1138,7 @@
 
       return `
         <div class="cart-section-item" data-id="${p.id}">
-          <img src="${getProductImageUrl(p)}" alt="${escapeHtml(p.name)}" class="cart-section-item-img" onerror="this.onerror=null; this.src='${FALLBACK_IMAGE_URL}';" />
+          <img src="${getProductImageUrl(p)}" alt="${escapeHtml(p.name)}" class="cart-section-item-img" decoding="async" onerror="this.onerror=null; this.src='${FALLBACK_IMAGE_URL}';" />
           <div class="cart-section-item-info">
             <span class="cart-section-item-brand">${brand}</span>
             <h4 class="cart-section-item-name">${p.name}</h4>
@@ -1272,7 +1290,7 @@
                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
               </svg>
             </button>
-            <img src="${getProductImageUrl(p)}" alt="${escapeHtml(p.name)}" class="product-img" loading="lazy" onerror="this.onerror=null; this.src='${FALLBACK_IMAGE_URL}';" />
+            <img src="${getProductImageUrl(p)}" alt="${escapeHtml(p.name)}" class="product-img" loading="lazy" decoding="async" onerror="this.onerror=null; this.src='${FALLBACK_IMAGE_URL}';" />
           </div>
           <div class="card-body">
             <span class="product-brand">${brand}</span>
@@ -1302,45 +1320,40 @@
     });
 
     wishlistProductsGridEl.innerHTML = html;
-
-    wishlistProductsGridEl.querySelectorAll('.product-card').forEach(card => {
-      card.addEventListener('click', (e) => {
-        if (e.target.closest('.wishlist-btn') || e.target.closest('.btn-add-cart') || e.target.closest('.btn-channel-link')) return;
-        const pid = parseInt(card.dataset.id, 10);
-        const prod = state.products.find(x => x.id === pid);
-        if (prod) openProductModal(prod);
-      });
-    });
-
-    wishlistProductsGridEl.querySelectorAll('.btn-channel-link').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const pid = parseInt(btn.dataset.id, 10);
-        const postUrl = btn.dataset.postUrl;
-        openChannelPost(postUrl, pid);
-      });
-    });
-
-    wishlistProductsGridEl.querySelectorAll('.wishlist-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const pid = parseInt(btn.dataset.id, 10);
-        const prod = state.products.find(x => x.id === pid);
-        if (prod) {
-          toggleWishlist(prod, e);
-          renderWishlistSection();
-        }
-      });
-    });
-
-    wishlistProductsGridEl.querySelectorAll('.btn-add-cart').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const pid = parseInt(btn.dataset.id, 10);
-        const prod = state.products.find(x => x.id === pid);
-        if (prod) handleAddToCart(prod, btn);
-      });
-    });
   }
+
+  // Wishlist grid hodisasi (Event Delegation)
+  wishlistProductsGridEl?.addEventListener('click', (e) => {
+    const card = e.target.closest('.product-card');
+    if (!card) return;
+    const pid = parseInt(card.dataset.id, 10);
+    const prod = state.products.find(x => x.id === pid);
+    if (!prod) return;
+
+    const wishlistBtn = e.target.closest('.wishlist-btn');
+    if (wishlistBtn) {
+      e.stopPropagation();
+      toggleWishlist(prod, e);
+      renderWishlistSection();
+      return;
+    }
+
+    const addCartBtn = e.target.closest('.btn-add-cart');
+    if (addCartBtn) {
+      e.stopPropagation();
+      handleAddToCart(prod, addCartBtn);
+      return;
+    }
+
+    const channelBtn = e.target.closest('.btn-channel-link');
+    if (channelBtn) {
+      e.stopPropagation();
+      openChannelPost(channelBtn.dataset.postUrl, pid);
+      return;
+    }
+
+    openProductModal(prod);
+  });
 
   btnBrowseProductsEl?.addEventListener('click', () => {
     switchTab('home');
@@ -1405,7 +1418,7 @@
                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
               </svg>
             </button>
-            <img src="${getProductImageUrl(p)}" alt="${escapeHtml(p.name)}" class="product-img" loading="lazy" onerror="this.onerror=null; this.src='${FALLBACK_IMAGE_URL}';" />
+            <img src="${getProductImageUrl(p)}" alt="${escapeHtml(p.name)}" class="product-img" loading="lazy" decoding="async" onerror="this.onerror=null; this.src='${FALLBACK_IMAGE_URL}';" />
           </div>
           <div class="card-body">
             <span class="product-brand">${brand}</span>
@@ -1435,42 +1448,39 @@
     });
 
     catalogProductsGridEl.innerHTML = html;
-
-    catalogProductsGridEl.querySelectorAll('.product-card').forEach(card => {
-      card.addEventListener('click', (e) => {
-        if (e.target.closest('.wishlist-btn') || e.target.closest('.btn-add-cart') || e.target.closest('.btn-channel-link')) return;
-        const pid = parseInt(card.dataset.id, 10);
-        const prod = state.products.find(x => x.id === pid);
-        if (prod) openProductModal(prod);
-      });
-    });
-
-    catalogProductsGridEl.querySelectorAll('.btn-channel-link').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const pid = parseInt(btn.dataset.id, 10);
-        const postUrl = btn.dataset.postUrl;
-        openChannelPost(postUrl, pid);
-      });
-    });
-
-    catalogProductsGridEl.querySelectorAll('.wishlist-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const pid = parseInt(btn.dataset.id, 10);
-        const prod = state.products.find(x => x.id === pid);
-        if (prod) toggleWishlist(prod, e);
-      });
-    });
-
-    catalogProductsGridEl.querySelectorAll('.btn-add-cart').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const pid = parseInt(btn.dataset.id, 10);
-        const prod = state.products.find(x => x.id === pid);
-        if (prod) handleAddToCart(prod, btn);
-      });
-    });
   }
+
+  // Katalog grid hodisasi (Event Delegation)
+  catalogProductsGridEl?.addEventListener('click', (e) => {
+    const card = e.target.closest('.product-card');
+    if (!card) return;
+    const pid = parseInt(card.dataset.id, 10);
+    const prod = state.products.find(x => x.id === pid);
+    if (!prod) return;
+
+    const wishlistBtn = e.target.closest('.wishlist-btn');
+    if (wishlistBtn) {
+      e.stopPropagation();
+      toggleWishlist(prod, e);
+      return;
+    }
+
+    const addCartBtn = e.target.closest('.btn-add-cart');
+    if (addCartBtn) {
+      e.stopPropagation();
+      handleAddToCart(prod, addCartBtn);
+      return;
+    }
+
+    const channelBtn = e.target.closest('.btn-channel-link');
+    if (channelBtn) {
+      e.stopPropagation();
+      openChannelPost(channelBtn.dataset.postUrl, pid);
+      return;
+    }
+
+    openProductModal(prod);
+  });
 
   // ==========================================================================
   // 7. PROFIL BO'LIMI (PROFILE SECTION)
@@ -1545,7 +1555,10 @@
       pdWishlistBtnEl.classList.toggle('active', isFav);
     }
     if (pdBottomPriceEl) {
-      pdBottomPriceEl.innerHTML = `${formatPrice(prod.price)} <span class="bottom-bar-uzs">(${formatPriceUzs(prod.price)})</span>`;
+      pdBottomPriceEl.textContent = formatPrice(prod.price);
+    }
+    if (pdBottomPriceUzsEl) {
+      pdBottomPriceUzsEl.textContent = `≈ ${formatPriceUzs(prod.price)}`;
     }
 
     let galleryHTML = `
@@ -1553,7 +1566,7 @@
         <div class="modal-gallery-track" id="pdGalleryTrack">
           ${images.map((img, i) => `
             <div class="gallery-slide" data-index="${i}">
-              <img src="${img}" alt="${escapeHtml(prod.name)}" onerror="this.onerror=null; this.src='${FALLBACK_IMAGE_URL}';" />
+              <img src="${img}" alt="${escapeHtml(prod.name)}" decoding="async" onerror="this.onerror=null; this.src='${FALLBACK_IMAGE_URL}';" />
             </div>
           `).join('')}
         </div>
@@ -1574,11 +1587,12 @@
 
     pdBodyContentEl.innerHTML = `
       ${galleryHTML}
-      <div style="margin-top: 10px;">
-        <span class="product-brand" style="font-size:0.76rem; font-weight:800; color:var(--accent-yellow); letter-spacing:0.06em;">APPLE</span>
-        <h2 class="modal-product-title" style="margin-top:4px;">${prod.name}</h2>
-        <div class="modal-price-box">
-          <div class="modal-price-val">${formatPrice(prod.price)} <span class="modal-price-uzs">≈ ${formatPriceUzs(prod.price)}</span></div>
+      <div class="pd-hero-meta">
+        <span class="pd-hero-brand">APPLE</span>
+        <h2 class="pd-hero-title">${escapeHtml(prod.name)}</h2>
+        <div class="pd-hero-price-stack">
+          <div class="pd-hero-usd">${formatPrice(prod.price)}</div>
+          <div class="pd-hero-uzs">≈ ${formatPriceUzs(prod.price)}</div>
         </div>
       </div>
       
@@ -1726,6 +1740,15 @@
           updateLiveUsdBadge(data.current_usd_rate);
         }
       }
+
+      // Keshga saqlash (Keyingi ochilishda 0ms da yuklash uchun)
+      if (!state.searchQuery.trim() && state.selectedCategory === 0 && (!state.selectedSort || state.selectedSort === 'default')) {
+        try {
+          localStorage.setItem('demostore_cached_products', JSON.stringify(state.products));
+          localStorage.setItem('demostore_cached_usd_rate', String(state.currentUsdRate));
+        } catch (e) {}
+      }
+
       renderProducts();
       renderDiscountsSlider();
     } catch (err) {
@@ -1787,7 +1810,7 @@
                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
               </svg>
             </button>
-            <img src="${getProductImageUrl(p)}" alt="${escapeHtml(p.name)}" class="product-img" loading="lazy" onerror="this.onerror=null; this.src='${FALLBACK_IMAGE_URL}';" />
+            <img src="${getProductImageUrl(p)}" alt="${escapeHtml(p.name)}" class="product-img" loading="lazy" decoding="async" onerror="this.onerror=null; this.src='${FALLBACK_IMAGE_URL}';" />
           </div>
           <div class="card-body">
             <span class="product-brand">${brand}</span>
@@ -1817,46 +1840,39 @@
     });
 
     productsGridEl.innerHTML = html;
-
-    // Kartalar bosilganda batafsil sahifani ochish
-    productsGridEl.querySelectorAll('.product-card').forEach(card => {
-      card.addEventListener('click', (e) => {
-        if (e.target.closest('.wishlist-btn') || e.target.closest('.btn-add-cart') || e.target.closest('.btn-channel-link')) return;
-        const pid = parseInt(card.dataset.id, 10);
-        const prod = state.products.find(x => x.id === pid);
-        if (prod) openProductModal(prod);
-      });
-    });
-
-    // Kanaldan ko'rish tugmasi hodisasi
-    productsGridEl.querySelectorAll('.btn-channel-link').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const pid = parseInt(btn.dataset.id, 10);
-        const postUrl = btn.dataset.postUrl;
-        openChannelPost(postUrl, pid);
-      });
-    });
-
-    // Yurakcha tugmasi hodisasi
-    productsGridEl.querySelectorAll('.wishlist-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const pid = parseInt(btn.dataset.id, 10);
-        const prod = state.products.find(x => x.id === pid);
-        if (prod) toggleWishlist(prod, e);
-      });
-    });
-
-    // Savatga olish tugmasi hodisasi (Mikro-animatsiyalar bilan)
-    productsGridEl.querySelectorAll('.btn-add-cart').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const pid = parseInt(btn.dataset.id, 10);
-        const prod = state.products.find(x => x.id === pid);
-        if (prod) handleAddToCart(prod, btn);
-      });
-    });
   }
+
+  // Bosh sahifa grid hodisasi (Event Delegation)
+  productsGridEl?.addEventListener('click', (e) => {
+    const card = e.target.closest('.product-card');
+    if (!card) return;
+    const pid = parseInt(card.dataset.id, 10);
+    const prod = state.products.find(x => x.id === pid);
+    if (!prod) return;
+
+    const wishlistBtn = e.target.closest('.wishlist-btn');
+    if (wishlistBtn) {
+      e.stopPropagation();
+      toggleWishlist(prod, e);
+      return;
+    }
+
+    const addCartBtn = e.target.closest('.btn-add-cart');
+    if (addCartBtn) {
+      e.stopPropagation();
+      handleAddToCart(prod, addCartBtn);
+      return;
+    }
+
+    const channelBtn = e.target.closest('.btn-channel-link');
+    if (channelBtn) {
+      e.stopPropagation();
+      openChannelPost(channelBtn.dataset.postUrl, pid);
+      return;
+    }
+
+    openProductModal(prod);
+  });
 
   // ==========================================================================
   // 10. HODISALAR VA TUGMALARNI ULASH
@@ -2049,74 +2065,50 @@
   // ==========================================================================
   function initSplashScreen() {
     const splashScreen = document.getElementById('splash-screen');
-    const splashSkipBtn = document.getElementById('splashSkipBtn');
-
     if (!splashScreen) return;
 
-    // Har safar ilova ochilganda kirish animatsiyasini to'liq faollashtirish
-    splashScreen.style.display = 'flex';
-    splashScreen.classList.remove('curtain-open');
-    splashScreen.style.pointerEvents = 'auto';
-
-    if (tg?.setHeaderColor) {
-      try {
-        tg.setHeaderColor('#09090b');
-        tg.setBackgroundColor('#09090b');
-      } catch (e) {}
+    // Agar ilovaga kirish avval ko'rsatilgan bo'lsa yoki allaqachon ochilgan bo'lsa:
+    if (sessionStorage.getItem('demostore_intro_shown') === 'true' || splashScreen.classList.contains('curtain-open')) {
+      splashScreen.style.display = 'none';
+      return;
     }
 
-    let isDismissed = false;
-    function openCurtains() {
-      if (isDismissed) return;
-      isDismissed = true;
-
-      triggerHaptic('light');
-
-      // Do'kon interfeysi ochilishi bilan Telegram panelini oq fonga o'tkazish
-      if (tg?.setHeaderColor) {
-        try {
-          tg.setHeaderColor('#ffffff');
-          tg.setBackgroundColor('#ffffff');
-        } catch (e) {}
-      }
-
-      // Pardalarni ikki tarafga ochish (logo yo'q bo'ladi, chap va o'ng pardalar suriladi)
+    // Do'kon interfeysi tayyor bo'lishi bilan pardani tezkor ochish
+    if (typeof window.dismissIntroCurtains === 'function') {
+      setTimeout(window.dismissIntroCurtains, 80);
+    } else {
       splashScreen.classList.add('curtain-open');
       splashScreen.style.pointerEvents = 'none';
-
-      // Parda ochilib bo'lgach (850ms), elementni butunlay yopish
       setTimeout(() => {
         splashScreen.style.display = 'none';
-      }, 850);
+      }, 380);
     }
-
-    // O'tkazib yuborish (Skip) tugmasi yoki ekranga teginish bilan darhol ochish
-    splashSkipBtn?.addEventListener('click', (e) => {
-      e.stopPropagation();
-      openCurtains();
-    });
-
-    splashScreen.addEventListener('click', () => {
-      openCurtains();
-    });
-
-    // 1.3 soniya logo va do'kon nomi to'liq ko'rsatilgach pardalar avtomatik ikki tarafga ochiladi
-    setTimeout(openCurtains, 1300);
   }
 
   // ==========================================================================
   // INITSIALIZATSIYA
   // ==========================================================================
   function boot() {
-    initSplashScreen();
     initTheme();
     updateSafeArea();
     updateHeaderHeight();
     applyLanguage(state.lang);
     updateWishlistBadge();
     updateCartBadges();
-    fetchLiveCurrencyRate();
-    loadProducts();
+
+    // 1. Agar keshda mahsulotlar bo'lsa — darhol 0ms da chizish!
+    const hasCache = Boolean(state.products && state.products.length > 0);
+    if (hasCache) {
+      updateLiveUsdBadge(state.currentUsdRate);
+      renderProducts();
+      renderDiscountsSlider();
+    }
+
+    // 2. Pardani ochish (foydalanuvchi kutib qolmasligi uchun)
+    initSplashScreen();
+
+    // 3. Yangi ma'lumotlarni fonda sokin yangilash (kesh bo'lsa, silent = true)
+    loadProducts(hasCache);
 
     // 60 soniyalik sokin fon yangilanishi
     setInterval(() => {
