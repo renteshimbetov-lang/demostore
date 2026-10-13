@@ -148,18 +148,3 @@ def parse_channel_post_content(raw_text: str) -> Tuple[str, str, int]:
     description = "\n".join(lines[1:]) if len(lines) > 1 else lines[0]
 
     return name, description, price
-
-def is_media_group_duplicate(media_group_id: Optional[str]) -> bool:
-    if not media_group_id:
-        return False
-
-    current_time = time.time()
-    expired = [k for k, t in _processed_media_groups.items() if current_time - t > 300]
-    for k in expired:
-        _processed_media_groups.pop(k, None)
-
-    if media_group_id in _processed_media_groups:
-        return True
-
-    _processed_media_groups[media_group_id] = current_time
-    return False

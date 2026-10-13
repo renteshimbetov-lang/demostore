@@ -7,7 +7,9 @@ class Database:
 
     async def init_db(self):
         """Ma'lumotlar bazasi jadvallarini yaratish va boshlang'ich ma'lumotlarni kiritish"""
-        async with aiosqlite.connect(self.db_path) as db:
+        async with aiosqlite.connect(self.db_path, timeout=30.0) as db:
+            await db.execute("PRAGMA journal_mode = WAL;")
+            await db.execute("PRAGMA busy_timeout = 30000;")
             await db.execute("PRAGMA foreign_keys = ON;")
             
             # Foydalanuvchilar jadvali
@@ -382,7 +384,7 @@ class Database:
     async def update_product_image(self, product_id: int, image_url: str):
         """Mahsulot rasmi manzilini yangilash (fon tozalangandan so'ng)"""
         import json
-        async with aiosqlite.connect(self.db_path) as db:
+        async with aiosqlite.connect(self.db_path, timeout=30.0) as db:
             gallery = json.dumps([image_url])
             await db.execute("""
                 UPDATE products 
@@ -390,6 +392,18 @@ class Database:
                     gallery_images = CASE WHEN gallery_images IS NULL OR gallery_images = '' OR gallery_images = '[]' THEN ? ELSE gallery_images END 
                 WHERE id = ?;
             """, (image_url, gallery, product_id))
+            await db.commit()
+
+    async def update_product_gallery(self, product_id: int, image_url: str, gallery_images: List[str]):
+        """Mahsulot asosiy rasmi va barcha galereya rasmlarini yangilash"""
+        import json
+        async with aiosqlite.connect(self.db_path, timeout=30.0) as db:
+            gallery_json = json.dumps(gallery_images)
+            await db.execute("""
+                UPDATE products 
+                SET image_url = ?, gallery_images = ? 
+                WHERE id = ?;
+            """, (image_url, gallery_json, product_id))
             await db.commit()
 
     async def add_product(self, category_id: int, name: str, description: str, price: int, image_url: str):
