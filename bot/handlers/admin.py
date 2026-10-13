@@ -397,14 +397,17 @@ def setup_admin_router(db: Database, bot: Bot) -> Router:
         file_ids = extract_admin_photos(msgs)
 
         # Rasm tanlash mantig'i:
-        # 1-rasm odatda yon tarafdan olingan bo'ladi.
-        # Keyingi (2-rasm) esa to'g'ridan olingan bo'ladi!
-        # Agar keyingi rasm bo'lmasa, 1-rasm (yon tarafdan olingani) olinadi.
-        if len(file_ids) >= 2:
-            primary_fid = file_ids[1]  # Keyingi to'g'ridan olingan rasm
+        # Noutbuklar uchun: 1-rasm odatda yon tarafdan olingan bo'ladi. Keyingi (2-rasm) to'g'ridan olingan bo'ladi.
+        # TELEFONLAR uchun esa oldi ko'rinishi tadbiq etilmaydi — telefonlar faqat orqa tarafi (1-rasm) ko'rinadi!
+        from bot.utils.helpers import is_phone_product, is_laptop_product
+        is_phone = is_phone_product(name, description)
+        is_laptop = is_laptop_product(name, description)
+
+        if is_laptop and len(file_ids) >= 2:
+            primary_fid = file_ids[1]  # Noutbuklar uchun to'g'ridan ochilgan holati
             ordered_fids = [file_ids[1], file_ids[0], *file_ids[2:]]
         elif file_ids:
-            primary_fid = file_ids[0]
+            primary_fid = file_ids[0]  # Telefonlar (faqat orqa tarafi) va boshqalar
             ordered_fids = file_ids
         else:
             primary_fid = None

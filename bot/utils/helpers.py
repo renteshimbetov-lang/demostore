@@ -22,3 +22,18 @@ def format_order_summary(order_id: int, full_name: str, phone: str, address: str
     lines.append(f"━━━━━━━━━━━━━━━━━━")
     lines.append(f"💰 <b>Jami toʻlov:</b> <b>{format_price(total)}</b>")
     return "\n".join(lines)
+
+def is_phone_product(name: str = "", description: str = "") -> bool:
+    """Mahsulot telefon / smartfon ekanligini aniqlash"""
+    text = f"{name or ''} {description or ''}".lower()
+    if any(k in text for k in ["macbook", "noutbuk", "laptop", "surface", "asus", "thinkpad", "dell", "hp"]):
+        return False
+    if any(k in text for k in ["iphone", "samsung", "redmi", "xiaomi", "telefon", "smartfon", "galaxy", "pro max", "plus", "mini"]):
+        return True
+    return False
+
+def is_laptop_product(name: str = "", description: str = "") -> bool:
+    """Mahsulot noutbuk / MacBook ekanligini aniqlash"""
+    text = f"{name or ''} {description or ''}".lower()
+    return any(k in text for k in ["macbook", "noutbuk", "laptop", "surface", "thinkpad", "asus", "dell", "hp", "mac"])
+
