@@ -58,8 +58,10 @@ async def sync():
 
         photos = get_channel_post_photos(channel_username, msg_id)
         if photos:
-            primary_photo = photos[0]
-            gallery_json = json.dumps(photos)
+            from bot.utils.photo_selector import select_best_product_photos
+            primary_photo, gallery_urls = select_best_product_photos(p.get("name", ""), "", photos)
+            primary_photo = primary_photo or photos[0]
+            gallery_json = json.dumps(gallery_urls)
             
             await db.execute("""
                 UPDATE products 

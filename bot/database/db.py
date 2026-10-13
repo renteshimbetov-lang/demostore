@@ -422,9 +422,10 @@ class Database:
         media_group_id: Optional[str] = None,
         category_id: Optional[int] = None,
         photo_file_id: Optional[str] = None,
-        gallery_images: Optional[str] = None
+        gallery_images: Optional[str] = None,
+        is_active: Optional[int] = 0
     ) -> int:
-        """Kanal postidan mahsulotni Neon bazasiga xatosiz qo'shish yoki yangilash"""
+        """Kanal postidan mahsulotni Neon bazasiga xatosiz qo'shish yoki yangilash (yangi mahsulotlar admin tasdiqlaguncha is_active=0 bo'ladi)"""
         if not category_id:
             full_search = f"{name} {description}".lower()
             lower_name = name.lower()
@@ -449,6 +450,9 @@ class Database:
         existing = await self.get_product_by_channel_post(channel_id, message_id)
 
         if existing:
+            # Agar oldinroq admin tasdiqlagan bo'lsa, active holat saqlanadi
+            active_val = existing.get("is_active", 0) if (is_active is None or is_active == 0) else is_active
+            avail_val = 1 if active_val == 1 else 0
             await self.execute("""
                 UPDATE products 
                 SET category_id = $1, name = $2, description = $3, price = $4, 
@@ -457,11 +461,13 @@ class Database:
                     media_group_id = COALESCE(NULLIF($7::text, ''), media_group_id),
                     photo_file_id = COALESCE(NULLIF($8::text, ''), photo_file_id),
                     gallery_images = COALESCE(NULLIF($9::text, ''), gallery_images),
-                    is_active = 1, is_available = 1
-                WHERE channel_id = $10 AND message_id = $11;
-            """, category_id, name, description, price, image_url or "", post_url, media_group_id, photo_file_id, gallery_images, str(channel_id), int(message_id))
+                    is_active = $10, is_available = $11
+                WHERE channel_id = $12 AND message_id = $13;
+            """, category_id, name, description, price, image_url or "", post_url, media_group_id, photo_file_id, gallery_images, active_val, avail_val, str(channel_id), int(message_id))
             return existing['id']
         else:
+            new_active = is_active if is_active is not None else 0
+            new_avail = 1 if new_active == 1 else 0
             prod_id = await self.fetchval("""
                 INSERT INTO products (
                     category_id, name, description, price, image_url, 
@@ -469,9 +475,9 @@ class Database:
                     photo_file_id, gallery_images,
                     views_count, is_active, is_available
                 )
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 0, 1, 1)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 0, $12, $13)
                 RETURNING id;
-            """, category_id, name, description, price, image_url, str(channel_id), int(message_id), media_group_id, post_url, photo_file_id, gallery_images)
+            """, category_id, name, description, price, image_url or "", str(channel_id), int(message_id), media_group_id, post_url, photo_file_id, gallery_images, new_active, new_avail)
             return prod_id
 
     async def deactivate_product_by_channel_post(self, channel_id: str, message_id: int):

@@ -601,7 +601,7 @@ def setup_admin_router(db: Database, bot: Bot) -> Router:
         await callback.answer("❌ Post bekor qilindi.", show_alert=False)
 
     # =========================================================================
-    # 2. Kanaldan kelgan postlarni moderatsiya qilish (Approve / Reject)
+    # 2. Kanaldan kelgan postlarni moderatsiya qilish (Approve / Reject / Rasm almashtirish)
     # =========================================================================
     @router.callback_query(F.data.startswith("chan_approve_"))
     async def approve_channel_post_callback(callback: CallbackQuery):
@@ -620,7 +620,7 @@ def setup_admin_router(db: Database, bot: Bot) -> Router:
             except Exception:
                 pass
 
-        await callback.answer(f"✅ '{name}' tasdiqlandi va do'konga joylandi!", show_alert=False)
+        await callback.answer(f"✅ '{name}' tasdiqlandi va mini ilovaga joylandi!", show_alert=True)
 
     @router.callback_query(F.data.startswith("chan_reject_"))
     async def reject_channel_post_callback(callback: CallbackQuery):
@@ -632,22 +632,79 @@ def setup_admin_router(db: Database, bot: Bot) -> Router:
         prod = await db.get_product(prod_id)
         name = prod["name"] if prod else "Mahsulot"
 
-        del_kb = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="🗑 Kanaldan ham o'chirish", callback_data=f"chan_delmsg_{prod_id}")],
-            [InlineKeyboardButton(text="❌ Xabarni tozalash (O'chirish)", callback_data="admin_dismiss_msg")]
-        ])
-        res_text = (
-            f"❌ <b>MAHSULOT RAD ETILDI!</b>\n"
-            f"━━━━━━━━━━━━━━━━━━━━━━\n"
-            f"📱 <b>Model:</b> {name}\n\n"
-            f"⚠️ <i>Mahsulot mini ilovadan (do'kondan) olib tashlandi va xaridorlarga ko'rinmaydi.</i>"
-        )
+        # Chat clean turishi uchun xabar o'chiriladi
         if callback.message:
-            if callback.message.photo:
-                await callback.message.edit_caption(caption=res_text, reply_markup=del_kb, parse_mode="HTML")
-            else:
-                await callback.message.edit_text(text=res_text, reply_markup=del_kb, parse_mode="HTML")
-        await callback.answer("❌ Mahsulot rad etildi.")
+            try:
+                await callback.message.delete()
+            except Exception:
+                pass
+        await callback.answer(f"❌ '{name}' rad etildi va mini ilovada ko'rinmaydi.", show_alert=True)
+
+    @router.callback_query(F.data.startswith("chan_nextphoto_"))
+    async def cycle_channel_product_photo_callback(callback: CallbackQuery):
+        if not is_admin(callback.from_user.id):
+            return
+
+        parts = callback.data.split("_")
+        prod_id = int(parts[2])
+        curr_idx = int(parts[3]) if len(parts) > 3 else 0
+
+        prod = await db.get_product(prod_id)
+        if not prod:
+            await callback.answer("Mahsulot topilmadi.", show_alert=True)
+            return
+
+        gallery_json = prod.get("gallery_images") or "[]"
+        try:
+            gallery = json.loads(gallery_json)
+        except Exception:
+            gallery = []
+
+        if len(gallery) <= 1:
+            await callback.answer("Boshqa rasm mavjud emas.")
+            return
+
+        next_idx = (curr_idx + 1) % len(gallery)
+        selected_photo = gallery[next_idx]
+
+        # Galereyani qayta tartiblash: tanlangan rasm birinchi bo'ladi
+        reordered = [selected_photo] + [img for i, img in enumerate(gallery) if i != next_idx]
+        await db.update_product_gallery(prod_id, selected_photo, reordered)
+
+        # Telegramdagi xabarni yangilash
+        price_uzs = format_price(prod["price"] * config.usd_rate)
+        post_url = prod.get("post_url", "")
+        admin_alert_text = (
+            f"🔔 <b>KANALDAN YANGI POST QABUL QILINDI!</b>\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"📱 <b>Model:</b> {prod['name']}\n"
+            f"💵 <b>Narxi:</b> ${prod['price']} (≈ {price_uzs})\n"
+            f"🔗 <b>Kanal posti:</b> <a href=\"{post_url}\">Postni ko'rish</a>\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"❓ <b>Shuni do'kon / mini ilovaga joylaylikmi?</b>"
+        )
+        admin_kb = InlineKeyboardMarkup(inline_keyboard=[
+            [
+                InlineKeyboardButton(text="🟢 Ha, do'konga joylash", callback_data=f"chan_approve_{prod_id}"),
+                InlineKeyboardButton(text="🔴 Yo'q, rad etish", callback_data=f"chan_reject_{prod_id}")
+            ],
+            [
+                InlineKeyboardButton(text=f"🔄 Boshqa rasmni tanlash ({next_idx + 1}/{len(gallery)})", callback_data=f"chan_nextphoto_{prod_id}_{next_idx}")
+            ]
+        ])
+
+        try:
+            media_arg = selected_photo
+            if selected_photo.startswith("/api/photo/"):
+                media_arg = selected_photo.split("/")[-1]
+            await callback.message.edit_media(
+                media=InputMediaPhoto(media=media_arg, caption=admin_alert_text, parse_mode="HTML"),
+                reply_markup=admin_kb
+            )
+            await callback.answer(f"Rasm almashtirildi: {next_idx + 1}/{len(gallery)}")
+        except Exception as e:
+            logger.warning(f"Rasm almashtirishda ogohlantirish: {e}")
+            await callback.answer(f"Rasm #{next_idx + 1} ga o'tildi.")
 
     @router.callback_query(F.data.startswith("chan_delmsg_"))
     async def delete_channel_msg_callback(callback: CallbackQuery):

@@ -44,7 +44,7 @@ async def run_full_tests():
     # Oldingi testlardan qolgan test mahsulotlarini tozalash
     await db.execute("DELETE FROM products WHERE channel_id = $1;", test_channel_id)
 
-    # Kanal postidan mahsulot qo'shish
+    # Kanal postidan mahsulot qo'shish (Dastlab admin tasdiqlaguncha is_active=0 bo'ladi)
     prod_id = await db.upsert_product_from_channel(
         channel_id=test_channel_id,
         message_id=99901,
@@ -55,7 +55,15 @@ async def run_full_tests():
         post_url="https://t.me/test_channel/99901",
         media_group_id="mg_test_123"
     )
-    print(f"  [OK] Kanal postidan mahsulot qo'shildi: ID #{prod_id}")
+    prod_pending = await db.get_product(prod_id)
+    assert prod_pending['is_active'] == 0, "Yangi kanal posti admin 'Ha' deguncha nofaol (0) bo'lishi kerak"
+    print(f"  [OK] Kanal postidan mahsulot qo'shildi (tasdiq kutmoqda, is_active=0): ID #{prod_id}")
+
+    # Admin 'Ha' deb tasdiqlaganda faollashadi
+    await db.activate_product_by_id(prod_id)
+    prod_approved = await db.get_product(prod_id)
+    assert prod_approved['is_active'] == 1, "Admin tasdiqlagach is_active=1 bo'lishi kerak"
+    print("  [OK] Admin 'Ha' deb tasdiqladi: mahsulot faollashtirildi (is_active=1)")
 
     # Kanal posti tahrirlanganda yangilanish
     updated_id = await db.upsert_product_from_channel(
@@ -81,22 +89,14 @@ async def run_full_tests():
     print("  [OK] Post nofaol (is_active=0) qilindi.")
 
     # Mahsulotni qayta faollashtirib ko'rishlarni sinash
-    await db.upsert_product_from_channel(
-        channel_id=test_channel_id,
-        message_id=99901,
-        name="MacBook Air M3 16GB",
-        description="Yana sotuvda",
-        price=1650,
-        image_url="https://example.com/mac.jpg",
-        post_url="https://t.me/test_channel/99901"
-    )
+    await db.activate_product_by_id(prod_id)
 
     v1 = await db.increment_views(prod_id)
     v2 = await db.increment_views(prod_id)
     assert v2 >= 2
     print(f"  [OK] Kanalda ko'rish (views_count) muvaffaqiyatli oshirildi: {v2} ta")
 
-    # Ikkinchi test mahsulotini qo'shish
+    # Ikkinchi test mahsulotini qo'shish va tasdiqlash
     prod2_id = await db.upsert_product_from_channel(
         channel_id=test_channel_id,
         message_id=99902,
@@ -106,6 +106,7 @@ async def run_full_tests():
         image_url="https://example.com/mac2.jpg",
         post_url="https://t.me/test_channel/99902"
     )
+    await db.activate_product_by_id(prod2_id)
     await db.increment_views(prod2_id)
 
     top = await db.get_top_viewed_products(limit=15)

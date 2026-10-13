@@ -91,41 +91,25 @@ def setup_channel_router(db: Database, bot: Bot) -> Router:
         # Telegram file_id larini ajratib olish (diskka hech narsa yuklanmaydi)
         file_ids = extract_all_photo_file_ids(all_messages)
 
-        # Rasm tanlash mantig'i:
-        # Noutbuklar uchun: 1-rasm ko'pincha burchakdan/yonboshdan olingan bo'ladi,
-        # shuning uchun agar 2-rasm bo'lsa, to'g'ridan (ochilgan holati) olingani asosiy qilinadi.
-        # LEKIN TELEFONLARDA oldi ko'rinishi tadbiq etilmaydi!
-        # Telefonlarda faqat ORQA TARAFI (kameralar, rang ko'rinishi — 1-rasm) asosiy bo'ladi!
-        from bot.utils.helpers import is_phone_product, is_laptop_product
-
-        is_phone = is_phone_product(name, description)
-        is_laptop = is_laptop_product(name, description)
-
-        if is_laptop and len(file_ids) >= 2:
-            primary_file_id = file_ids[1]  # Noutbuklar uchun to'g'ridan ochilgan holati
-            ordered_file_ids = [file_ids[1], file_ids[0], *file_ids[2:]]
-        elif file_ids:
-            primary_file_id = file_ids[0]  # Telefonlar (faqat orqa tarafi) va boshqalar
-            ordered_file_ids = file_ids
-        else:
-            primary_file_id = None
-            ordered_file_ids = []
-
         # Agar kanal ommaviy bo'lsa, Telegram rasmiy CDN manzillarini olish
         from bot.config import config
+        from bot.utils.photo_selector import select_best_product_photos
+
         chan_user = main_msg.chat.username or config.channel_username
         cdn_photos = fetch_channel_embed_photos(chan_user, message_id) if chan_user else []
 
-        if is_laptop and len(cdn_photos) >= 2:
-            image_url = cdn_photos[1]  # Noutbuklar uchun to'g'ridan olingan rasm
-            gallery_urls = [cdn_photos[1], cdn_photos[0], *cdn_photos[2:]]
-        elif cdn_photos:
-            image_url = cdn_photos[0]  # Telefonlar (orqa tarafi) va boshqalar
-            gallery_urls = cdn_photos
-        elif primary_file_id:
+        if cdn_photos:
+            best_img, gallery_urls = select_best_product_photos(name, description, cdn_photos)
+            image_url = best_img or cdn_photos[0]
+            # Primary file id (admin xabari uchun)
+            primary_file_id = file_ids[0] if file_ids else None
+        elif file_ids:
+            best_fid, ordered_fids = select_best_product_photos(name, description, file_ids)
+            primary_file_id = best_fid or file_ids[0]
             image_url = f"/api/photo/{primary_file_id}"
-            gallery_urls = [f"/api/photo/{fid}" for fid in ordered_file_ids]
+            gallery_urls = [f"/api/photo/{fid}" for fid in ordered_fids]
         else:
+            primary_file_id = None
             image_url = "/static/apple_3d_logo.png"
             gallery_urls = ["/static/apple_3d_logo.png"]
 
@@ -143,15 +127,16 @@ def setup_channel_router(db: Database, bot: Bot) -> Router:
                 post_url=post_url,
                 media_group_id=main_msg.media_group_id,
                 photo_file_id=primary_file_id,
-                gallery_images=gallery_images_json
+                gallery_images=gallery_images_json,
+                is_active=0  # Yangi postlar admin 'Ha' deguncha mini ilovada ko'rinmaydi!
             )
 
         logger.info(
             f"Kanal posti qabul qilindi! Mahsulot ID: {product_id}, Nomi: {name}, "
-            f"Narxi: ${price}, Rasmlar (file_id): {len(file_ids)} ta"
+            f"Narxi: ${price}, Tanlangan rasm: {image_url[:50]}"
         )
 
-        # Adminlarga srazu bildirishnoma yuborish (Ha / Yo'q tugmalari bilan)
+        # Adminlarga srazu bildirishnoma yuborish (Ha / Yo'q va Rasm tanlash tugmalari bilan)
         from bot.utils.helpers import format_price
         price_uzs = format_price(price * config.usd_rate)
         admin_alert_text = (
@@ -163,19 +148,25 @@ def setup_channel_router(db: Database, bot: Bot) -> Router:
             f"━━━━━━━━━━━━━━━━━━━━━━\n"
             f"❓ <b>Shuni do'kon / mini ilovaga joylaylikmi?</b>"
         )
-        admin_kb = InlineKeyboardMarkup(inline_keyboard=[
+        admin_kb_buttons = [
             [
                 InlineKeyboardButton(text="🟢 Ha, do'konga joylash", callback_data=f"chan_approve_{product_id}"),
                 InlineKeyboardButton(text="🔴 Yo'q, rad etish", callback_data=f"chan_reject_{product_id}")
             ]
-        ])
+        ]
+        if len(gallery_urls) > 1:
+            admin_kb_buttons.append([
+                InlineKeyboardButton(text=f"🔄 Boshqa rasmni tanlash (1/{len(gallery_urls)})", callback_data=f"chan_nextphoto_{product_id}_0")
+            ])
+        admin_kb = InlineKeyboardMarkup(inline_keyboard=admin_kb_buttons)
 
+        photo_to_send = primary_file_id or (image_url if image_url.startswith("http") else None)
         for admin_id in config.admin_ids:
             try:
-                if primary_file_id:
+                if photo_to_send:
                     await bot.send_photo(
                         chat_id=admin_id,
-                        photo=primary_file_id,
+                        photo=photo_to_send,
                         caption=admin_alert_text,
                         reply_markup=admin_kb,
                         parse_mode="HTML"
