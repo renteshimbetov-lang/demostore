@@ -50,6 +50,29 @@ def setup_channel_router(db: Database, bot: Bot) -> Router:
                 file_ids.append(fid)
         return file_ids
 
+    def fetch_channel_embed_photos(channel_username: str, message_id: int) -> List[str]:
+        """Ommaviy Telegram kanal postidan rasmiy CDN rasmlari (telesco.pe) ni olish"""
+        if not channel_username:
+            return []
+        import urllib.request, re, ssl
+        url = f"https://t.me/{channel_username.lstrip('@')}/{message_id}?embed=1"
+        ctx = ssl._create_unverified_context()
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+        try:
+            with urllib.request.urlopen(req, timeout=6, context=ctx) as resp:
+                html = resp.read().decode("utf-8")
+                matches = re.findall(r"background-image:url\('(https://cdn\d*\.telesco\.pe/file/[^']+)'\)", html)
+                seen = set()
+                unique = []
+                for m in matches:
+                    if m not in seen:
+                        seen.add(m)
+                        unique.append(m)
+                return unique
+        except Exception as e:
+            logger.debug(f"Embed rasm olishda xatolik: {e}")
+            return []
+
     async def save_product_from_messages(main_msg: Message, all_messages: List[Message]):
         """Bir yoki bir nechta xabardan (albomdan) mahsulotni yaratish yoki yangilash"""
         import json
@@ -69,7 +92,15 @@ def setup_channel_router(db: Database, bot: Bot) -> Router:
         file_ids = extract_all_photo_file_ids(all_messages)
         primary_file_id = file_ids[0] if file_ids else None
 
-        if primary_file_id:
+        # Agar kanal ommaviy bo'lsa, Telegram rasmiy CDN manzillarini olish
+        from bot.config import config
+        chan_user = main_msg.chat.username or config.channel_username
+        cdn_photos = fetch_channel_embed_photos(chan_user, message_id) if chan_user else []
+
+        if cdn_photos:
+            image_url = cdn_photos[0]
+            gallery_urls = cdn_photos
+        elif primary_file_id:
             image_url = f"/api/photo/{primary_file_id}"
             gallery_urls = [f"/api/photo/{fid}" for fid in file_ids]
         else:

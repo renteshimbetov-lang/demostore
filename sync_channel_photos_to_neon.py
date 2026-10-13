@@ -1,0 +1,96 @@
+"""
+Barcha mavjud mahsulotlarning rasmlarini Telegram rasmiy CDN (telesco.pe) orqali
+to'liq yangilab, Neon PostgreSQL bazasiga yozish skripti.
+"""
+import asyncio
+import json
+import logging
+import re
+import ssl
+import urllib.request
+from dotenv import load_dotenv
+
+load_dotenv()
+
+from bot.config import config
+from bot.database.db import Database
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+logger = logging.getLogger("SyncPhotos")
+
+_ssl_ctx = ssl._create_unverified_context()
+
+def get_channel_post_photos(channel_username: str, message_id: int):
+    url = f"https://t.me/{channel_username.lstrip('@')}/{message_id}?embed=1"
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+    try:
+        with urllib.request.urlopen(req, timeout=10, context=_ssl_ctx) as resp:
+            html = resp.read().decode("utf-8")
+            # telesco.pe fayl manzillarini ajratib olish
+            matches = re.findall(r"background-image:url\('(https://cdn\d*\.telesco\.pe/file/[^']+)'\)", html)
+            # Dublikatlarni tartibni saqlagan holda tozalash
+            seen = set()
+            unique = []
+            for m in matches:
+                if m not in seen:
+                    seen.add(m)
+                    unique.append(m)
+            return unique
+    except Exception as e:
+        logger.warning(f"Msg #{message_id} rasmlarini olishda xatolik: {e}")
+        return []
+
+async def sync():
+    db = Database(database_url=config.database_url)
+    await db.init_db()
+
+    channel_username = config.channel_username or "shbdbdjdhdjjdhd"
+    logger.info(f"Ma'lumotlar bazasi rejimi: {'Neon PostgreSQL' if db.is_postgres else 'SQLite'}")
+
+    if db.is_postgres:
+        rows = await db.pool.fetch("SELECT id, name, message_id, image_url FROM products ORDER BY id DESC;")
+        products = [dict(r) for r in rows]
+    else:
+        import aiosqlite
+        async with aiosqlite.connect(db.db_path) as s_db:
+            s_db.row_factory = aiosqlite.Row
+            async with s_db.execute("SELECT id, name, message_id, image_url FROM products ORDER BY id DESC;") as cur:
+                products = [dict(r) for r in await cur.fetchall()]
+
+    logger.info(f"Jami {len(products)} ta mahsulot tekshirilmoqda...")
+
+    updated_count = 0
+    for p in products:
+        msg_id = p.get("message_id")
+        if not msg_id:
+            continue
+
+        photos = get_channel_post_photos(channel_username, msg_id)
+        if photos:
+            primary_photo = photos[0]
+            gallery_json = json.dumps(photos)
+            
+            if db.is_postgres:
+                await db.pool.execute("""
+                    UPDATE products 
+                    SET image_url = $1, gallery_images = $2 
+                    WHERE id = $3;
+                """, primary_photo, gallery_json, p["id"])
+            else:
+                async with aiosqlite.connect(db.db_path) as s_db:
+                    await s_db.execute("""
+                        UPDATE products 
+                        SET image_url = ?, gallery_images = ? 
+                        WHERE id = ?;
+                    """, (primary_photo, gallery_json, p["id"]))
+                    await s_db.commit()
+
+            updated_count += 1
+            logger.info(f"Mahsulot #{p['id']} ('{p['name']}'): {len(photos)} ta haqiqiy Telegram rasm yangilandi!")
+        else:
+            logger.warning(f"Mahsulot #{p['id']} (msg #{msg_id}): Telegramda rasm topilmadi.")
+
+    logger.info(f"YAKUNLANDI! Jami {updated_count} ta mahsulotning rasmlari Telegram CDN orqali yangilandi!")
+
+if __name__ == "__main__":
+    asyncio.run(sync())

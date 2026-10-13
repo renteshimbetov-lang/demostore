@@ -200,10 +200,14 @@ def create_web_app(db: Database, webapp_dir: str) -> web.Application:
         current_rate = await get_cbu_usd_rate()
 
         for p in products:
-            # Agar photo_file_id mavjud bo'lsa rasm proksi manzilini biriktirish
-            if p.get("photo_file_id"):
+            img = (p.get("image_url") or "").strip()
+            if img.startswith("http://") or img.startswith("https://"):
+                p["image_url"] = img
+            elif p.get("photo_file_id"):
                 p["image_url"] = f"/api/photo/{p['photo_file_id']}"
-            elif not p.get("image_url"):
+            elif img:
+                p["image_url"] = img
+            else:
                 p["image_url"] = "/static/apple_3d_logo.png"
 
             raw_g = p.get("gallery_images")

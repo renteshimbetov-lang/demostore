@@ -614,7 +614,13 @@
 
   function getProductImageUrl(prod) {
     if (!prod) return FALLBACK_IMAGE_URL;
+    // 1. Agar to'g'ridan-to'g'ri Telegram CDN yoki tashqi havola bo'lsa (https://...)
+    if (prod.image_url && (String(prod.image_url).startsWith('http://') || String(prod.image_url).startsWith('https://'))) {
+      return prod.image_url;
+    }
+    // 2. Agar Telegram photo_file_id bo'lsa
     if (prod.photo_file_id) return '/api/photo/' + prod.photo_file_id;
+    // 3. Agar mavjud image_url bo'lsa
     if (prod.image_url && String(prod.image_url).trim()) return prod.image_url;
     if (prod.image && String(prod.image).trim()) return prod.image;
     return FALLBACK_IMAGE_URL;
