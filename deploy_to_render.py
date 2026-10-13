@@ -70,7 +70,7 @@ def trigger_deploy(clear_cache=False):
     payload = {"clearCache": "clear" if clear_cache else "do_not_clear"}
     status, res = _request(f"/services/{SERVICE_ID}/deploys", method="POST", data=payload)
     if status in (200, 201, 202) and isinstance(res, dict):
-        dep_id = res.get("id")
+        dep_id = res.get("id") or res.get("deploy", {}).get("id")
         print(f"Deploy muvaffaqiyatli yuborildi! Deploy ID: {dep_id}")
         print("Deploy jarayoni kuzatilmoqda...")
         for _ in range(60):
