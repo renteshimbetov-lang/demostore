@@ -44,9 +44,9 @@ html.light {
   /* Telegram iOS / Android Xavfsiz oraliqlar (Top clearance) */
   --app-safe-top: max(
     var(--tg-content-safe-area-inset-top, 0px),
-    calc(var(--tg-safe-area-inset-top, 0px) + 38px),
-    calc(env(safe-area-inset-top, 0px) + 38px),
-    14px
+    var(--tg-safe-area-inset-top, 0px),
+    env(safe-area-inset-top, 0px),
+    12px
   );
   --app-safe-bottom: max(
     var(--tg-content-safe-area-inset-bottom, 0px),

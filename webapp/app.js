@@ -51,17 +51,17 @@
       const contentTop = tg?.contentSafeAreaInset?.top || 0;
       const safeTop = tg?.safeAreaInset?.top || 0;
 
-      let finalTop = 14; // Standart desktop brauzer uchun
+      let finalTop = 12; // Standart ixcham oraliq
 
       if (contentTop > 0) {
-        // Telegram floating tugmalari pastki chegarasidan 6px xavfsiz oraliq
-        finalTop = Math.max(contentTop + 6, 78);
+        // Telegram floating tugmalari (content inset)
+        finalTop = contentTop + 4;
       } else if (safeTop > 0) {
-        // Safe area (notch/status bar) + Telegram floating tugmalari balandligi (~44px)
-        finalTop = safeTop + (isFullscreen ? 44 : 20);
+        // Safe area (notch/status bar)
+        finalTop = safeTop + (isFullscreen ? 10 : 4);
       } else if (isTg) {
-        // Telegram ichida insetlar kechikib kelsa xavfsiz standart
-        finalTop = isFullscreen ? 88 : 64;
+        // Telegram ichida agar insetlar 0 bo'lsa (Desktop / Mac client)
+        finalTop = isFullscreen ? 16 : 12;
       }
 
       if (finalTop !== lastSafeTop) {
@@ -738,9 +738,63 @@
   }
 
   // ==========================================================================
-  // 2. BO'LIMLARNI BOSHQARISH VA ROUTING (TAB SWITCHING)
+  // 2. BO'LIMLARNI BOSHQARISH VA ROUTING (NAV HISTORY, BACK BUTTON & IPHONE SWIPE)
   // ==========================================================================
-  function switchTab(tabKey, categoryId = null) {
+  const navHistory = ['home'];
+
+  function updateBackButtons() {
+    const isHome = state.currentTab === 'home';
+    const isProductDetail = state.currentTab === 'product-detail';
+
+    // 1. Telegram Native BackButton (Mini App chap yuqoridagi rasmiy orqaga tugmasi)
+    if (tg?.BackButton) {
+      if (!isHome) {
+        tg.BackButton.show();
+      } else {
+        tg.BackButton.hide();
+      }
+    }
+
+    // 2. Ilova Header Orqaga tugmasi (#btnHeaderBack vs #btnOpenMenu)
+    const btnHeaderBack = document.getElementById('btnHeaderBack');
+    const btnOpenMenu = document.getElementById('btnOpenMenu');
+    if (btnHeaderBack && btnOpenMenu) {
+      if (!isHome && !isProductDetail) {
+        btnHeaderBack.classList.remove('hidden');
+        btnOpenMenu.classList.add('hidden');
+      } else if (isHome) {
+        btnHeaderBack.classList.add('hidden');
+        btnOpenMenu.classList.remove('hidden');
+      }
+    }
+  }
+
+  function goBack() {
+    triggerHaptic('light');
+
+    // 1. Agar yon menyu (drawer) ochiq bo'lsa
+    if (menuDrawerEl && !menuDrawerEl.classList.contains('hidden')) {
+      closeAllDrawers();
+      return;
+    }
+
+    // 2. Agar filter modali ochiq bo'lsa
+    if (filterModalEl && !filterModalEl.classList.contains('hidden')) {
+      closeFilterModal();
+      return;
+    }
+
+    // 3. Tarix bo'yicha orqaga qaytish
+    if (navHistory.length > 1) {
+      navHistory.pop(); // Joriy bo'limni o'chiramiz
+      const prevTab = navHistory[navHistory.length - 1] || 'home';
+      switchTab(prevTab, null, false);
+    } else {
+      switchTab('home', null, false);
+    }
+  }
+
+  function switchTab(tabKey, categoryId = null, pushState = true) {
     if (!sections[tabKey]) return;
     triggerHaptic('light');
     closeAllDrawers();
@@ -749,6 +803,20 @@
       state.previousTab = state.currentTab;
     }
     state.currentTab = tabKey;
+
+    if (pushState) {
+      if (tabKey === 'home') {
+        navHistory.length = 0;
+        navHistory.push('home');
+      } else {
+        if (navHistory[navHistory.length - 1] !== tabKey) {
+          navHistory.push(tabKey);
+        }
+      }
+      try {
+        history.pushState({ tab: tabKey, categoryId }, '', '#' + tabKey);
+      } catch (e) {}
+    }
 
     // Pastki dockdagi faol tugmani belgilash
     dockItems.forEach(d => {
@@ -769,26 +837,21 @@
       }
     });
 
-    // Mahsulot batafsil ko'rishda Telegram native BackButton ko'rsatiladi
+    // Header va Dock holatini boshqarish
     const mobileHeaderEl = document.getElementById('mobileHeader');
     const mainContentEl = document.getElementById('mainContent');
     if (tabKey === 'product-detail') {
       mobileHeaderEl?.classList.add('hidden');
       mobileDockEl?.classList.add('hidden');
       if (mainContentEl) mainContentEl.style.paddingTop = 'var(--app-safe-top, 12px)';
-      if (tg?.BackButton) {
-        tg.BackButton.show();
-        tg.BackButton.onClick(handleBackClick);
-      }
     } else {
       mobileHeaderEl?.classList.remove('hidden');
       mobileDockEl?.classList.remove('hidden');
       if (mainContentEl) mainContentEl.style.paddingTop = '';
-      if (tg?.BackButton) {
-        tg.BackButton.hide();
-      }
       setTimeout(updateHeaderHeight, 10);
     }
+
+    updateBackButtons();
 
     // Har bir bo'limga mos render
     if (tabKey === 'home') {
@@ -814,10 +877,72 @@
   }
 
   function handleBackClick() {
-    switchTab(state.previousTab || 'home');
+    goBack();
   }
 
-  pdBackBtnEl?.addEventListener('click', handleBackClick);
+  // Telegram native BackButton va Header tugmalarini ulash
+  if (tg?.BackButton) {
+    tg.BackButton.onClick(goBack);
+  }
+  document.getElementById('btnHeaderBack')?.addEventListener('click', goBack);
+  pdBackBtnEl?.addEventListener('click', goBack);
+
+  // Brauzer / iOS Safari native orqaga o'tish (popstate)
+  window.addEventListener('popstate', () => {
+    goBack();
+  });
+
+  // ==========================================================================
+  // IPHONE SWIPE-TO-BACK GESTURE (Chap chetdan o'ngga surish orqali orqaga qaytish)
+  // ==========================================================================
+  let touchStartX = 0;
+  let touchStartY = 0;
+  let touchStartTime = 0;
+  let isEdgeSwipeGesture = false;
+
+  window.addEventListener('touchstart', (e) => {
+    if (e.touches.length !== 1) return;
+    const touch = e.touches[0];
+    touchStartX = touch.clientX;
+    touchStartY = touch.clientY;
+    touchStartTime = Date.now();
+
+    // Foydalanuvchi bosh sahifada bo'lmasa VA barmoq chap 40px chetdan boshlansa
+    if (touchStartX <= 40 && state.currentTab !== 'home') {
+      isEdgeSwipeGesture = true;
+    } else {
+      isEdgeSwipeGesture = false;
+    }
+  }, { passive: true });
+
+  window.addEventListener('touchmove', (e) => {
+    if (!isEdgeSwipeGesture) return;
+    const touch = e.touches[0];
+    const diffX = touch.clientX - touchStartX;
+    const diffY = Math.abs(touch.clientY - touchStartY);
+
+    // Agar vertikal scroll ustun bo'lsa, jestni bekor qilamiz
+    if (diffY > 30 && diffY > diffX) {
+      isEdgeSwipeGesture = false;
+    }
+  }, { passive: true });
+
+  window.addEventListener('touchend', (e) => {
+    if (!isEdgeSwipeGesture) return;
+    const touch = e.changedTouches[0];
+    const diffX = touch.clientX - touchStartX;
+    const diffY = Math.abs(touch.clientY - touchStartY);
+    const elapsed = Date.now() - touchStartTime;
+
+    // Gorizontal o'ngga surish (kamida 45px o'ngga va tezkor <600ms)
+    if (diffX > 45 && diffX > diffY * 1.2 && elapsed < 600) {
+      try {
+        tg?.HapticFeedback?.impactOccurred?.('medium');
+      } catch (err) {}
+      goBack();
+    }
+    isEdgeSwipeGesture = false;
+  }, { passive: true });
 
   // ==========================================================================
   // 3. MIKRO-ANIMATSIYALAR TIZIMI (PREMIUM MICRO-ANIMATIONS)
