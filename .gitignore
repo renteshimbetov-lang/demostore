@@ -6,6 +6,7 @@ __pycache__/
 .env
 .env.local
 .env.*
+!.env.example
 .DS_Store
 temp_photos/
 channel_all_photos/

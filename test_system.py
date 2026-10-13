@@ -6,7 +6,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from bot.database.db import Database
-from bot.parser.channel_parser import parse_price, is_media_group_duplicate, parse_channel_post_content
+from bot.parser.channel_parser import parse_price, parse_channel_post_content
 
 async def run_full_tests():
     print("--- 1. Narx tahlilchisi (Price Parser) testlari (USD format) ---")
@@ -29,11 +29,11 @@ async def run_full_tests():
         assert parsed == expected, f"Xatolik: '{raw}' -> {parsed}, kutilgan: {expected}"
         print(f"  [OK] '{raw}' => ${parsed}")
 
-    print("\n--- 2. Albom (Media Group) dublikatlarini tekshirish ---")
-    mg_id = "test_album_98765"
-    assert is_media_group_duplicate(mg_id) is False, "Birinchi rasm qabul qilinishi kerak edi"
-    assert is_media_group_duplicate(mg_id) is True, "Ikkinchi rasm o'tkazib yuborilishi kerak edi"
-    print("  [OK] Media group birinchi rasm saqlanadi, keyingilari rad etiladi.")
+    print("\n--- 2. Kanal post matnini tahlil qilish (Parser) ---")
+    name, desc, price = parse_channel_post_content("MacBook Air M3\nJuda yaxshi holatda\nNarxi: 1200$")
+    assert "MacBook" in name
+    assert price == 1200
+    print(f"  [OK] Post tahlili muvaffaqiyatli: {name}, ${price}")
 
     print("\n--- 3. Ma'lumotlar bazasi va Sinxronizatsiya testlari ---")
     test_db = "test_demostore.db"

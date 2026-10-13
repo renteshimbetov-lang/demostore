@@ -10,6 +10,7 @@ class Config:
     bot_token: str
     admin_ids: List[int]
     db_path: str
+    database_url: str
     store_name: str
     support_phone: str
     support_username: str
@@ -31,6 +32,7 @@ def load_config() -> Config:
             if part.isdigit():
                 admin_ids.append(int(part))
 
+    database_url = os.getenv("DATABASE_URL", "").strip()
     db_path = os.getenv("DATABASE_PATH", "demostore.db").strip()
     store_name = os.getenv("STORE_NAME", "Demo Store").strip()
     support_phone = os.getenv("SUPPORT_PHONE", "+998901234567").strip()
@@ -48,6 +50,7 @@ def load_config() -> Config:
         bot_token=bot_token,
         admin_ids=admin_ids,
         db_path=db_path,
+        database_url=database_url,
         store_name=store_name,
         support_phone=support_phone,
         support_username=support_username,

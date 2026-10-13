@@ -58,9 +58,12 @@ async def main():
         sys.exit(1)
 
     logger.info("Ma'lumotlar bazasi initsializatsiya qilinmoqda...")
-    db = Database(config.db_path)
+    db = Database(db_path=config.db_path, database_url=config.database_url)
     await db.init_db()
-    logger.info("Ma'lumotlar bazasi tayyor!")
+    if db.is_postgres:
+        logger.info("Neon PostgreSQL ma'lumotlar bazasi muvaffaqiyatli ulandi va tayyor!")
+    else:
+        logger.info("SQLite ma'lumotlar bazasi tayyor!")
 
     bot = Bot(
         token=config.bot_token,
@@ -118,6 +121,7 @@ async def main():
         await dp.start_polling(bot)
     finally:
         await runner.cleanup()
+        await db.close()
 
 if __name__ == "__main__":
     try:
