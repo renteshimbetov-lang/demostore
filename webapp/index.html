@@ -18,7 +18,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet">
   </noscript>
   
-  <link rel="stylesheet" href="/static/app.css?v=34.0" />
+  <link rel="stylesheet" href="/static/app.css?v=35.0" />
 </head>
 <body>
   <!-- To'liq ekranli Parda (Curtain Reveal) Kirish Animatsiyasi -->
@@ -94,7 +94,7 @@
         splashEl.style.pointerEvents = 'none';
         setTimeout(function () {
           splashEl.style.display = 'none';
-        }, 380);
+        }, 850);
       }
 
       window.dismissIntroCurtains = openCurtain;
@@ -107,8 +107,8 @@
       }
       splashEl.addEventListener('click', openCurtain);
 
-      // Tezkor va silliq parda ochilishi (250ms)
-      setTimeout(openCurtain, 250);
+      // 1.2 soniya logo to'liq ko'rsatilgach pardalar avtomatik ikki tarafga ochiladi
+      setTimeout(openCurtain, 1200);
     })();
   </script>
 
@@ -708,6 +708,6 @@
     </div>
   </div>
 
-  <script src="/static/app.js?v=34.0"></script>
+  <script src="/static/app.js?v=35.0"></script>
 </body>
 </html>

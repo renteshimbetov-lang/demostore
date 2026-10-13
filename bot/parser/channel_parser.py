@@ -102,63 +102,11 @@ def parse_price(text: str, usd_rate: int = DEFAULT_USD_RATE) -> Optional[int]:
     return None
 
 def clean_title_text(raw_line: str, full_text: str = "") -> str:
-    """Sarlavhadan emojilar, 'Nomi:' prefikslari va ortiqcha belgilarni tozalash, xususiyatlarni qo'shish"""
+    """Sarlavhadan emojilar, 'Nomi:' prefikslari va ortiqcha qavslarni tozalash (faqat toza model nomi)"""
     cleaned = re.sub(r"^[^\w\d]+", "", raw_line).strip()
     cleaned = re.sub(r"^(?:nomi|model|tovar|mahsulot|name)\s*[:\-]\s*", "", cleaned, flags=re.I).strip()
-    
-    if cleaned and full_text:
-        lower_cleaned = cleaned.lower()
-        lower_full = full_text.lower()
-
-        # 1. MACBOOKLAR
-        if "macbook" in lower_cleaned or "macbook" in lower_full or "laptop" in lower_cleaned:
-            spec_parts = []
-            cpu_match = re.search(r"(?:protsessor|chip)[:\s]+[^\w]*(M\d(?:\s*(?:pro|max|ultra))?)", full_text, re.I)
-            if cpu_match:
-                spec_parts.append(cpu_match.group(1).strip())
-                
-            ram_match = re.search(r"(?:operativ|ram)[:\s]+[^\w]*(\d+\s*gb)", full_text, re.I)
-            if ram_match:
-                spec_parts.append(ram_match.group(1).replace(" ", "").upper())
-                
-            ssd_match = re.search(r"(?:asosiy\s*xotira|xotira|ssd|rom)[:\s]+[^\w]*(\d+\s*(?:gb|tb))", full_text, re.I)
-            if ssd_match:
-                spec_parts.append(ssd_match.group(1).replace(" ", "").upper())
-                
-            if spec_parts:
-                specs_str = " / ".join(spec_parts)
-                if specs_str.lower() not in cleaned.lower():
-                    cleaned = f"{cleaned} ({specs_str})"
-
-        # 2. IPHONE VA SMARTFONLAR
-        elif "iphone" in lower_cleaned or "iphone" in lower_full or "pro max" in lower_cleaned or "samsung" in lower_cleaned:
-            spec_parts = []
-            
-            # Xotira (Storage)
-            storage_m = re.search(r"(?:🧠\s*|xotira[:\s]+|\b)(\d+\s*(?:gb|tb))\b", full_text, re.I)
-            if storage_m:
-                spec_parts.append(storage_m.group(1).replace(" ", "").upper())
-                
-            # Rang (Color)
-            color_cand = re.search(r"(?:🎨\s*|rangi?[:\s]+)(natural|desert|black|silver|blue|gold|white|pink|space\s*black|titanium)", full_text, re.I)
-            if color_cand:
-                spec_parts.append(color_cand.group(1).strip().capitalize())
-            else:
-                for c in ["natural", "desert", "black", "silver", "blue", "gold", "white", "pink"]:
-                    if re.search(r"\b" + c + r"\b", lower_full):
-                        spec_parts.append(c.capitalize())
-                        break
-                        
-            # Yomkost / Batareya %
-            bat_m = re.search(r"(?:🔋\s*|yomkost[:\s]+|ёмкость[:\s]+|batareya[:\s]+|\b)(\d{2,3}\s*%)", full_text, re.I)
-            if bat_m:
-                spec_parts.append(bat_m.group(1).strip())
-
-            if spec_parts:
-                specs_str = " / ".join(spec_parts)
-                if not any(part.lower() in cleaned.lower() for part in spec_parts):
-                    cleaned = f"{cleaned} ({specs_str})"
-
+    # Qavs ichidagi (256GB / Desert...) kabi ortiqcha matnlarni tozalash
+    cleaned = re.sub(r"\s*\([^)]*\)", "", cleaned).strip()
     return cleaned if cleaned else "Mahsulot"
 
 def parse_channel_post_content(raw_text: str) -> Tuple[str, str, int]:

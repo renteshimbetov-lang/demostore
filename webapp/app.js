@@ -382,6 +382,12 @@
     return badges;
   }
 
+  // Mahsulot kartasida faqat toza model nomini ko'rsatish (qavslardagi ortiqcha matnlarsiz)
+  function getCleanCardTitle(name) {
+    if (!name) return 'Mahsulot';
+    return name.replace(/\s*\([^)]*\)/g, '').trim();
+  }
+
   // Toifa bo'yicha qat'iy va xatosiz filtrlash (Noutbuklar hech qachon smartfonga kirmaydi)
   function isProductInCategory(p, catId) {
     if (!catId || catId === 0) return true;
@@ -919,7 +925,7 @@
                 <span class="deal-drop-tag">-${rate}%</span>
               </div>
             </div>
-            <h3 class="deal-title" title="${escapeHtml(p.name)}">${escapeHtml(p.name)}</h3>
+            <h3 class="deal-title" title="${escapeHtml(getCleanCardTitle(p.name))}">${escapeHtml(getCleanCardTitle(p.name))}</h3>
             <div class="deal-footer-action">
               <button class="deal-cart-btn btn-buy" data-id="${p.id}">
                 <span class="deal-cart-icon">
@@ -1372,7 +1378,7 @@
           <img src="${getProductImageUrl(p)}" alt="${escapeHtml(p.name)}" class="cart-section-item-img" decoding="async" onerror="this.onerror=null; this.src='${FALLBACK_IMAGE_URL}';" />
           <div class="cart-section-item-info">
             <span class="cart-section-item-brand">${brand}</span>
-            <h4 class="cart-section-item-name">${p.name}</h4>
+            <h4 class="cart-section-item-name">${escapeHtml(getCleanCardTitle(p.name))}</h4>
             <div class="cart-section-item-price">
               ${formatPrice(p.price)}
               <span class="cart-item-uzs-sub">(${formatPriceUzs(p.price * item.qty)})</span>
@@ -1525,15 +1531,7 @@
           </div>
           <div class="card-body">
             <span class="product-brand">${brand}</span>
-            <h3 class="product-title">${escapeHtml(p.name)}</h3>
-            ${(() => {
-              const badges = getProductKeyBadges(p);
-              return badges.length > 0 ? `
-                <div class="card-specs-row">
-                  ${badges.map(b => `<span class="card-spec-pill ${b.type}">${escapeHtml(b.text)}</span>`).join('')}
-                </div>
-              ` : '';
-            })()}
+            <h3 class="product-title">${escapeHtml(getCleanCardTitle(p.name))}</h3>
             <div class="price-wrap">
               <span class="price-current">${formatPrice(p.price)}</span>
               <span class="price-uzs">≈ ${formatPriceUzs(p.price)}</span>
@@ -1661,15 +1659,7 @@
           </div>
           <div class="card-body">
             <span class="product-brand">${brand}</span>
-            <h3 class="product-title">${escapeHtml(p.name)}</h3>
-            ${(() => {
-              const badges = getProductKeyBadges(p);
-              return badges.length > 0 ? `
-                <div class="card-specs-row">
-                  ${badges.map(b => `<span class="card-spec-pill ${b.type}">${escapeHtml(b.text)}</span>`).join('')}
-                </div>
-              ` : '';
-            })()}
+            <h3 class="product-title">${escapeHtml(getCleanCardTitle(p.name))}</h3>
             <div class="price-wrap">
               <span class="price-current">${formatPrice(p.price)}</span>
               <span class="price-uzs">≈ ${formatPriceUzs(p.price)}</span>
@@ -1837,7 +1827,7 @@
       ${galleryHTML}
       <div class="pd-hero-meta">
         <span class="pd-hero-brand">APPLE</span>
-        <h2 class="pd-hero-title">${escapeHtml(prod.name)}</h2>
+        <h2 class="pd-hero-title">${escapeHtml(getCleanCardTitle(prod.name))}</h2>
         <div class="pd-hero-price-stack">
           <div class="pd-hero-usd">${formatPrice(prod.price)}</div>
           <div class="pd-hero-uzs">≈ ${formatPriceUzs(prod.price)}</div>
@@ -2083,15 +2073,7 @@
           </div>
           <div class="card-body">
             <span class="product-brand">${brand}</span>
-            <h3 class="product-title">${escapeHtml(p.name)}</h3>
-            ${(() => {
-              const badges = getProductKeyBadges(p);
-              return badges.length > 0 ? `
-                <div class="card-specs-row">
-                  ${badges.map(b => `<span class="card-spec-pill ${b.type}">${escapeHtml(b.text)}</span>`).join('')}
-                </div>
-              ` : '';
-            })()}
+            <h3 class="product-title">${escapeHtml(getCleanCardTitle(p.name))}</h3>
             <div class="price-wrap">
               <span class="price-current">${formatPrice(p.price)}</span>
               <span class="price-uzs">≈ ${formatPriceUzs(p.price)}</span>
@@ -2342,24 +2324,41 @@
   // ==========================================================================
   function initSplashScreen() {
     const splashScreen = document.getElementById('splash-screen');
+    const splashSkipBtn = document.getElementById('splashSkipBtn');
     if (!splashScreen) return;
 
-    // Agar ilovaga kirish avval ko'rsatilgan bo'lsa yoki allaqachon ochilgan bo'lsa:
     if (sessionStorage.getItem('demostore_intro_shown') === 'true' || splashScreen.classList.contains('curtain-open')) {
       splashScreen.style.display = 'none';
       return;
     }
 
-    // Do'kon interfeysi tayyor bo'lishi bilan pardani tezkor ochish
-    if (typeof window.dismissIntroCurtains === 'function') {
-      setTimeout(window.dismissIntroCurtains, 80);
-    } else {
-      splashScreen.classList.add('curtain-open');
-      splashScreen.style.pointerEvents = 'none';
-      setTimeout(() => {
-        splashScreen.style.display = 'none';
-      }, 380);
+    let isDismissed = false;
+    function openCurtains() {
+      if (isDismissed) return;
+      isDismissed = true;
+
+      triggerHaptic('light');
+
+      if (typeof window.dismissIntroCurtains === 'function') {
+        window.dismissIntroCurtains();
+      } else {
+        splashScreen.classList.add('curtain-open');
+        splashScreen.style.pointerEvents = 'none';
+        setTimeout(() => {
+          splashScreen.style.display = 'none';
+        }, 850);
+      }
     }
+
+    splashSkipBtn?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openCurtains();
+    });
+
+    splashScreen.addEventListener('click', openCurtains);
+
+    // 1.2 soniya davomida Apple 3D logo ajoyib ko'rinib, pardalar ikki tarafga silliq ochiladi
+    setTimeout(openCurtains, 1200);
   }
 
   // ==========================================================================
