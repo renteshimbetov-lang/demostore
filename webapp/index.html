@@ -18,7 +18,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet">
   </noscript>
   
-  <link rel="stylesheet" href="/static/app.css?v=32.0" />
+  <link rel="stylesheet" href="/static/app.css?v=33.0" />
 </head>
 <body>
   <!-- To'liq ekranli Parda (Curtain Reveal) Kirish Animatsiyasi -->
@@ -113,15 +113,10 @@
   </script>
 
   <div id="app">
-    <!-- Mobil Header (Telegram Yopish tugmasidan to'liq xavfsiz) -->
+    <!-- Mobil Header -->
     <header class="mobile-header" id="mobileHeader">
       <div class="header-inner">
-        <!-- Chap: Hamburger menyu yoki Orqaga tugmasi -->
-        <button class="icon-btn hidden" id="btnHeaderBack" aria-label="Orqaga" title="Orqaga">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="15 18 9 12 15 6"></polyline>
-          </svg>
-        </button>
+        <!-- Chap: Hamburger menyu -->
         <button class="icon-btn" id="btnOpenMenu" aria-label="Menyu">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
             <line x1="3" y1="12" x2="21" y2="12"></line>
@@ -524,12 +519,6 @@
       <!-- 6. MAHSULOT BATAFSIL KO'RISH BO'LIMI (Product Detail Full Section) -->
       <section class="app-section product-detail-section hidden" id="sectionProductDetail" data-section="product-detail">
         <div class="pd-top-bar">
-          <button class="pd-back-btn" id="pdBackBtn" aria-label="Orqaga">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="m15 18-6-6 6-6"></path>
-            </svg>
-            <span>Orqaga</span>
-          </button>
           <button class="pd-wishlist-btn" id="pdWishlistBtn" aria-label="Sevimlilar">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
@@ -719,6 +708,6 @@
     </div>
   </div>
 
-  <script src="/static/app.js?v=32.0"></script>
+  <script src="/static/app.js?v=33.0"></script>
 </body>
 </html>

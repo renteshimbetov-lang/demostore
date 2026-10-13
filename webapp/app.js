@@ -766,45 +766,42 @@
   // ==========================================================================
   const navHistory = ['home'];
 
+  function isAnyDrawerOpen() {
+    return (
+      (leftDrawerEl && leftDrawerEl.classList.contains('active')) ||
+      (bottomFilterEl && bottomFilterEl.classList.contains('active')) ||
+      (backdropEl && backdropEl.classList.contains('active'))
+    );
+  }
+
   function updateBackButtons() {
     const isHome = state.currentTab === 'home';
-    const isProductDetail = state.currentTab === 'product-detail';
 
-    // 1. Telegram Native BackButton (Mini App chap yuqoridagi rasmiy orqaga tugmasi)
+    // Telegram rasmiy orqaga tugmasi (Native Telegram BackButton)
     if (tg?.BackButton) {
-      if (!isHome) {
-        tg.BackButton.show();
-      } else {
-        tg.BackButton.hide();
-      }
-    }
-
-    // 2. Ilova Header Orqaga tugmasi (#btnHeaderBack vs #btnOpenMenu)
-    const btnHeaderBack = document.getElementById('btnHeaderBack');
-    const btnOpenMenu = document.getElementById('btnOpenMenu');
-    if (btnHeaderBack && btnOpenMenu) {
-      if (!isHome && !isProductDetail) {
-        btnHeaderBack.classList.remove('hidden');
-        btnOpenMenu.classList.add('hidden');
-      } else if (isHome) {
-        btnHeaderBack.classList.add('hidden');
-        btnOpenMenu.classList.remove('hidden');
-      }
+      try {
+        if (!isHome) {
+          tg.BackButton.show();
+        } else {
+          tg.BackButton.hide();
+        }
+      } catch (e) {}
     }
   }
 
   function goBack() {
     triggerHaptic('light');
 
-    // 1. Agar yon menyu (drawer) ochiq bo'lsa
-    if (menuDrawerEl && !menuDrawerEl.classList.contains('hidden')) {
+    // 1. Agar yon menyu yoki filtr ochiq bo'lsa, avval uni yopamiz
+    if (isAnyDrawerOpen()) {
       closeAllDrawers();
       return;
     }
 
-    // 2. Agar filter modali ochiq bo'lsa
-    if (filterModalEl && !filterModalEl.classList.contains('hidden')) {
-      closeFilterModal();
+    // 2. Agar mahsulot batafsil sahifasida bo'lsa, avvalgi sahifaga qaytish
+    if (state.currentTab === 'product-detail') {
+      const prev = (state.previousTab && state.previousTab !== 'product-detail') ? state.previousTab : 'home';
+      switchTab(prev, null, false);
       return;
     }
 
@@ -900,20 +897,23 @@
     window.scrollTo({ top: 0, behavior: 'instant' });
   }
 
-  function handleBackClick() {
-    goBack();
-  }
-
-  // Telegram native BackButton va Header tugmalarini ulash
+  // Telegram native BackButton
   if (tg?.BackButton) {
-    tg.BackButton.onClick(goBack);
+    try {
+      tg.BackButton.onClick(goBack);
+    } catch (e) {}
   }
-  document.getElementById('btnHeaderBack')?.addEventListener('click', goBack);
-  pdBackBtnEl?.addEventListener('click', goBack);
 
-  // Brauzer / iOS Safari native orqaga o'tish (popstate)
+  // Brauzer / Android apparat tugmasi / iOS Safari popstate
   window.addEventListener('popstate', () => {
     goBack();
+  });
+
+  // Klaviatura Escape tugmasi
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      goBack();
+    }
   });
 
   // ==========================================================================
@@ -930,12 +930,11 @@
     touchStartX = touch.clientX;
     touchStartY = touch.clientY;
     touchStartTime = Date.now();
+    isEdgeSwipeGesture = false;
 
-    // Foydalanuvchi bosh sahifada bo'lmasa VA barmoq chap 40px chetdan boshlansa
-    if (touchStartX <= 40 && state.currentTab !== 'home') {
+    // Barmoq ekranning chap chekkasida (<= 75px) boshlansa VA bosh sahifada bo'lmasa (yoki drawer ochiq bo'lsa)
+    if (touchStartX <= 75 && (state.currentTab !== 'home' || isAnyDrawerOpen())) {
       isEdgeSwipeGesture = true;
-    } else {
-      isEdgeSwipeGesture = false;
     }
   }, { passive: true });
 
@@ -945,8 +944,8 @@
     const diffX = touch.clientX - touchStartX;
     const diffY = Math.abs(touch.clientY - touchStartY);
 
-    // Agar vertikal scroll ustun bo'lsa, jestni bekor qilamiz
-    if (diffY > 30 && diffY > diffX) {
+    // Agar vertikal skroll ustun bo'lsa (diffY > 25 va diffY > diffX), jestni bekor qilamiz
+    if (diffY > 25 && diffY > diffX) {
       isEdgeSwipeGesture = false;
     }
   }, { passive: true });
@@ -958,14 +957,12 @@
     const diffY = Math.abs(touch.clientY - touchStartY);
     const elapsed = Date.now() - touchStartTime;
 
-    // Gorizontal o'ngga surish (kamida 45px o'ngga va tezkor <600ms)
-    if (diffX > 45 && diffX > diffY * 1.2 && elapsed < 600) {
-      try {
-        tg?.HapticFeedback?.impactOccurred?.('medium');
-      } catch (err) {}
+    isEdgeSwipeGesture = false;
+
+    // Gorizontal o'ngga surish: kamida 40px o'ngga surilsa, vertikaldan ustun bo'lsa va 700ms ichida bo'lsa
+    if (diffX >= 40 && diffX > diffY * 1.05 && elapsed < 700) {
       goBack();
     }
-    isEdgeSwipeGesture = false;
   }, { passive: true });
 
   // ==========================================================================
