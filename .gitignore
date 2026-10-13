@@ -11,3 +11,6 @@ __pycache__/
 temp_photos/
 channel_all_photos/
 remove_bg
+*.db
+*.sqlite
+*.sqlite3

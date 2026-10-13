@@ -1,6 +1,6 @@
 # 🛒 DemoStore — Telegram E-Commerce & Mini App Ekotizimi
 
-Ushbu loyiha zamonaviy **Python 3**, **Aiogram 3.x**, **SQLite (aiosqlite)**, **Aiohttp REST API** va **Telegram Mini App (Web App)** asosida yaratilgan toʻliq funksional internet-doʻkon va kanal sinxronizatsiyasi platformasidir.
+Ushbu loyiha zamonaviy **Python 3**, **Aiogram 3.x**, **Neon Serverless PostgreSQL (asyncpg)**, **Aiohttp REST API** va **Telegram Mini App (Web App)** asosida yaratilgan toʻliq funksional internet-doʻkon va kanal sinxronizatsiyasi platformasidir.
 
 ---
 
@@ -54,10 +54,9 @@ Ushbu loyiha zamonaviy **Python 3**, **Aiogram 3.x**, **SQLite (aiosqlite)**, **
 
 ```
 demostore/
-├── .env                  # Token, Admin ID va Port sozlamalari
-├── main.py               # Bot va REST API serverini bir vaqtda yurgizuvchi fayl
-├── demostore.db          # SQLite ma'lumotlar bazasi
-├── test_system.py        # Tizim testlari (parser, db, views, sort)
+├── .env                  # Token, Neon DATABASE_URL va Port sozlamalari
+├── main_store.py         # Bot va REST API serverini bir vaqtda yurgizuvchi fayl
+├── test_system.py        # Tizim testlari (parser, neon db, views, sort)
 ├── run.sh                # Ishga tushirish skripti
 ├── requirements.txt      # Kutubxonalar
 ├── bot/

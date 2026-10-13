@@ -47,16 +47,7 @@ async def sync():
     channel_username = config.channel_username or "shbdbdjdhdjjdhd"
     logger.info(f"Ma'lumotlar bazasi rejimi: {'Neon PostgreSQL' if db.is_postgres else 'SQLite'}")
 
-    if db.is_postgres:
-        rows = await db.pool.fetch("SELECT id, name, message_id, image_url FROM products ORDER BY id DESC;")
-        products = [dict(r) for r in rows]
-    else:
-        import aiosqlite
-        async with aiosqlite.connect(db.db_path) as s_db:
-            s_db.row_factory = aiosqlite.Row
-            async with s_db.execute("SELECT id, name, message_id, image_url FROM products ORDER BY id DESC;") as cur:
-                products = [dict(r) for r in await cur.fetchall()]
-
+    products = await db.fetch("SELECT id, name, message_id, image_url FROM products ORDER BY id DESC;")
     logger.info(f"Jami {len(products)} ta mahsulot tekshirilmoqda...")
 
     updated_count = 0
@@ -70,20 +61,11 @@ async def sync():
             primary_photo = photos[0]
             gallery_json = json.dumps(photos)
             
-            if db.is_postgres:
-                await db.pool.execute("""
-                    UPDATE products 
-                    SET image_url = $1, gallery_images = $2 
-                    WHERE id = $3;
-                """, primary_photo, gallery_json, p["id"])
-            else:
-                async with aiosqlite.connect(db.db_path) as s_db:
-                    await s_db.execute("""
-                        UPDATE products 
-                        SET image_url = ?, gallery_images = ? 
-                        WHERE id = ?;
-                    """, (primary_photo, gallery_json, p["id"]))
-                    await s_db.commit()
+            await db.execute("""
+                UPDATE products 
+                SET image_url = $1, gallery_images = $2 
+                WHERE id = $3;
+            """, primary_photo, gallery_json, p["id"])
 
             updated_count += 1
             logger.info(f"Mahsulot #{p['id']} ('{p['name']}'): {len(photos)} ta haqiqiy Telegram rasm yangilandi!")
