@@ -1304,7 +1304,7 @@
     }
   }
 
-  // 2. Savatga qo'shish tugmasining jonli Apple-style animatsiyasi (Spring Checkmark Pop)
+  // 2. Savatga qo'shish tugmasining jonli Apple-style animatsiyasi (Spinner -> Checkmark Pop -> Asl holat)
   function animateCartButton(btn) {
     if (!btn || btn.dataset.animating === 'true') return;
     btn.dataset.animating = 'true';
@@ -1315,15 +1315,24 @@
       btn.style.minWidth = `${currentWidth}px`;
     }
 
-    // 1-bosqich: Tezkor elastik qisilish
-    btn.style.transform = 'scale(0.92)';
+    // 1-bosqich: Smooth tactile bosilish va aylanuvchi spinner (Spinner + "Qo'shilmoqda...")
+    btn.style.transform = 'scale(0.93)';
     btn.style.transition = 'transform 0.1s cubic-bezier(0.2, 0, 0, 1)';
 
+    const addingText = (typeof t === 'function' ? t('adding') : null) || "Qo'shilmoqda...";
+    btn.innerHTML = `<span class="btn-spinner"></span><span>${addingText}</span>`;
+
+    // Mayin elastik kengayish (Smooth spring release)
     setTimeout(() => {
-      // 2-bosqich: Yashil muvaffaqiyat holatiga o'tish (Checkmark + "Qo'shildi")
-      btn.classList.add('is-success');
       btn.style.transform = 'scale(1)';
-      btn.style.transition = 'transform 0.24s cubic-bezier(0.25, 1.4, 0.5, 1), background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease';
+      btn.style.transition = 'transform 0.22s cubic-bezier(0.25, 1.4, 0.5, 1)';
+    }, 60);
+
+    // 2-bosqich: Spinner aylanib bo'lgach (280ms), Yashil ptichka sakrashi (Checkmark Pop + "Qo'shildi!")
+    setTimeout(() => {
+      btn.classList.add('is-success');
+      btn.style.transform = 'scale(1.02)';
+      btn.style.transition = 'transform 0.22s cubic-bezier(0.25, 1.4, 0.5, 1), background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease';
 
       const addedText = (typeof t === 'function' ? t('added') : null) || "Qo'shildi!";
       btn.innerHTML = `
@@ -1334,9 +1343,13 @@
         <span>${addedText}</span>
       `;
 
+      setTimeout(() => {
+        btn.style.transform = 'scale(1)';
+      }, 140);
+
       triggerHaptic('success');
 
-      // 3-bosqich: Asl holatiga mayin qaytish
+      // 3-bosqich: Yashil ptichka holatidan mayin asl holatiga qaytish
       setTimeout(() => {
         btn.style.transform = 'scale(0.96)';
         btn.style.transition = 'transform 0.12s ease';
@@ -1350,7 +1363,7 @@
           btn.dataset.animating = 'false';
         }, 120);
       }, 750);
-    }, 110);
+    }, 280);
   }
 
   // 3. Telegram kanaldagi postni ochish funksiyasi
@@ -1535,7 +1548,7 @@
     text += `Joriy MB kursi: 1$ = ${rateVal} soʻm\n\nIltimos, yetkazib berish boʻyicha maʼlumot bering.`;
 
     const encoded = encodeURIComponent(text);
-    const tgUrl = `https://t.me/SmartBook_menejer?text=${encoded}`;
+    const tgUrl = `https://t.me/eshmbetov?text=${encoded}`;
     window.open(tgUrl, '_blank');
   });
 
