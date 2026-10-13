@@ -141,13 +141,10 @@
     return uzs.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' soʻm';
   }
 
-  // Sarlavhadagi jonli kurs belgisini (badge) yangilash
+  // Sarlavhadagi jonli kurs belgisini (badge) yangilash (foydalanuvchi talabiga ko'ra o'chirildi)
   function updateLiveUsdBadge(rate) {
-    const textEl = document.getElementById('liveUsdText');
-    if (!textEl) return;
-    const rInt = Math.round(rate || state?.currentUsdRate || 12850);
-    const rFormatted = rInt.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-    textEl.textContent = `1$ = ${rFormatted} soʻm`;
+    const el = document.getElementById('liveUsdBadge');
+    if (el) el.style.display = 'none';
   }
 
   // Markaziy Bank kursini API orqali olish

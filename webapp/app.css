@@ -385,7 +385,7 @@ html, body {
 }
 
 .live-usd-badge {
-  display: inline-flex;
+  display: none !important;
   align-items: center;
   gap: 5px;
   margin-top: 1px;
