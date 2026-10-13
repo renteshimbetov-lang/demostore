@@ -755,6 +755,24 @@ class Database:
                 """, product_ids)
                 await db.commit()
 
+    async def activate_product_by_id(self, product_id: int):
+        """Mahsulotni faollashtirish (is_active=1, is_available=1)"""
+        if self.is_postgres:
+            await self.pool.execute("UPDATE products SET is_active = 1, is_available = 1 WHERE id = $1;", product_id)
+        else:
+            async with aiosqlite.connect(self.db_path) as db:
+                await db.execute("UPDATE products SET is_active = 1, is_available = 1 WHERE id = ?;", (product_id,))
+                await db.commit()
+
+    async def deactivate_product_by_id(self, product_id: int):
+        """Mahsulotni nofaol qilish (is_active=0, is_available=0)"""
+        if self.is_postgres:
+            await self.pool.execute("UPDATE products SET is_active = 0, is_available = 0 WHERE id = $1;", product_id)
+        else:
+            async with aiosqlite.connect(self.db_path) as db:
+                await db.execute("UPDATE products SET is_active = 0, is_available = 0 WHERE id = ?;", (product_id,))
+                await db.commit()
+
     async def update_product_image(self, product_id: int, image_url: str):
         """Mahsulot rasmi manzilini yangilash (fon tozalangandan so'ng)"""
         gallery = json.dumps([image_url])

@@ -2,7 +2,7 @@ import asyncio
 import logging
 from typing import Dict, List, Optional
 from aiogram import Router, Bot
-from aiogram.types import Message
+from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 
 from bot.database.db import Database
 from bot.parser.channel_parser import parse_channel_post_content
@@ -128,6 +128,45 @@ def setup_channel_router(db: Database, bot: Bot) -> Router:
             f"Kanal posti qabul qilindi! Mahsulot ID: {product_id}, Nomi: {name}, "
             f"Narxi: ${price}, Rasmlar (file_id): {len(file_ids)} ta"
         )
+
+        # Adminlarga srazu bildirishnoma yuborish (Ha / Yo'q tugmalari bilan)
+        from bot.utils.helpers import format_price
+        price_uzs = format_price(price * config.usd_rate)
+        admin_alert_text = (
+            f"🔔 <b>KANALDAN YANGI POST QABUL QILINDI!</b>\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"📱 <b>Model:</b> {name}\n"
+            f"💵 <b>Narxi:</b> ${price} (≈ {price_uzs})\n"
+            f"🔗 <b>Kanal posti:</b> <a href=\"{post_url}\">Postni ko'rish</a>\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"❓ <b>Shuni do'kon / mini ilovaga joylaylikmi?</b>"
+        )
+        admin_kb = InlineKeyboardMarkup(inline_keyboard=[
+            [
+                InlineKeyboardButton(text="🟢 Ha, do'konga joylash", callback_data=f"chan_approve_{product_id}"),
+                InlineKeyboardButton(text="🔴 Yo'q, rad etish", callback_data=f"chan_reject_{product_id}")
+            ]
+        ])
+
+        for admin_id in config.admin_ids:
+            try:
+                if primary_file_id:
+                    await bot.send_photo(
+                        chat_id=admin_id,
+                        photo=primary_file_id,
+                        caption=admin_alert_text,
+                        reply_markup=admin_kb,
+                        parse_mode="HTML"
+                    )
+                else:
+                    await bot.send_message(
+                        chat_id=admin_id,
+                        text=admin_alert_text,
+                        reply_markup=admin_kb,
+                        parse_mode="HTML"
+                    )
+            except Exception as e:
+                logger.warning(f"Adminga bildirishnoma yuborishda xatolik ({admin_id}): {e}")
 
     async def _process_debounced_media_group(mg_id: str):
         """Albomning barcha 2-4 ta rasmi Telegramdan kelib bo'lgach (1.2s debounce) qayta ishlash"""

@@ -12,7 +12,9 @@ class SearchStates(StatesGroup):
 
 class AdminStates(StatesGroup):
     waiting_for_broadcast = State()
-    
+    waiting_for_channel_post = State()
+    waiting_for_post_confirm = State()
+
     # Mahsulot qo'shish
     waiting_for_category = State()
     waiting_for_name = State()

@@ -459,6 +459,7 @@
       weekly_discounts: "Hafta chegirmalari",
       see_all: "Hammasini koʻrish",
       popular_products: "Ommabop tovarlar",
+      search_results: "Qidiruv natijalari",
       filter: "Filtr",
       filter_title: "Saralash & Filtr",
       sort_default: "Odatiy (Kanal tartibi)",
@@ -529,6 +530,7 @@
       weekly_discounts: "Скидки недели",
       see_all: "Все товары",
       popular_products: "Популярные товары",
+      search_results: "Результаты поиска",
       filter: "Фильтр",
       filter_title: "Сортировка и фильтр",
       sort_default: "По умолчанию (порядок канала)",
@@ -599,6 +601,7 @@
       weekly_discounts: "Weekly Deals",
       see_all: "See all",
       popular_products: "Popular Products",
+      search_results: "Search Results",
       filter: "Filter",
       filter_title: "Sort & Filter",
       sort_default: "Default (Channel order)",
@@ -891,7 +894,18 @@
   }
 
   function renderDiscountsSlider() {
-    if (!discountsTrackEl || !state.products || state.products.length === 0) return;
+    if (!discountsTrackEl) return;
+
+    // Qidiruv faol bo'lsa, hafta chegirmalarini ko'rsatmaslik
+    const isSearching = Boolean(state.searchQuery && state.searchQuery.trim().length > 0);
+    if (isSearching) {
+      if (discountsSliderSectionEl) discountsSliderSectionEl.classList.add('hidden');
+      return;
+    } else {
+      if (discountsSliderSectionEl) discountsSliderSectionEl.classList.remove('hidden');
+    }
+
+    if (!state.products || state.products.length === 0) return;
 
     // Dastlabki 8 ta mahsulotni haftalik chegirmalarga olamiz
     const discountItems = state.products.slice(0, 8);
@@ -2037,6 +2051,13 @@
   let lastRenderedSignature = '';
   function renderProducts(force = false) {
     if (!productsGridEl) return;
+    const isSearching = Boolean(state.searchQuery && state.searchQuery.trim().length > 0);
+    if (discountsSliderSectionEl) {
+      discountsSliderSectionEl.classList.toggle('hidden', isSearching);
+    }
+    if (sectionTitleEl) {
+      sectionTitleEl.textContent = isSearching ? t('search_results') : t('popular_products');
+    }
     const products = state.products;
 
     if (!products || products.length === 0) {
@@ -2203,7 +2224,16 @@
   searchInputEl?.addEventListener('input', (e) => {
     const val = e.target.value;
     state.searchQuery = val;
-    clearSearchBtnEl?.classList.toggle('hidden', val.length === 0);
+    const isSearching = Boolean(val && val.trim().length > 0);
+    clearSearchBtnEl?.classList.toggle('hidden', !isSearching);
+
+    // Qidiruv boshlanishi bilanoq Hafta chegirmalarini darhol yashirish
+    if (discountsSliderSectionEl) {
+      discountsSliderSectionEl.classList.toggle('hidden', isSearching);
+    }
+    if (sectionTitleEl) {
+      sectionTitleEl.textContent = isSearching ? t('search_results') : t('popular_products');
+    }
 
     if (state.currentTab !== 'home' && state.currentTab !== 'catalog') {
       switchTab('home');
@@ -2220,6 +2250,12 @@
     if (searchInputEl) searchInputEl.value = '';
     state.searchQuery = '';
     clearSearchBtnEl?.classList.add('hidden');
+    if (discountsSliderSectionEl) {
+      discountsSliderSectionEl.classList.remove('hidden');
+    }
+    if (sectionTitleEl) {
+      sectionTitleEl.textContent = t('popular_products');
+    }
     loadProducts();
   });
 
@@ -2230,6 +2266,12 @@
     state.searchQuery = '';
     if (searchInputEl) searchInputEl.value = '';
     clearSearchBtnEl?.classList.add('hidden');
+    if (discountsSliderSectionEl) {
+      discountsSliderSectionEl.classList.remove('hidden');
+    }
+    if (sectionTitleEl) {
+      sectionTitleEl.textContent = t('popular_products');
+    }
     catalogCategorySliderEl?.querySelectorAll('.category-pill').forEach(p => {
       p.classList.toggle('active', p.dataset.category === '0');
     });

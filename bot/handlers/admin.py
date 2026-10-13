@@ -1,3 +1,4 @@
+import json
 from aiogram import Router, F, Bot
 from aiogram.filters import Command
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
@@ -7,6 +8,7 @@ from bot.config import config
 from bot.database.db import Database
 from bot.states.states import AdminStates
 from bot.utils.helpers import format_price
+from bot.parser.channel_parser import parse_channel_post_content
 
 def setup_admin_router(db: Database, bot: Bot) -> Router:
     router = Router()
@@ -17,10 +19,16 @@ def setup_admin_router(db: Database, bot: Bot) -> Router:
     def get_admin_menu_inline() -> InlineKeyboardMarkup:
         return InlineKeyboardMarkup(
             inline_keyboard=[
-                [InlineKeyboardButton(text="Statistika hisoboti", callback_data="admin_stats")],
-                [InlineKeyboardButton(text="Oxirgi buyurtmalar", callback_data="admin_orders")],
-                [InlineKeyboardButton(text="Xabar tarqatish (Broadcast)", callback_data="admin_broadcast")],
-                [InlineKeyboardButton(text="Yangi mahsulot qo'shish", callback_data="admin_add_product")]
+                [InlineKeyboardButton(text="📢 Kanalga yangi post tayyorlash & joylash", callback_data="admin_create_post")],
+                [
+                    InlineKeyboardButton(text="📊 Statistika", callback_data="admin_stats"),
+                    InlineKeyboardButton(text="📦 Buyurtmalar", callback_data="admin_orders")
+                ],
+                [
+                    InlineKeyboardButton(text="✉️ Xabar tarqatish (Broadcast)", callback_data="admin_broadcast"),
+                    InlineKeyboardButton(text="➕ Yangi mahsulot", callback_data="admin_add_product")
+                ],
+                [InlineKeyboardButton(text="🔄 Kanal postlarini sinxronlash", callback_data="admin_sync_channel")]
             ]
         )
 
@@ -50,12 +58,14 @@ def setup_admin_router(db: Database, bot: Bot) -> Router:
         await state.clear()
         stats = await db.get_stats()
         text = (
-            f"<b>Admin Boshqaruv Paneli</b>\n\n"
-            f"Foydalanuvchilar: <b>{stats['users_count']}</b> ta\n"
-            f"Faol mahsulotlar: <b>{stats['products_count']}</b> ta\n"
-            f"Buyurtmalar: <b>{stats['orders_count']}</b> ta\n"
-            f"Jami aylanma: <b>{format_price(stats['total_revenue'])}</b>\n\n"
-            f"Boshqarish uchun bo'limni tanlang:"
+            f"👑 <b>ADMIN BOSHQARUV PANELI</b>\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"👥 Foydalanuvchilar: <b>{stats['users_count']}</b> nafar\n"
+            f"📦 Faol mahsulotlar: <b>{stats['products_count']}</b> ta\n"
+            f"🛍 Buyurtmalar: <b>{stats['orders_count']}</b> ta\n"
+            f"💰 Jami aylanma: <b>{format_price(stats['total_revenue'])}</b>\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"⚡️ <i>Kerakli bo'limni tanlang:</i>"
         )
         await message.answer(text, reply_markup=get_admin_menu_inline(), parse_mode="HTML")
 
@@ -98,15 +108,21 @@ def setup_admin_router(db: Database, bot: Bot) -> Router:
         await state.clear()
         stats = await db.get_stats()
         text = (
-            f"<b>Admin Boshqaruv Paneli</b>\n\n"
-            f"Foydalanuvchilar: <b>{stats['users_count']}</b> ta\n"
-            f"Faol mahsulotlar: <b>{stats['products_count']}</b> ta\n"
-            f"Buyurtmalar: <b>{stats['orders_count']}</b> ta\n"
-            f"Jami aylanma: <b>{format_price(stats['total_revenue'])}</b>\n\n"
-            f"Boshqarish uchun bo'limni tanlang:"
+            f"👑 <b>ADMIN BOSHQARUV PANELI</b>\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"👥 Foydalanuvchilar: <b>{stats['users_count']}</b> nafar\n"
+            f"📦 Faol mahsulotlar: <b>{stats['products_count']}</b> ta\n"
+            f"🛍 Buyurtmalar: <b>{stats['orders_count']}</b> ta\n"
+            f"💰 Jami aylanma: <b>{format_price(stats['total_revenue'])}</b>\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"⚡️ <i>Kerakli bo'limni tanlang:</i>"
         )
         if callback.message:
-            await callback.message.edit_text(text, reply_markup=get_admin_menu_inline(), parse_mode="HTML")
+            if callback.message.photo:
+                await callback.message.delete()
+                await callback.message.answer(text, reply_markup=get_admin_menu_inline(), parse_mode="HTML")
+            else:
+                await callback.message.edit_text(text, reply_markup=get_admin_menu_inline(), parse_mode="HTML")
         await callback.answer()
 
     @router.callback_query(F.data == "admin_orders")

@@ -19,26 +19,38 @@ def setup_common_router(db: Database) -> Router:
         if user:
             await db.add_user(user.id, user.full_name, user.username)
         
-        from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo, ReplyKeyboardRemove
+        from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
+        from bot.keyboards.reply import get_main_menu
         
-        # 1. Pastki barcha eski klaviatura tugmalarini to'liq o'chirish
+        is_admin_user = bool(user and user.id in config.admin_ids)
+        reply_kb = get_main_menu(is_admin=is_admin_user)
+
+        # 1. Salomlashish
         await message.answer(
             f"Assalomu alaykum, <b>{user.first_name if user else 'Qadrli mijoz'}</b>!\n"
             f"<b>{config.store_name}</b> rasmiy do'koniga xush kelibsiz!",
-            reply_markup=ReplyKeyboardRemove(),
+            reply_markup=reply_kb,
             parse_mode="HTML"
         )
         
-        inline_kb = None
+        buttons = []
         if config.webapp_url and config.webapp_url.startswith("https://"):
-            inline_kb = InlineKeyboardMarkup(inline_keyboard=[
-                [InlineKeyboardButton(text="Do'konni ochish (Mini App)", web_app=WebAppInfo(url=config.webapp_url))]
-            ])
+            buttons.append([InlineKeyboardButton(text="🛍 Do'konni ochish (Mini App)", web_app=WebAppInfo(url=config.webapp_url))])
+        
+        if is_admin_user:
+            buttons.append([InlineKeyboardButton(text="👑 Admin Boshqaruv Paneli", callback_data="admin_main")])
+
+        inline_kb = InlineKeyboardMarkup(inline_keyboard=buttons) if buttons else None
         
         welcome_text = (
             f"Barcha tovarlar, aksiyalar va buyurtma berish xizmati mini ilovamizda mavjud.\n\n"
             f"Xarid qilish uchun quyidagi tugmani bosing 👇"
         )
+        if is_admin_user:
+            welcome_text += (
+                f"\n\n👑 <b>Siz tizim adminisiz!</b>\n"
+                f"Kanal postlari moderatsiyasi va boshqaruv uchun <b>Admin Panel</b> tugmasidan foydalaning."
+            )
         
         await message.answer(
             welcome_text,

@@ -1,8 +1,14 @@
 from aiogram.types import ReplyKeyboardRemove, ReplyKeyboardMarkup, KeyboardButton, WebAppInfo
 from bot.config import config
 
-def get_main_menu(is_admin: bool = False, cart_count: int = 0) -> ReplyKeyboardRemove:
-    """Chatdagi barcha komanda va klaviatura tugmalarini to'liq olib tashlash"""
+def get_main_menu(is_admin: bool = False, cart_count: int = 0):
+    """Adminlar uchun qulay boshqaruv tugmasi, oddiy mijozlar uchun esa toza ekran"""
+    if is_admin:
+        kb = []
+        if config.webapp_url and config.webapp_url.startswith("https://"):
+            kb.append([KeyboardButton(text="🛍 Do'konni ochish", web_app=WebAppInfo(url=config.webapp_url))])
+        kb.append([KeyboardButton(text="⚙️ Admin Panel")])
+        return ReplyKeyboardMarkup(keyboard=kb, resize_keyboard=True)
     return ReplyKeyboardRemove()
 
 def get_phone_keyboard() -> ReplyKeyboardMarkup:
