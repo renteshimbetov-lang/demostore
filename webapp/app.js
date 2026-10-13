@@ -119,6 +119,46 @@
     return '$' + amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
   }
 
+  // Narxni joriy jonli dollar kursi bo'yicha so'mda chiqarish
+  function formatPriceUzs(amountUsd) {
+    if (!amountUsd) return '0 soʻm';
+    const rate = state?.currentUsdRate || 12850;
+    const uzs = Math.round(amountUsd * rate);
+    return uzs.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' soʻm';
+  }
+
+  // Sarlavhadagi jonli kurs belgisini (badge) yangilash
+  function updateLiveUsdBadge(rate) {
+    const textEl = document.getElementById('liveUsdText');
+    if (!textEl) return;
+    const rInt = Math.round(rate || state?.currentUsdRate || 12850);
+    const rFormatted = rInt.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+    textEl.textContent = `💵 1$ = ${rFormatted} soʻm`;
+  }
+
+  // Markaziy Bank kursini API orqali olish
+  async function fetchLiveCurrencyRate() {
+    try {
+      const res = await fetch('/api/currency');
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.rate) {
+          state.currentUsdRate = data.rate;
+          updateLiveUsdBadge(data.rate);
+          // Agar mahsulotlar allaqachon yuklangan bo'lsa, narxlarni qayta render qilish
+          if (state.products && state.products.length > 0) {
+            if (typeof renderProducts === 'function') renderProducts(true);
+            if (typeof renderCatalogProducts === 'function') renderCatalogProducts();
+            if (typeof renderDiscountsSlider === 'function') renderDiscountsSlider();
+            if (typeof renderCartSection === 'function') renderCartSection();
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Jonli kurs yuklashda ogohlantirish:', e);
+    }
+  }
+
   // Tavsif matnidagi parametrlarni toza ajratib olish (emojilarsiz)
   function parseSpecs(desc) {
     if (!desc) return [];
@@ -369,6 +409,7 @@
   // Holat (State)
   const state = {
     lang: localStorage.getItem('demostore_lang') || 'uz',
+    currentUsdRate: 12850,
     selectedCategory: 0,
     selectedSort: 'default',
     searchQuery: '',
@@ -595,7 +636,10 @@
           </div>
           <div class="deal-content">
             <div class="deal-price-block">
-              <div class="deal-current-price">${formatPrice(p.price)}</div>
+              <div class="deal-current-price">
+                ${formatPrice(p.price)}
+                <span class="deal-price-uzs">≈ ${formatPriceUzs(p.price)}</span>
+              </div>
               <div class="deal-old-price-row">
                 <span class="deal-old-price">${formatPrice(oldPrice)}</span>
                 <span class="deal-drop-tag">-${rate}%</span>
@@ -939,7 +983,10 @@
           <div class="cart-section-item-info">
             <span class="cart-section-item-brand">${brand}</span>
             <h4 class="cart-section-item-name">${p.name}</h4>
-            <div class="cart-section-item-price">${formatPrice(p.price)}</div>
+            <div class="cart-section-item-price">
+              ${formatPrice(p.price)}
+              <span class="cart-item-uzs-sub">(${formatPriceUzs(p.price * item.qty)})</span>
+            </div>
           </div>
           <div class="cart-section-item-actions">
             <button class="cart-delete-item-btn" data-id="${p.id}" aria-label="Oʻchirish">
@@ -957,8 +1004,8 @@
       `;
     }).join('');
 
-    if (cartSubtotalPriceEl) cartSubtotalPriceEl.textContent = formatPrice(total);
-    if (cartFinalTotalPriceEl) cartFinalTotalPriceEl.textContent = formatPrice(total);
+    if (cartSubtotalPriceEl) cartSubtotalPriceEl.innerHTML = `${formatPrice(total)} <small class="cart-total-uzs">(${formatPriceUzs(total)})</small>`;
+    if (cartFinalTotalPriceEl) cartFinalTotalPriceEl.innerHTML = `${formatPrice(total)} <small class="cart-total-uzs">(${formatPriceUzs(total)})</small>`;
 
     // Savatdagi tugmalar hodisalari
     cartSectionItemsListEl.querySelectorAll('.btn-minus').forEach(btn => {
@@ -1002,9 +1049,11 @@
       const p = item.product;
       const subtotal = p.price * item.qty;
       total += subtotal;
-      text += `${idx + 1}. ${p.name} — ${item.qty} dona x ${formatPrice(p.price)} = ${formatPrice(subtotal)}\n`;
+      text += `${idx + 1}. ${p.name} — ${item.qty} dona x ${formatPrice(p.price)} = ${formatPrice(subtotal)} (${formatPriceUzs(subtotal)})\n`;
     });
-    text += `\nJami summa: ${formatPrice(total)}\n\nIltimos, yetkazib berish boʻyicha maʼlumot bering.`;
+    text += `\nJami summa: ${formatPrice(total)} (${formatPriceUzs(total)})\n`;
+    const rateVal = Math.round(state.currentUsdRate || 12850).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+    text += `💵 Joriy MB kursi: 1$ = ${rateVal} soʻm\n\nIltimos, yetkazib berish boʻyicha maʼlumot bering.`;
 
     const encoded = encodeURIComponent(text);
     const tgUrl = `https://t.me/SmartBook_menejer?text=${encoded}`;
@@ -1089,6 +1138,7 @@
             <h3 class="product-title">${p.name}</h3>
             <div class="price-wrap">
               <span class="price-current">${formatPrice(p.price)}</span>
+              <span class="price-uzs">≈ ${formatPriceUzs(p.price)}</span>
             </div>
             <div class="card-actions-stack">
               <button class="btn-buy btn-add-cart" data-id="${p.id}">
@@ -1221,6 +1271,7 @@
             <h3 class="product-title">${p.name}</h3>
             <div class="price-wrap">
               <span class="price-current">${formatPrice(p.price)}</span>
+              <span class="price-uzs">≈ ${formatPriceUzs(p.price)}</span>
             </div>
             <div class="card-actions-stack">
               <button class="btn-buy btn-add-cart" data-id="${p.id}">
@@ -1340,7 +1391,7 @@
       pdWishlistBtnEl.classList.toggle('active', isFav);
     }
     if (pdBottomPriceEl) {
-      pdBottomPriceEl.textContent = formatPrice(prod.price);
+      pdBottomPriceEl.innerHTML = `${formatPrice(prod.price)} <span class="bottom-bar-uzs">(${formatPriceUzs(prod.price)})</span>`;
     }
 
     let galleryHTML = `
@@ -1373,7 +1424,7 @@
         <span class="product-brand" style="font-size:0.76rem; font-weight:800; color:var(--accent-yellow); letter-spacing:0.06em;">APPLE</span>
         <h2 class="modal-product-title" style="margin-top:4px;">${prod.name}</h2>
         <div class="modal-price-box">
-          <div class="modal-price-val">${formatPrice(prod.price)}</div>
+          <div class="modal-price-val">${formatPrice(prod.price)} <span class="modal-price-uzs">≈ ${formatPriceUzs(prod.price)}</span></div>
         </div>
       </div>
       
@@ -1507,8 +1558,20 @@
 
       const res = await fetch(`/api/products?${params.toString()}`);
       if (!res.ok) throw new Error('Mahsulotlar yuklanmadi');
-      const products = await res.json();
-      state.products = products;
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        state.products = data;
+        if (data[0] && data[0].current_usd_rate) {
+          state.currentUsdRate = data[0].current_usd_rate;
+          updateLiveUsdBadge(data[0].current_usd_rate);
+        }
+      } else if (data && data.products) {
+        state.products = data.products;
+        if (data.current_usd_rate) {
+          state.currentUsdRate = data.current_usd_rate;
+          updateLiveUsdBadge(data.current_usd_rate);
+        }
+      }
       renderProducts();
       renderDiscountsSlider();
     } catch (err) {
@@ -1577,6 +1640,7 @@
             <h3 class="product-title">${p.name}</h3>
             <div class="price-wrap">
               <span class="price-current">${formatPrice(p.price)}</span>
+              <span class="price-uzs">≈ ${formatPriceUzs(p.price)}</span>
             </div>
             <div class="card-actions-stack">
               <button class="btn-buy btn-add-cart" data-id="${p.id}">
@@ -1897,6 +1961,7 @@
     applyLanguage(state.lang);
     updateWishlistBadge();
     updateCartBadges();
+    fetchLiveCurrencyRate();
     loadProducts();
 
     // 60 soniyalik sokin fon yangilanishi
@@ -1905,6 +1970,11 @@
         loadProducts(true);
       }
     }, 60000);
+
+    // Har 30 daqiqada valyuta kursini sokin yangilab turish
+    setInterval(() => {
+      fetchLiveCurrencyRate();
+    }, 30 * 60 * 1000);
   }
 
   if (document.readyState === 'loading') {

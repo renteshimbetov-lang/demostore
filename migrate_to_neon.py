@@ -51,10 +51,17 @@ async def migrate():
         logger.info(f"Ko'chirilmoqda: {len(categories)} ta kategoriya...")
         for c in categories:
             await pg_db.pool.execute("""
-                INSERT INTO categories (id, name, icon) 
-                VALUES ($1, $2, $3)
-                ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, icon = EXCLUDED.icon;
-            """, c['id'], c['name'], c.get('icon', 'folder'))
+                INSERT INTO categories (name, icon) 
+                VALUES ($1, $2)
+                ON CONFLICT (name) DO UPDATE SET icon = EXCLUDED.icon;
+            """, c['name'], c.get('icon', 'folder'))
+
+        # Kategoriya ID moslash xaritasi (name -> id)
+        cat_rows = await pg_db.pool.fetch("SELECT id, name FROM categories;")
+        cat_map = {r['name']: r['id'] for r in cat_rows}
+
+        # SQLite dagi kategoriya id larini nom bo'yicha moslashtirish
+        sqlite_cat_map = {c['id']: cat_map.get(c['name'], 1) for c in categories}
 
         # 2. Foydalanuvchilarni ko'chirish
         async with s_db.execute("SELECT * FROM users;") as cur:
@@ -74,6 +81,7 @@ async def migrate():
 
         logger.info(f"Ko'chirilmoqda: {len(products)} ta mahsulot...")
         for p in products:
+            new_cat_id = sqlite_cat_map.get(p.get('category_id'), 1)
             await pg_db.pool.execute("""
                 INSERT INTO products (
                     id, category_id, name, description, price, image_url, gallery_images,
@@ -83,6 +91,7 @@ async def migrate():
                     $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
                 )
                 ON CONFLICT (id) DO UPDATE SET
+                    category_id = EXCLUDED.category_id,
                     name = EXCLUDED.name,
                     description = EXCLUDED.description,
                     price = EXCLUDED.price,
@@ -96,7 +105,7 @@ async def migrate():
                     views_count = EXCLUDED.views_count,
                     is_active = EXCLUDED.is_active;
             """, 
-                p['id'], p.get('category_id'), p['name'], p.get('description'), p.get('price', 0),
+                p['id'], new_cat_id, p['name'], p.get('description'), p.get('price', 0),
                 p.get('image_url'), p.get('gallery_images'), p.get('is_available', 1),
                 p.get('channel_id'), p.get('message_id'), p.get('media_group_id'),
                 p.get('post_url'), p.get('views_count', 0), p.get('is_active', 1)

@@ -33,7 +33,17 @@ def create_web_app(db: Database, webapp_dir: str) -> web.Application:
         categories = await db.get_categories()
         return web.json_response(categories)
 
+    async def get_currency(request: web.Request) -> web.Response:
+        from bot.utils.currency import get_cbu_usd_rate, format_rate_compact
+        rate = await get_cbu_usd_rate()
+        return web.json_response({
+            "rate": rate,
+            "currency": "USD",
+            "formatted": format_rate_compact(rate)
+        })
+
     async def get_products(request: web.Request) -> web.Response:
+        from bot.utils.currency import get_cbu_usd_rate, convert_usd_to_uzs, format_rate_compact
         category_id_param = request.query.get("category_id")
         sort_param = request.query.get("sort", "default")
         search_param = request.query.get("search", "")
@@ -44,6 +54,8 @@ def create_web_app(db: Database, webapp_dir: str) -> web.Application:
             sort_by=sort_param,
             search=search_param
         )
+        current_rate = await get_cbu_usd_rate()
+
         for p in products:
             raw_g = p.get("gallery_images")
             if isinstance(raw_g, str):
@@ -53,7 +65,15 @@ def create_web_app(db: Database, webapp_dir: str) -> web.Application:
                     p["gallery_images"] = [p["image_url"]] if p.get("image_url") else []
             elif not raw_g:
                 p["gallery_images"] = [p["image_url"]] if p.get("image_url") else []
-        return web.json_response(products)
+
+            p["current_usd_rate"] = current_rate
+            p["price_uzs"] = convert_usd_to_uzs(p.get("price", 0), current_rate)
+
+        return web.json_response({
+            "products": products,
+            "current_usd_rate": current_rate,
+            "rate_text": format_rate_compact(current_rate)
+        })
 
     async def increment_product_click(request: web.Request) -> web.Response:
         product_id = int(request.match_info["id"])
@@ -65,15 +85,19 @@ def create_web_app(db: Database, webapp_dir: str) -> web.Application:
         })
 
     async def get_stats(request: web.Request) -> web.Response:
+        from bot.utils.currency import get_cbu_usd_rate
         stats = await db.get_stats()
         top_products = await db.get_top_viewed_products(limit=10)
+        current_rate = await get_cbu_usd_rate()
         return web.json_response({
             **stats,
+            "current_usd_rate": current_rate,
             "top_products": top_products
         })
 
     # Marshrutlarni ro'yxatdan o'tkazish
     app.router.add_get("/api/categories", get_categories)
+    app.router.add_get("/api/currency", get_currency)
     app.router.add_get("/api/products", get_products)
     app.router.add_post("/api/products/{id}/click", increment_product_click)
     app.router.add_get("/api/stats", get_stats)
