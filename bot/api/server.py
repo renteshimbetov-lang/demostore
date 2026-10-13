@@ -281,10 +281,19 @@ def create_web_app(db: Database, webapp_dir: str) -> web.Application:
                 return web.FileResponse(demo_path)
             return web.FileResponse(os.path.join(webapp_dir, "index.html"))
 
+        async def serve_taplink(request: web.Request) -> web.FileResponse:
+            taplink_path = os.path.join(webapp_dir, "taplink.html")
+            if os.path.exists(taplink_path):
+                return web.FileResponse(taplink_path)
+            return web.FileResponse(os.path.join(webapp_dir, "index.html"))
+
         app.router.add_get("/", serve_index)
         app.router.add_get("/webapp", serve_index)
         app.router.add_get("/intro.mp4", serve_intro)
         app.router.add_get("/demo", serve_demo)
         app.router.add_get("/buttons", serve_demo)
+        app.router.add_get("/taplink", serve_taplink)
+        app.router.add_get("/links", serve_taplink)
+        app.router.add_get("/linktree", serve_taplink)
 
     return app

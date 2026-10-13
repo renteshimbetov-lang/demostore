@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="uz" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>@DemoStore.uz | Demo Store Linktree & Rasmiy Havolalar</title>
+  
+  <meta name="description" content="DemoStore.uz rasmiy havolalari: Telegram, Instagram, Admin aloqa, rasmiy sayt va Toshkentdagi do'kon manzili. Barchasini shu yerdan toping!" />
+  <meta name="keywords" content="demostore.uz, demo store, linktree, taplink, demostore admin, apple toshkent, iphone narxlari" />
+  <meta name="author" content="DemoStore.uz" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="profile" />
+  <meta property="og:title" content="@DemoStore.uz — Demo Store rasmiy sahifasi" />
+  <meta property="og:description" content="Telegram, Instagram, Admin aloqasi va Malika B-blok 1-do'kon lokatsiyasi." />
+  <meta property="og:image" content="images/logo.png" />
+  <meta property="og:url" content="https://black-store-pi.vercel.app" />
+  <meta name="theme-color" content="#f3f3f1" />
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="images/logo.png" />
+  <link rel="apple-touch-icon" href="images/logo.png" />
+
+  <!-- Fonts: Plus Jakarta Sans for Apple / Linktree modern aesthetics -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="taplink_assets/css/style.css?v=2.1" />
+</head>
+<body>
+
+  <div class="page-wrapper">
+
+    <!-- ======================================================================
+         TOP BAR: Sparkle Icon (Left) | Theme Toggle + Share Button (Right)
+         ====================================================================== -->
+    <header class="top-bar">
+      <div class="top-bar-left">
+        <button class="icon-btn-circle" onclick="copyPageUrl()" title="DemoStore.uz" aria-label="DemoStore Brand">
+          <!-- Linktree Sparkle / 8-pointed Star -->
+          <svg viewBox="0 0 24 24">
+            <path d="M12 2L14.2 9.8L22 12L14.2 14.2L12 22L9.8 14.2L2 12L9.8 9.8L12 2Z"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="top-bar-right">
+        <!-- Theme Toggle (Light / Dark) -->
+        <button class="icon-btn-circle" id="themeToggleBtn" onclick="toggleTheme()" title="Rejimni almashtirish" aria-label="Mavzu">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+        </button>
+
+        <!-- Share Button (iOS Style Share) -->
+        <button class="icon-btn-circle" id="topShareBtn" title="Ulashish" aria-label="Ulashish">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
+            <polyline points="16 6 12 2 8 6"></polyline>
+            <line x1="12" y1="2" x2="12" y2="15"></line>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- ======================================================================
+         PROFILE HERO SECTION (AppleBox Style Image 2)
+         ====================================================================== -->
+    <section class="profile-section">
+      <div class="avatar-container" onclick="openQrModal()" title="QR kodni ochish">
+        <div class="avatar-img-wrapper">
+          <img src="images/logo.png" alt="DemoStore.uz Logo" class="avatar-img" />
+        </div>
+      </div>
+
+      <h1 class="profile-name">@DemoStore.uz</h1>
+      <h2 class="profile-tagline">BARCHASINI SHU YERDAN TOPING!</h2>
+    </section>
+
+    <!-- ======================================================================
+         LINKS LIST (EXACT APPLEBOX LAYOUT - Image 2)
+         ====================================================================== -->
+    <main class="links-list">
+
+      <!-- 1. TELEGRAM -->
+      <a href="https://t.me/+y-KOTC5kOaFiZWUy" target="_blank" rel="noopener noreferrer" class="link-card" id="linkTelegramChannel">
+        <div class="link-card-left">
+          <div class="icon-badge badge-telegram-brand">
+            <img src="images/logo.png" alt="Demo Store" />
+          </div>
+        </div>
+        <div class="link-card-center">
+          <span class="link-card-title">TELEGRAM</span>
+        </div>
+        <div class="link-card-right">
+          <button class="btn-three-dots" data-title="TELEGRAM" data-url="https://t.me/+y-KOTC5kOaFiZWUy" aria-label="Havola sozlamalari">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="12" cy="19" r="2"></circle></svg>
+          </button>
+        </div>
+      </a>
+
+      <!-- 2. ADMIN BILAN ALOQA -->
+      <a href="https://t.me/blackstore_admin" target="_blank" rel="noopener noreferrer" class="link-card" id="linkTelegramAdmin">
+        <div class="link-card-left">
+          <div class="icon-badge badge-clean-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+              <line x1="9" y1="10" x2="15" y2="10"></line>
+              <line x1="12" y1="7" x2="12" y2="13"></line>
+            </svg>
+          </div>
+        </div>
+        <div class="link-card-center">
+          <span class="link-card-title">ADMIN BILAN ALOQA</span>
+        </div>
+        <div class="link-card-right">
+          <button class="btn-three-dots" data-title="ADMIN BILAN ALOQA" data-url="https://t.me/blackstore_admin" aria-label="Havola sozlamalari">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="12" cy="19" r="2"></circle></svg>
+          </button>
+        </div>
+      </a>
+
+      <!-- 3. RASMIY SAYTIMIZ -->
+      <a href="https://demostore-gu0p.onrender.com" target="_blank" rel="noopener noreferrer" class="link-card" id="linkWebsite">
+        <div class="link-card-left">
+          <div class="icon-badge badge-clean-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="2" y1="12" x2="22" y2="12"></line>
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+            </svg>
+          </div>
+        </div>
+        <div class="link-card-center">
+          <span class="link-card-title">RASMIY SAYTIMIZ</span>
+        </div>
+        <div class="link-card-right">
+          <button class="btn-three-dots" data-title="RASMIY SAYTIMIZ" data-url="https://demostore-gu0p.onrender.com" aria-label="Havola sozlamalari">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="12" cy="19" r="2"></circle></svg>
+          </button>
+        </div>
+      </a>
+
+      <!-- 4. INSTAGRAM -->
+      <a href="https://instagram.com/blackstore.uz?mdxt=eHRsNWNkZTRkenE%3D" target="_blank" rel="noopener noreferrer" class="link-card" id="linkInstagram">
+        <div class="link-card-left">
+          <div class="icon-badge badge-clean-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+              <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+              <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+            </svg>
+          </div>
+        </div>
+        <div class="link-card-center">
+          <span class="link-card-title">INSTAGRAM</span>
+        </div>
+        <div class="link-card-right">
+          <button class="btn-three-dots" data-title="INSTAGRAM" data-url="https://instagram.com/blackstore.uz?mdxt=eHRsNWNkZTRkenE%3D" aria-label="Havola sozlamalari">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="12" cy="19" r="2"></circle></svg>
+          </button>
+        </div>
+      </a>
+
+      <!-- 5. TIKTOK -->
+      <a href="https://tiktok.com/@blackstore.uz" target="_blank" rel="noopener noreferrer" class="link-card" id="linkTiktok">
+        <div class="link-card-left">
+          <div class="icon-badge badge-clean-icon">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.89 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.35 0 .68.06.98.17V9.38a6.37 6.37 0 0 0-.98-.08 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.34-6.34V8.71a8.21 8.21 0 0 0 4.76 1.48v-3.5z"/>
+            </svg>
+          </div>
+        </div>
+        <div class="link-card-center">
+          <span class="link-card-title">TIKTOK</span>
+        </div>
+        <div class="link-card-right">
+          <button class="btn-three-dots" data-title="TIKTOK" data-url="https://tiktok.com/@blackstore.uz" aria-label="Havola sozlamalari">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="12" cy="19" r="2"></circle></svg>
+          </button>
+        </div>
+      </a>
+
+      <!-- 6. YOU TUBE -->
+      <a href="https://youtube.com/@blackstoreuz" target="_blank" rel="noopener noreferrer" class="link-card" id="linkYoutube">
+        <div class="link-card-left">
+          <div class="icon-badge badge-clean-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="4" width="20" height="16" rx="5"></rect>
+              <polygon points="10 9 15 12 10 15 10 9" fill="currentColor"></polygon>
+            </svg>
+          </div>
+        </div>
+        <div class="link-card-center">
+          <span class="link-card-title">YOU TUBE</span>
+        </div>
+        <div class="link-card-right">
+          <button class="btn-three-dots" data-title="YOU TUBE" data-url="https://youtube.com/@blackstoreuz" aria-label="Havola sozlamalari">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="12" cy="19" r="2"></circle></svg>
+          </button>
+        </div>
+      </a>
+
+      <!-- 7. MALIKA B-BLOK 1-DO'KON (LOKATSIYA) -->
+      <a href="https://yandex.uz/maps/-/CDu~mQ2d" target="_blank" rel="noopener noreferrer" class="link-card" id="linkStoreLocation">
+        <div class="link-card-left">
+          <div class="icon-badge badge-clean-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+              <circle cx="12" cy="10" r="3"></circle>
+            </svg>
+          </div>
+        </div>
+        <div class="link-card-center">
+          <span class="link-card-title">MALIKA B-BLOK 1-DO'KON</span>
+        </div>
+        <div class="link-card-right">
+          <button class="btn-three-dots" data-title="MALIKA B-BLOK 1-DO'KON" data-url="https://yandex.uz/maps/-/CDu~mQ2d" aria-label="Havola sozlamalari">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="12" cy="19" r="2"></circle></svg>
+          </button>
+        </div>
+      </a>
+
+      <!-- 8. TELEFON -->
+      <a href="tel:+998951964444" class="link-card" id="linkPhoneCall">
+        <div class="link-card-left">
+          <div class="icon-badge badge-clean-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+            </svg>
+          </div>
+        </div>
+        <div class="link-card-center">
+          <span class="link-card-title">+998 (95) 196-44-44</span>
+        </div>
+        <div class="link-card-right">
+          <button class="btn-three-dots" data-title="TELEFON: +998 (95) 196-44-44" data-url="tel:+998951964444" aria-label="Havola sozlamalari">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="12" cy="19" r="2"></circle></svg>
+          </button>
+        </div>
+      </a>
+
+    </main>
+
+    <!-- ======================================================================
+         FOOTER
+         ====================================================================== -->
+    <footer class="footer-text">
+      <span>Join <strong>DemoStore.uz</strong> on Linktree today</span>
+      <span>&copy; 2026 DemoStore.uz · Barcha huquqlar himoyalangan</span>
+    </footer>
+
+    <!-- ======================================================================
+         FLOATING BOTTOM PILL (MATCHING SCREENSHOT)
+         ====================================================================== -->
+    <div class="floating-bottom-dock" id="floatingBottomDock">
+      <div class="floating-pill-content" onclick="copyPageUrl()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2L14.2 9.8L22 12L14.2 14.2L12 22L9.8 14.2L2 12L9.8 9.8L12 2Z"/>
+        </svg>
+        <span class="floating-pill-text">demostore.uz/links</span>
+      </div>
+      <button class="floating-pill-close" id="floatingCloseBtn" aria-label="Yopish">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+  </div>
+
+  <!-- ======================================================================
+       MODAL 1: SHARE MODAL (BOTTOM SHEET)
+       ====================================================================== -->
+  <div class="modal-backdrop" id="shareModal">
+    <div class="bottom-sheet">
+      <div class="sheet-drag-handle"></div>
+      <div class="sheet-header">
+        <span class="sheet-title">Ulashish: @DemoStore.uz</span>
+        <button class="sheet-close-btn" onclick="closeShareModal()" aria-label="Yopish">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+
+      <!-- Quick Social Buttons -->
+      <div class="share-options-grid">
+        <!-- Telegram -->
+        <a href="https://t.me/share/url?url=https://black-store-pi.vercel.app&text=DemoStore.uz%20-%20Apple%20mahsulotlari%20eng%20arzon%20narxlarda!" target="_blank" rel="noopener noreferrer" class="share-opt-btn">
+          <div class="share-opt-icon badge-telegram-admin">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+          </div>
+          <span class="share-opt-label">Telegram</span>
+        </a>
+
+        <!-- Instagram -->
+        <a href="https://instagram.com/blackstore.uz?mdxt=eHRsNWNkZTRkenE%3D" target="_blank" rel="noopener noreferrer" class="share-opt-btn">
+          <div class="share-opt-icon badge-instagram">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path></svg>
+          </div>
+          <span class="share-opt-label">Instagram</span>
+        </a>
+
+        <!-- WhatsApp -->
+        <a href="https://api.whatsapp.com/send?text=DemoStore.uz%20-%20https://black-store-pi.vercel.app" target="_blank" rel="noopener noreferrer" class="share-opt-btn">
+          <div class="share-opt-icon badge-phone" style="background:#25D366;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+          </div>
+          <span class="share-opt-label">WhatsApp</span>
+        </a>
+
+        <!-- QR Code -->
+        <button class="share-opt-btn" onclick="openQrModal()">
+          <div class="share-opt-icon" style="background:#09090b;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+          </div>
+          <span class="share-opt-label">QR Kod</span>
+        </button>
+      </div>
+
+      <!-- Copy Link Field -->
+      <div class="copy-link-bar">
+        <input type="text" id="shareUrlInput" class="copy-link-input" readonly value="https://black-store-pi.vercel.app" />
+        <button class="copy-btn" onclick="copyPageUrl()">Nusxalash</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================================
+       MODAL 2: LINK ACTIONS MODAL (When clicking 3 dots on card)
+       ====================================================================== -->
+  <div class="modal-backdrop" id="linkActionModal">
+    <div class="bottom-sheet">
+      <div class="sheet-drag-handle"></div>
+      <div class="sheet-header">
+        <div>
+          <span class="sheet-title" id="linkActionTitle">Havola</span>
+          <p id="linkActionUrl" style="font-size:0.75rem; color:var(--text-muted); margin-top:2px; word-break:break-all;"></p>
+        </div>
+        <button class="sheet-close-btn" onclick="closeLinkActionModal()" aria-label="Yopish">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+
+      <button class="link-action-item" onclick="copyActiveLinkUrl()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Havoladan nusxa olish</span>
+      </button>
+
+      <button class="link-action-item" onclick="shareActiveLinkUrl()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg>
+        <span>Ushbu havolani ulashish</span>
+      </button>
+
+      <button class="link-action-item" onclick="openActiveLinkDirectly()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+        <span>To'g'ridan-to'g'ri ochish</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ======================================================================
+       MODAL 3: QR CODE MODAL
+       ====================================================================== -->
+  <div class="modal-backdrop" id="qrModal">
+    <div class="bottom-sheet">
+      <div class="sheet-drag-handle"></div>
+      <div class="sheet-header">
+        <span class="sheet-title">QR Kod orqali ochish</span>
+        <button class="sheet-close-btn" onclick="closeQrModal()" aria-label="Yopish">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+
+      <div class="qr-container">
+        <div class="qr-code-box" id="qrCodeContainer">
+          <!-- Rendered via JS -->
+        </div>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 14px;">Kamerangizni ushbu QR kodga qarating</p>
+        <button class="copy-btn" onclick="copyPageUrl()" style="width: 100%; padding: 12px;">Havolani nusxalash</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================================
+       TOAST NOTIFICATION
+       ====================================================================== -->
+  <div class="toast-msg" id="toastMsg">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+    <span id="toastText">Nusxa olindi!</span>
+  </div>
+
+  <!-- Application Logic -->
+  <script src="taplink_assets/js/app.js?v=2.1"></script>
+</body>
+</html>
