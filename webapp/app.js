@@ -1083,6 +1083,46 @@
     }
   }
 
+  function resetHomeView() {
+    const hadFilterOrSearch = Boolean(state.searchQuery || state.selectedCategory !== 0 || (state.selectedSort && state.selectedSort !== 'default'));
+    state.searchQuery = '';
+    state.selectedCategory = 0;
+    state.selectedSort = 'default';
+
+    if (searchInputEl) {
+      searchInputEl.value = '';
+      searchInputEl.blur();
+    }
+    clearSearchBtnEl?.classList.add('hidden');
+    if (discountsSliderSectionEl) {
+      discountsSliderSectionEl.classList.remove('hidden');
+    }
+    if (sectionTitleEl) {
+      sectionTitleEl.textContent = t('popular_products');
+    }
+    document.body.classList.remove('search-focused', 'keyboard-open');
+    mobileDockEl?.classList.remove('dock-hidden-keyboard');
+
+    catalogCategorySliderEl?.querySelectorAll('.category-pill').forEach(p => {
+      p.classList.toggle('active', p.dataset.category === '0');
+    });
+
+    if (hadFilterOrSearch) {
+      const cached = localStorage.getItem('demostore_cached_products');
+      if (cached) {
+        try {
+          state.products = JSON.parse(cached);
+          renderProducts(true);
+          renderDiscountsSlider();
+        } catch (e) {}
+      }
+      loadProducts(true);
+    } else {
+      renderProducts(true);
+      renderDiscountsSlider();
+    }
+  }
+
   function switchTab(tabKey, categoryId = null, pushState = true) {
     if (!sections[tabKey]) return;
     triggerHaptic('light');
@@ -1144,8 +1184,7 @@
 
     // Har bir bo'limga mos render
     if (tabKey === 'home') {
-      state.selectedCategory = 0;
-      renderProducts();
+      resetHomeView();
     } else if (tabKey === 'catalog') {
       if (categoryId !== null) {
         state.selectedCategory = categoryId;
@@ -1236,66 +1275,22 @@
   // ==========================================================================
   // 3. MIKRO-ANIMATSIYALAR TIZIMI (PREMIUM MICRO-ANIMATIONS)
   // ==========================================================================
-  // 1. Savat tugmasi va nishonini elastik sakratish (Spring jump animation)
+  // 1. Savat hisoblagichi (Badge) yangilanishi — Tepadagi va pastdagi savat qimirlamaydi
   function triggerCartJump() {
-    const bottomCartTab = document.querySelector('.mobile-dock .dock-item[data-tab="cart"]');
-    const badges = document.querySelectorAll('.dock-badge, .cart-badge');
-
-    if (bottomCartTab) {
-      bottomCartTab.classList.remove('bottom-cart-jump-anim');
-      void bottomCartTab.offsetWidth; // DOM reflow
-      bottomCartTab.classList.add('bottom-cart-jump-anim');
-      setTimeout(() => {
-        bottomCartTab.classList.remove('bottom-cart-jump-anim');
-      }, 850);
-    }
-
-    if (btnHeaderCartEl) {
-      btnHeaderCartEl.classList.remove('bottom-cart-jump-anim');
-      void btnHeaderCartEl.offsetWidth; // DOM reflow
-      btnHeaderCartEl.classList.add('bottom-cart-jump-anim');
-      setTimeout(() => {
-        btnHeaderCartEl.classList.remove('bottom-cart-jump-anim');
-      }, 850);
-    }
-
-    badges.forEach(badge => {
-      badge.classList.remove('badge-pop-anim');
-      void badge.offsetWidth; // DOM reflow
-      badge.classList.add('badge-pop-anim');
-      setTimeout(() => {
-        badge.classList.remove('badge-pop-anim');
-      }, 650);
-    });
+    // Foydalanuvchi talabi: Tepadagi savat va pastki tugmalar hech qachon qimirlamasin (sakramasin)
+    // Faqatgina hisoblagich (badge) sokin yangilanadi
   }
 
-  // 2. Tugmaning 3 bosqichli interaktiv animatsiyasi (Stateful Add to Cart)
+  // 2. Tugmaning silliq muvaffaqiyat indikatsiyasi (matn va o'lcham sakramasdan)
   function animateCartButton(btn) {
     if (!btn || btn.dataset.animating === 'true') return;
     btn.dataset.animating = 'true';
-    const originalContent = btn.innerHTML;
+    btn.classList.add('is-success');
 
-    // 1-bosqich: Spinner (Qo'shilmoqda... ~300ms)
-    btn.innerHTML = `<span class="btn-spinner"></span> ${t('adding')}`;
-
-    // 2-bosqich: Yashil ptichka va "Qo'shildi!" (~750ms)
     setTimeout(() => {
-      btn.classList.add('is-success');
-      btn.innerHTML = `
-        <svg class="checkmark-pop-anim" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:4px;">
-          <circle cx="12" cy="12" r="9.5" fill="rgba(16, 185, 129, 0.15)"></circle>
-          <polyline points="8 12 11 15 16 9"></polyline>
-        </svg>
-        <span>${t('added')}</span>
-      `;
-
-      // 3-bosqich: Asl holatiga silliq qaytish
-      setTimeout(() => {
-        btn.classList.remove('is-success');
-        btn.innerHTML = originalContent;
-        btn.dataset.animating = 'false';
-      }, 750);
-    }, 300);
+      btn.classList.remove('is-success');
+      btn.dataset.animating = 'false';
+    }, 550);
   }
 
   // 3. Telegram kanaldagi postni ochish funksiyasi
@@ -2173,19 +2168,33 @@
   // ==========================================================================
   // Pastki Dock hodisalari
   dockItems.forEach(item => {
-    item.addEventListener('click', () => {
+    item.addEventListener('click', (e) => {
+      e.preventDefault();
       const tab = item.dataset.tab;
-      if (tab) switchTab(tab);
+      if (!tab) return;
+      triggerHaptic('light');
+
+      if (tab === 'home') {
+        switchTab('home');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
+
+      switchTab(tab);
     });
   });
 
   // Header elementlari
   logoBtnEl?.addEventListener('click', (e) => {
     e.preventDefault();
+    triggerHaptic('light');
     switchTab('home');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 
-  btnHeaderCartEl?.addEventListener('click', () => {
+  btnHeaderCartEl?.addEventListener('click', (e) => {
+    e.preventDefault();
+    triggerHaptic('light');
     switchTab('cart');
   });
 
