@@ -166,35 +166,269 @@
     }
   }
 
-  // Tavsif matnidagi parametrlarni toza ajratib olish (emojilarsiz)
+  // Tavsif matnidagi parametrlarni to'liq va aqlli ajratib olish (Telefon va Noutbuklar uchun)
   function parseSpecs(desc) {
     if (!desc) return [];
     const lines = desc.split('\n');
     const specs = [];
+    const seenKeys = new Set();
+
+    function addSpec(key, val) {
+      if (!key || !val) return;
+      const cleanVal = val.trim();
+      if (!cleanVal) return;
+      if (seenKeys.has(key)) return;
+      seenKeys.add(key);
+      specs.push({ key, val: cleanVal });
+    }
+
     lines.forEach(line => {
-      const clean = line.replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F1E6}-\u{1F1FF}\u{1F191}-\u{1F251}\u{1F004}\u{1F0CF}\u{1F170}-\u{1F171}\u{1F17E}-\u{1F17F}\u{1F18E}\u{3030}\u{2B50}\u{2B55}\u{2934}\u{2935}\u{25AA}\u{25AB}\u{25FE}\u{25FD}\u{25FB}\u{25FC}\u{25B6}\u{25C0}\u{1F200}-\u{1F251}\u{20E3}\u{FE0F}]/gu, '').trim();
-      if (clean.includes(':')) {
-        const parts = clean.split(':');
-        const key = parts[0].trim();
-        const val = parts.slice(1).join(':').trim();
-        const lowerKey = key.toLowerCase();
-        if (
-          key && val &&
-          !lowerKey.includes('narx') &&
-          !lowerKey.includes('menejer') &&
-          !lowerKey.includes('telefon') &&
-          !lowerKey.includes('kanal') &&
-          !lowerKey.includes('lokatsiya') &&
-          !lowerKey.includes('bog’lanish') &&
-          !lowerKey.includes('bog\'lanish')
-        ) {
-          specs.push({ key, val });
+      const raw = line.trim();
+      if (!raw) return;
+      const lower = raw.toLowerCase();
+
+      // Narx, aloqa, manzil va menejer ma'lumotlarini o'tkazib yuborish
+      if (
+        lower.includes('menejer') || lower.includes('telefon') || lower.includes('+998') ||
+        lower.includes('kanal') || lower.includes('lokatsiya') || lower.includes('malika') ||
+        lower.includes('beruniy') || lower.includes('bog’lanish') || lower.includes('bog\'lanish') ||
+        lower.includes('narxi') || lower.includes('narx') || lower.includes('заказ') ||
+        lower.includes('t.me') || lower.includes('telegram') || lower.includes('улгуриб') ||
+        lower.includes('муддатли') || lower.includes('бошига') || lower.includes('ой ')
+      ) {
+        return;
+      }
+
+      // 1. Xotira (Storage / Hotirasi)
+      if (raw.includes('🧠') || (lower.includes('xotira') && !lower.includes('operativ')) || /^(\d+\s*(?:gb|tb))$/i.test(lower)) {
+        const m = raw.match(/(\d+\s*(?:gb|tb))/i);
+        if (m) {
+          addSpec('Xotira (Hotirasi)', m[1].toUpperCase());
+          return;
         }
-      } else if (clean.toLowerCase().includes('kafolat')) {
-        specs.push({ key: 'Kafolat', val: clean });
+      }
+
+      // 2. Batareya / Yomkost
+      if (raw.includes('🔋') || lower.includes('yomkost') || lower.includes('ёмкость') || lower.includes('batereya') || lower.includes('batareya')) {
+        const pctM = raw.match(/(\d{2,3}\s*%)/);
+        const cycM = raw.match(/(\d+\s*(?:sikl|цикл))/i);
+        let val = pctM ? pctM[1].trim() : '';
+        if (cycM) {
+          val = val ? `${val} (${cycM[1].trim()})` : cycM[1].trim();
+        }
+        if (!val) {
+          val = raw.replace(/^[^\w\d%]+/, '').trim();
+        }
+        if (val) {
+          addSpec('Batareya (Yomkost)', val);
+          return;
+        }
+      }
+
+      // 3. Batareya sikli (Alohida sikl qatori)
+      if (/^\d+\s*(?:цикл|sikl)/i.test(lower)) {
+        addSpec('Batareya sikli', raw.trim());
+        return;
+      }
+
+      // 4. Rangi (Color)
+      if (
+        raw.includes('🎨') || lower.startsWith('rangi') ||
+        ['black', 'blue', 'silver', 'natural', 'gold', 'desert', 'white', 'pink', 'space black'].includes(lower)
+      ) {
+        let val = raw.replace(/^[^\w\d]+/, '').trim();
+        val = val.replace(/^rangi?[:\s]*/i, '').trim();
+        if (val) {
+          const capVal = val.charAt(0).toUpperCase() + val.slice(1);
+          addSpec('Rangi', capVal);
+          return;
+        }
+      }
+
+      // 5. Region / SIM formati
+      if (raw.includes('🌍') || lower.includes('e/sim') || lower.includes('esim') || /^[A-Z]{2}\/[A-Z]$/.test(raw.trim())) {
+        const regM = raw.match(/([A-Z]{2}\/[A-Z])/);
+        if (regM) {
+          addSpec('Region', regM[1]);
+        } else {
+          const simClean = raw.replace(/^[^\w\d/+\s]+/, '').trim();
+          addSpec('SIM formati', simClean);
+        }
+        return;
+      }
+
+      // 6. Karobka & Hujjatlar
+      if (raw.includes('📦') || lower.includes('box') || lower.includes('karobka')) {
+        if (lower.includes('nobox') || raw.includes('❌')) {
+          addSpec('Karobka & Hujjat', 'Nobox (Karobkasiz) ❌');
+        } else {
+          addSpec('Karobka & Hujjat', "To'liq komplekt bor ✅");
+        }
+        return;
+      }
+
+      // 7. Tashqi holati (Condition)
+      if (raw.includes('🛠') || lower.includes('holat') || lower.includes('состояние') || lower.includes('как новый')) {
+        if (raw.includes('⭐️') || raw.includes('⭐')) {
+          const stars = (raw.match(/⭐️|⭐/g) || []).length;
+          addSpec('Tashqi holati', '⭐️'.repeat(stars) + " (A'lo darajada)");
+        } else {
+          const val = raw.replace(/^[^\w\d]+/, '').trim();
+          addSpec('Tashqi holati', val);
+        }
+        return;
+      }
+
+      // 8. Kafolat
+      if (lower.includes('kafolat') || lower.includes('гарантия')) {
+        const val = raw.replace(/^[^\w\d]+/, '').trim();
+        addSpec('Kafolat', val);
+        return;
+      }
+
+      // 9. Operativ xotira (RAM)
+      if (lower.includes('operativ') || lower.includes('ram')) {
+        const m = raw.match(/(\d+\s*gb)/i);
+        if (m) {
+          addSpec('Operativ xotira (RAM)', m[1].toUpperCase());
+          return;
+        }
+      }
+
+      // 10. Protsessor
+      if (lower.includes('protsessor') || lower.includes('chip')) {
+        const val = raw.replace(/^(?:protsessor|chip)[:\s]*/i, '').replace(/^[^\w\d]+/, '').trim();
+        if (val) {
+          addSpec('Protsessor', val);
+          return;
+        }
+      }
+
+      // 11. Ekran
+      if (lower.includes('ekran') || lower.includes('display')) {
+        const val = raw.replace(/^(?:ekran|display)[:\s]*/i, '').replace(/^[^\w\d]+/, '').trim();
+        if (val) {
+          addSpec('Ekran', val);
+          return;
+        }
+      }
+
+      // 12. Touch ID
+      if (lower.includes('touch id')) {
+        addSpec('Xavfsizlik', 'Touch ID ✅');
+        return;
+      }
+
+      // 13. Standart Key: Value juftliklari
+      if (raw.includes(':')) {
+        const parts = raw.split(':');
+        const k = parts[0].replace(/^[^\w\d]+/, '').trim();
+        const v = parts.slice(1).join(':').trim();
+        if (k && v && k.length < 30 && v.length < 60) {
+          addSpec(k, v);
+        }
       }
     });
+
     return specs;
+  }
+
+  // Bo'lib to'lash (Muddatli to'lov) rejalarini ajratib olish
+  function parseInstallmentPlan(desc) {
+    if (!desc) return null;
+    const lines = desc.split('\n');
+    const plans = [];
+    let initialPay = '';
+    let hasInstallment = false;
+
+    lines.forEach(line => {
+      const lower = line.toLowerCase();
+      if (lower.includes('муддатли') || lower.includes('muddatli')) {
+        hasInstallment = true;
+      }
+      if (lower.includes('бошига') || lower.includes('boshiga')) {
+        initialPay = line.replace(/^[^\w\d]+/, '').trim();
+        hasInstallment = true;
+      }
+      const match = line.match(/(\d+)\s*(?:ой|oy)\s*(\d+[\$]?)/i);
+      if (match) {
+        plans.push(`${match[1]} oy: ${match[2]}`);
+        hasInstallment = true;
+      }
+    });
+
+    if (!hasInstallment) return null;
+    return {
+      initialPay: initialPay || "Boshlang'ich to'lov mavjud",
+      plans: plans
+    };
+  }
+
+  // Mahsulot kartasida ko'rsatiladigan asosiy nishonlar (Storage, Color, Battery)
+  function getProductKeyBadges(prod) {
+    const specs = parseSpecs(prod.description);
+    const badges = [];
+    const storage = specs.find(s => s.key.includes('Xotira'));
+    if (storage) badges.push({ text: storage.val, type: 'storage' });
+    const color = specs.find(s => s.key === 'Rangi');
+    if (color) badges.push({ text: color.val, type: 'color' });
+    const bat = specs.find(s => s.key.includes('Batareya'));
+    if (bat) {
+      const pctMatch = bat.val.match(/\d+%/);
+      badges.push({ text: pctMatch ? `🔋 ${pctMatch[0]}` : bat.val, type: 'battery' });
+    }
+    const ram = specs.find(s => s.key.includes('RAM'));
+    if (ram && badges.length < 3) badges.push({ text: `RAM ${ram.val}`, type: 'ram' });
+    return badges;
+  }
+
+  // Toifa bo'yicha qat'iy va xatosiz filtrlash (Noutbuklar hech qachon smartfonga kirmaydi)
+  function isProductInCategory(p, catId) {
+    if (!catId || catId === 0) return true;
+    const name = (p.name || '').toLowerCase();
+    const catName = (p.category_name || '').toLowerCase();
+    const desc = (p.description || '').toLowerCase();
+
+    // 1. SMARTFONLAR (Smartphones)
+    if (catId === 1) {
+      if (name.includes('macbook') || name.includes('surface') || name.includes('asus') || name.includes('laptop') || name.includes('noutbuk')) {
+        return false;
+      }
+      if (p.category_id === 1) return true;
+      if (catName.includes('smartfon') || name.includes('iphone') || name.includes('samsung') || name.includes('galaxy') || name.includes('redmi') || desc.includes('iphone')) {
+        return true;
+      }
+      return false;
+    }
+
+    // 2. NOUTBUKLAR (Laptops)
+    if (catId === 2) {
+      if (name.includes('iphone') || name.includes('smartfon') || name.includes('redmi') || name.includes('galaxy')) {
+        return false;
+      }
+      if (p.category_id === 2) return true;
+      if (catName.includes('noutbuk') || catName.includes('laptop') || name.includes('macbook') || name.includes('surface') || name.includes('asus') || desc.includes('macbook')) {
+        return true;
+      }
+      return false;
+    }
+
+    // 3. QULOQCHINLAR VA AUDIO
+    if (catId === 3) {
+      return p.category_id === 3 || catName.includes('audio') || name.includes('airpods') || name.includes('quloqchin') || name.includes('naushnik');
+    }
+
+    // 4. AQLLI SOATLAR
+    if (catId === 4) {
+      return p.category_id === 4 || catName.includes('soat') || name.includes('watch');
+    }
+
+    // 5. AKSESSUARLAR
+    if (catId === 5) {
+      return p.category_id === 5 || catName.includes('aksessuar');
+    }
+
+    return p.category_id === catId;
   }
 
   // ==========================================================================
@@ -1291,7 +1525,15 @@
           </div>
           <div class="card-body">
             <span class="product-brand">${brand}</span>
-            <h3 class="product-title">${p.name}</h3>
+            <h3 class="product-title">${escapeHtml(p.name)}</h3>
+            ${(() => {
+              const badges = getProductKeyBadges(p);
+              return badges.length > 0 ? `
+                <div class="card-specs-row">
+                  ${badges.map(b => `<span class="card-spec-pill ${b.type}">${escapeHtml(b.text)}</span>`).join('')}
+                </div>
+              ` : '';
+            })()}
             <div class="price-wrap">
               <span class="price-current">${formatPrice(p.price)}</span>
               <span class="price-uzs">≈ ${formatPriceUzs(p.price)}</span>
@@ -1374,7 +1616,7 @@
     if (!catalogProductsGridEl) return;
     let prods = state.products;
     if (state.selectedCategory > 0) {
-      prods = prods.filter(p => p.category_id === state.selectedCategory);
+      prods = prods.filter(p => isProductInCategory(p, state.selectedCategory));
     }
 
     const catKeys = {
@@ -1419,7 +1661,15 @@
           </div>
           <div class="card-body">
             <span class="product-brand">${brand}</span>
-            <h3 class="product-title">${p.name}</h3>
+            <h3 class="product-title">${escapeHtml(p.name)}</h3>
+            ${(() => {
+              const badges = getProductKeyBadges(p);
+              return badges.length > 0 ? `
+                <div class="card-specs-row">
+                  ${badges.map(b => `<span class="card-spec-pill ${b.type}">${escapeHtml(b.text)}</span>`).join('')}
+                </div>
+              ` : '';
+            })()}
             <div class="price-wrap">
               <span class="price-current">${formatPrice(p.price)}</span>
               <span class="price-uzs">≈ ${formatPriceUzs(p.price)}</span>
@@ -1546,6 +1796,7 @@
     }
 
     const specs = parseSpecs(prod.description);
+    const installmentPlan = parseInstallmentPlan(prod.description);
     const isFav = state.wishlist.has(prod.id);
 
     if (pdWishlistBtnEl) {
@@ -1599,10 +1850,31 @@
           <div class="specs-list">
             ${specs.map(s => `
               <div class="spec-row">
-                <span class="spec-key">${s.key}</span>
-                <span class="spec-val">${s.val}</span>
+                <span class="spec-key">${escapeHtml(s.key)}</span>
+                <span class="spec-val">${escapeHtml(s.val)}</span>
               </div>
             `).join('')}
+          </div>
+        </div>
+      ` : (prod.description ? `
+        <div class="specs-container">
+          <div class="specs-title">Mahsulot haqida maʼlumot</div>
+          <p style="font-size: 0.85rem; color: var(--text-sub); line-height: 1.5; white-space: pre-line;">${escapeHtml(prod.description)}</p>
+        </div>
+      ` : '')}
+
+      ${installmentPlan ? `
+        <div class="pd-installment-card">
+          <div class="pd-installment-head">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <rect width="20" height="14" x="2" y="5" rx="2"></rect>
+              <line x1="2" x2="22" y1="10" y2="10"></line>
+            </svg>
+            <span>Boʻlib toʻlash (Muddatli toʻlov)</span>
+          </div>
+          <div class="installment-initial">${escapeHtml(installmentPlan.initialPay)}</div>
+          <div class="installment-pills">
+            ${installmentPlan.plans.map(pl => `<span class="inst-pill">${escapeHtml(pl)}</span>`).join('')}
           </div>
         </div>
       ` : ''}
@@ -1811,7 +2083,15 @@
           </div>
           <div class="card-body">
             <span class="product-brand">${brand}</span>
-            <h3 class="product-title">${p.name}</h3>
+            <h3 class="product-title">${escapeHtml(p.name)}</h3>
+            ${(() => {
+              const badges = getProductKeyBadges(p);
+              return badges.length > 0 ? `
+                <div class="card-specs-row">
+                  ${badges.map(b => `<span class="card-spec-pill ${b.type}">${escapeHtml(b.text)}</span>`).join('')}
+                </div>
+              ` : '';
+            })()}
             <div class="price-wrap">
               <span class="price-current">${formatPrice(p.price)}</span>
               <span class="price-uzs">≈ ${formatPriceUzs(p.price)}</span>

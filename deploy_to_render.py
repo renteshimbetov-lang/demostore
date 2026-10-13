@@ -38,7 +38,10 @@ def _request(endpoint, method="GET", data=None):
         body = None
     try:
         with urllib.request.urlopen(req, data=body, timeout=20, context=_ssl_ctx) as resp:
-            return resp.status, json.loads(resp.read().decode("utf-8"))
+            content = resp.read().decode("utf-8")
+            if not content.strip():
+                return resp.status, {}
+            return resp.status, json.loads(content)
     except urllib.error.HTTPError as e:
         err_body = e.read().decode("utf-8")
         return e.code, err_body

@@ -187,8 +187,8 @@ class Database:
             cat_count = await conn.fetchval("SELECT COUNT(*) FROM categories;")
             if cat_count == 0:
                 categories = [
-                    ("Noutbuklar", "laptop"),
                     ("Smartfonlar", "smartphone"),
+                    ("Noutbuklar", "laptop"),
                     ("Quloqchinlar va Audio", "headphones"),
                     ("Aqlli soatlar", "watch"),
                     ("Aksessuarlar", "plug")
@@ -309,8 +309,8 @@ class Database:
             count = (await cursor.fetchone())[0]
             if count == 0:
                 categories = [
-                    ("Noutbuklar", "laptop"),
                     ("Smartfonlar", "smartphone"),
+                    ("Noutbuklar", "laptop"),
                     ("Quloqchinlar va Audio", "headphones"),
                     ("Aqlli soatlar", "watch"),
                     ("Aksessuarlar", "plug")
@@ -609,9 +609,14 @@ class Database:
         """Kanal postidan mahsulotni qo'shish yoki yangilash"""
         if not category_id:
             full_search = f"{name} {description}".lower()
-            if any(k in full_search for k in ["macbook", "noutbuk", "laptop", "asus", "thinkpad", "lenovo", "dell", "hp"]):
+            lower_name = name.lower()
+            if any(k in lower_name for k in ["macbook", "noutbuk", "laptop", "surface", "asus", "thinkpad", "lenovo", "dell", "hp"]):
                 c_name = "Noutbuklar"
-            elif any(k in full_search for k in ["iphone", "samsung", "redmi", "xiaomi", "smartfon", "telefon", "galaxy"]):
+            elif any(k in lower_name for k in ["iphone", "samsung", "redmi", "xiaomi", "smartfon", "telefon", "galaxy", "pro max"]):
+                c_name = "Smartfonlar"
+            elif any(k in full_search for k in ["macbook", "noutbuk", "laptop", "surface", "asus", "thinkpad", "lenovo", "dell", "hp"]):
+                c_name = "Noutbuklar"
+            elif any(k in full_search for k in ["iphone", "samsung", "redmi", "xiaomi", "smartfon", "telefon", "galaxy", "pro max"]):
                 c_name = "Smartfonlar"
             elif any(k in full_search for k in ["airpods", "quloqchin", "audio", "naushnik", "sony", "headphone"]):
                 c_name = "Quloqchinlar va Audio"
