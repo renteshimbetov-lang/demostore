@@ -2417,17 +2417,29 @@ html.light .switch-pill {
 .pd-top-bar {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
   padding: 8px 16px 12px;
   margin-bottom: 4px;
 }
 
-.pd-back-btn {
-  display: none !important;
+.pd-back-circle-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
-.pd-back-btn:active {
-  transform: scale(0.94);
+.pd-back-circle-btn:active {
+  transform: scale(0.92);
+  background: var(--bg-card-hover);
 }
 
 .pd-wishlist-btn {
@@ -2714,7 +2726,45 @@ html.light .btn-channel-pd {
   animation: checkmarkPop 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
 
-/* Tugmaning "Qo'shildi" yashil holati (Apple Emerald Success Badge) */
+/* Tugmaning "Buyurtmaga" faol holati — "Sotib olish" bosilgandan so'ng paydo bo'ladi */
+.btn-buy.btn-goto-order,
+.pd-add-btn.btn-goto-order,
+.deal-cart-btn.btn-goto-order {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+  border: 1px solid #059669 !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35) !important;
+  cursor: pointer !important;
+  pointer-events: auto !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  animation: gotoOrderPulse 0.32s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.btn-buy.btn-goto-order:active,
+.pd-add-btn.btn-goto-order:active,
+.deal-cart-btn.btn-goto-order:active {
+  transform: scale(0.95) !important;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.22) !important;
+  transition: transform 0.08s cubic-bezier(0.2, 0, 0, 1) !important;
+}
+
+.btn-buy.btn-goto-order svg,
+.pd-add-btn.btn-goto-order svg,
+.deal-cart-btn.btn-goto-order svg {
+  stroke: #ffffff !important;
+  color: #ffffff !important;
+}
+
+@keyframes gotoOrderPulse {
+  0% { transform: scale(0.94); }
+  60% { transform: scale(1.04); }
+  100% { transform: scale(1); }
+}
+
+/* Tugmaning "Qo'shildi" yashil holati */
 .btn-buy.is-success,
 .pd-add-btn.is-success,
 .deal-cart-btn.is-success {
@@ -2722,7 +2772,6 @@ html.light .btn-channel-pd {
   border: 1.5px solid #10b981 !important;
   color: #10b981 !important;
   box-shadow: 0 4px 18px rgba(16, 185, 129, 0.3) !important;
-  pointer-events: none;
 }
 
 /* 3. TEPADAGI SAVAT (HEADER CART) MUTLAQO QIMIRLAMAYDI — 100% STATIK VA HARAKATSIZ */

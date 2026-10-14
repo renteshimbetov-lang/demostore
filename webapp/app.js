@@ -486,8 +486,9 @@
       sort_price_desc: "Qimmatroqdan arzonroqqa ($)",
       sort_newest: "Eng yangi qoʻshilganlar",
       apply: "Qoʻllash",
-      add_to_cart: "Savatga",
-      buy_now: "Savatga olish",
+      add_to_cart: "Sotib olish",
+      buy_now: "Sotib olish",
+      go_to_order: "Buyurtmaga",
       view_in_channel: "Kanaldan koʻrish",
       adding: "Qo'shilmoqda...",
       added: "Qo'shildi!",
@@ -557,8 +558,9 @@
       sort_price_desc: "Сначала дороже ($)",
       sort_newest: "Сначала новинки",
       apply: "Применить",
-      add_to_cart: "В корзину",
-      buy_now: "В корзину",
+      add_to_cart: "Купить",
+      buy_now: "Купить",
+      go_to_order: "К заказу",
       view_in_channel: "В канале",
       adding: "Добавление...",
       added: "Добавлено!",
@@ -628,8 +630,9 @@
       sort_price_desc: "Price: High to Low ($)",
       sort_newest: "Newest Arrivals",
       apply: "Apply",
-      add_to_cart: "Add to Cart",
-      buy_now: "Add to Cart",
+      add_to_cart: "Buy Now",
+      buy_now: "Buy Now",
+      go_to_order: "To Order",
       view_in_channel: "In Channel",
       adding: "Adding...",
       added: "Added!",
@@ -703,7 +706,8 @@
     wishlist: new Set(),
     cart: {}, // { [productId]: { product, qty } }
     currentTab: 'home', // 'home', 'catalog', 'cart', 'wishlist', 'profile', 'product-detail'
-    previousTab: 'home'
+    previousTab: 'home',
+    savedScroll: {} // { [tab]: scrollY }
   };
 
   function t(key) {
@@ -869,8 +873,8 @@
     const dockProfile = document.querySelector('#dockProfile span');
     if (dockProfile) dockProfile.textContent = t('nav_profile');
 
-    // Mahsulot batafsil tugmasi yozuvi
-    if (pdBtnTextEl) pdBtnTextEl.textContent = t('buy_now');
+    // Mahsulot batafsil va barcha kartochka tugmalari yozuvlarini sinxronlash
+    syncAllProductButtons();
 
     // Agar mahsulotlar mavjud bo'lsa, joriy bo'limni yangilash
     if (state.products && state.products.length > 0) {
@@ -909,6 +913,119 @@
     if (prod.image_url && String(prod.image_url).trim()) return prod.image_url;
     if (prod.image && String(prod.image).trim()) return prod.image;
     return FALLBACK_IMAGE_URL;
+  }
+
+  // ==========================================================================
+  // XARID VA BUYURTMAGA O'TISH TUGMALARI (SOTIB OLISH -> BUYURTMAGA)
+  // ==========================================================================
+  function getCartButtonHtml(pid) {
+    const inCart = Boolean(state.cart && state.cart[pid]);
+    if (inCart) {
+      return `
+        <button class="btn-buy btn-add-cart btn-goto-order btn-bounce" data-id="${pid}" data-haptic="medium">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          <span>${t('go_to_order')}</span>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+        </button>
+      `;
+    }
+    return `
+      <button class="btn-buy btn-add-cart btn-bounce" data-id="${pid}" data-haptic="medium">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+        <span>${t('buy_now')}</span>
+      </button>
+    `;
+  }
+
+  function getDealCartButtonHtml(pid) {
+    const inCart = Boolean(state.cart && state.cart[pid]);
+    if (inCart) {
+      return `
+        <button class="deal-cart-btn btn-buy btn-goto-order btn-bounce" data-id="${pid}" data-haptic="medium">
+          <span class="deal-cart-icon">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          </span>
+          <span>${t('go_to_order')}</span>
+        </button>
+      `;
+    }
+    return `
+      <button class="deal-cart-btn btn-buy btn-bounce" data-id="${pid}" data-haptic="medium">
+        <span class="deal-cart-icon">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+        </span>
+        <span>${t('buy_now')}</span>
+      </button>
+    `;
+  }
+
+  function updatePdCartButton(inCart) {
+    if (!pdAddToCartBtnEl) return;
+    if (inCart) {
+      pdAddToCartBtnEl.classList.add('btn-goto-order');
+      pdAddToCartBtnEl.innerHTML = `
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+        <span id="pdBtnText">${t('go_to_order')}</span>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m9 18 6-6-6-6"/>
+        </svg>
+      `;
+    } else {
+      pdAddToCartBtnEl.classList.remove('btn-goto-order');
+      pdAddToCartBtnEl.innerHTML = `
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        <span id="pdBtnText">${t('buy_now')}</span>
+      `;
+    }
+  }
+
+  function syncAllProductButtons() {
+    document.querySelectorAll('.btn-add-cart[data-id]').forEach(btn => {
+      const pid = parseInt(btn.dataset.id, 10);
+      const inCart = Boolean(state.cart && state.cart[pid]);
+      if (inCart) {
+        btn.classList.add('btn-goto-order');
+        btn.innerHTML = `
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          <span>${t('go_to_order')}</span>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+        `;
+      } else {
+        btn.classList.remove('btn-goto-order');
+        btn.innerHTML = `
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+          <span>${t('buy_now')}</span>
+        `;
+      }
+    });
+
+    document.querySelectorAll('.deal-cart-btn[data-id]').forEach(btn => {
+      const pid = parseInt(btn.dataset.id, 10);
+      const inCart = Boolean(state.cart && state.cart[pid]);
+      if (inCart) {
+        btn.classList.add('btn-goto-order');
+        btn.innerHTML = `
+          <span class="deal-cart-icon">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          </span>
+          <span>${t('go_to_order')}</span>
+        `;
+      } else {
+        btn.classList.remove('btn-goto-order');
+        btn.innerHTML = `
+          <span class="deal-cart-icon">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+          </span>
+          <span>${t('buy_now')}</span>
+        `;
+      }
+    });
+
+    if (state.selectedProduct && pdAddToCartBtnEl) {
+      updatePdCartButton(Boolean(state.cart && state.cart[state.selectedProduct.id]));
+    }
   }
 
   function renderDiscountsSlider() {
@@ -959,12 +1076,7 @@
             </div>
             <h3 class="deal-title" title="${escapeHtml(getCleanCardTitle(p.name))}">${escapeHtml(getCleanCardTitle(p.name))}</h3>
             <div class="deal-footer-action">
-              <button class="deal-cart-btn btn-buy btn-bounce" data-id="${p.id}" data-haptic="medium">
-                <span class="deal-cart-icon">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
-                </span>
-                <span>${t('add_to_cart')}</span>
-              </button>
+              ${getDealCartButtonHtml(p.id)}
             </div>
           </div>
         </div>
@@ -993,6 +1105,10 @@
     const cartBtn = e.target.closest('.deal-cart-btn');
     if (cartBtn) {
       e.stopPropagation();
+      if (cartBtn.classList.contains('btn-goto-order') || (state.cart && state.cart[pid])) {
+        switchTab('cart');
+        return;
+      }
       handleAddToCart(prod, cartBtn);
       return;
     }
@@ -1036,8 +1152,6 @@
   // ==========================================================================
   // 2. BO'LIMLARNI BOSHQARISH VA ROUTING (NAV HISTORY, BACK BUTTON & IPHONE SWIPE)
   // ==========================================================================
-  const navHistory = ['home'];
-
   function isAnyDrawerOpen() {
     return (
       (leftDrawerEl && leftDrawerEl.classList.contains('active')) ||
@@ -1047,12 +1161,11 @@
   }
 
   function updateBackButtons() {
-    const isHome = state.currentTab === 'home';
-
-    // Telegram rasmiy orqaga tugmasi (Native Telegram BackButton)
+    // Faqat mahsulot batafsil sahifasida Telegram BackButton ko'rsatiladi.
+    // Asosiy bo'limlarda (Home, Catalog, Cart, Wishlist, Profile) Telegramning o'zini native "X" (Yopish) tugmasi turadi!
     if (tg?.BackButton) {
       try {
-        if (!isHome) {
+        if (state.currentTab === 'product-detail') {
           tg.BackButton.show();
         } else {
           tg.BackButton.hide();
@@ -1070,20 +1183,25 @@
       return;
     }
 
-    // 2. Agar mahsulot batafsil sahifasida bo'lsa, avvalgi sahifaga qaytish
+    // 2. Agar mahsulot batafsil sahifasida bo'lsa:
+    // Qaysi bo'limdan (Catalog, Wishlist, Cart, Home) ochilgan bo'lsa, aniq o'sha bo'limga va o'sha skroll joyiga qaytadi
     if (state.currentTab === 'product-detail') {
-      const prev = (state.previousTab && state.previousTab !== 'product-detail') ? state.previousTab : 'home';
-      switchTab(prev, null, false);
+      const returnTab = (state.previousTab && state.previousTab !== 'product-detail') ? state.previousTab : 'home';
+      switchTab(returnTab, null, false, true);
       return;
     }
 
-    // 3. Tarix bo'yicha orqaga qaytish
-    if (navHistory.length > 1) {
-      navHistory.pop(); // Joriy bo'limni o'chiramiz
-      const prevTab = navHistory[navHistory.length - 1] || 'home';
-      switchTab(prevTab, null, false);
-    } else {
+    // 3. Agar foydalanuvchi Bosh sahifada (home) bo'lmasa, Bosh sahifaga qaytish (1 qadam)
+    if (state.currentTab !== 'home') {
       switchTab('home', null, false);
+      return;
+    }
+
+    // 4. Agar allaqachon Bosh sahifada (home) turib chiqish qilinsa -> Telegram mini ilovani yopish!
+    if (tg?.close) {
+      try {
+        tg.close();
+      } catch (e) {}
     }
   }
 
@@ -1127,28 +1245,37 @@
     }
   }
 
-  function switchTab(tabKey, categoryId = null, pushState = true) {
+  function switchTab(tabKey, categoryId = null, pushState = true, restoreScroll = false) {
     if (!sections[tabKey]) return;
     triggerHaptic('light');
     closeAllDrawers();
 
-    if (state.currentTab !== 'product-detail' && tabKey !== 'product-detail') {
-      state.previousTab = state.currentTab;
+    const fromTab = state.currentTab;
+
+    // Agar mahsulot batafsilga o'tayotgan bo'lsa, qaysi bo'limdan kelganini va skrollini eslab qolamiz
+    if (tabKey === 'product-detail') {
+      if (fromTab !== 'product-detail') {
+        state.previousTab = fromTab;
+        state.savedScroll[fromTab] = window.scrollY || window.pageYOffset || 0;
+      }
+    } else if (fromTab !== 'product-detail') {
+      state.previousTab = fromTab;
     }
+
     state.currentTab = tabKey;
 
     if (pushState) {
-      if (tabKey === 'home') {
-        navHistory.length = 0;
-        navHistory.push('home');
+      if (tabKey === 'product-detail') {
+        try {
+          history.pushState({ tab: 'product-detail', from: state.previousTab }, '', '#product-detail');
+        } catch (e) {}
       } else {
-        if (navHistory[navHistory.length - 1] !== tabKey) {
-          navHistory.push(tabKey);
-        }
+        // Asosiy bo'limlar (Home, Catalog, Cart, Wishlist, Profile) uchun replaceState ishlatamiz.
+        // Bu orqali foydalanuvchi mini ilovadan chiqish uchun 10 marta orqaga bosib yurmaydi!
+        try {
+          history.replaceState({ tab: tabKey, categoryId }, '', '#' + tabKey);
+        } catch (e) {}
       }
-      try {
-        history.pushState({ tab: tabKey, categoryId }, '', '#' + tabKey);
-      } catch (e) {}
     }
 
     // Pastki dockdagi faol tugmani belgilash
@@ -1188,7 +1315,9 @@
 
     // Har bir bo'limga mos render
     if (tabKey === 'home') {
-      resetHomeView();
+      if (fromTab !== 'product-detail') {
+        resetHomeView();
+      }
     } else if (tabKey === 'catalog') {
       if (categoryId !== null) {
         state.selectedCategory = categoryId;
@@ -1205,7 +1334,15 @@
       renderProfileSection();
     }
 
-    window.scrollTo({ top: 0, behavior: 'instant' });
+    // Skroll holatini boshqarish
+    if (restoreScroll) {
+      const targetY = state.savedScroll[tabKey] || 0;
+      setTimeout(() => {
+        window.scrollTo({ top: targetY, behavior: 'instant' });
+      }, 15);
+    } else if (tabKey === 'product-detail') {
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    }
   }
 
   // Telegram native BackButton
@@ -1216,8 +1353,14 @@
   }
 
   // Brauzer / Android apparat tugmasi / iOS Safari popstate
-  window.addEventListener('popstate', () => {
-    goBack();
+  window.addEventListener('popstate', (e) => {
+    // Agar foydalanuvchi mahsulot batafsil oynasida bo'lsa va orqaga sursa:
+    if (state.currentTab === 'product-detail') {
+      const returnTab = (state.previousTab && state.previousTab !== 'product-detail') ? state.previousTab : 'home';
+      switchTab(returnTab, null, false, true);
+    } else {
+      goBack();
+    }
   });
 
   // Klaviatura Escape tugmasi
@@ -1243,8 +1386,8 @@
     touchStartTime = Date.now();
     isEdgeSwipeGesture = false;
 
-    // Barmoq ekranning chap chekkasida (<= 75px) boshlansa VA bosh sahifada bo'lmasa (yoki drawer ochiq bo'lsa)
-    if (touchStartX <= 75 && (state.currentTab !== 'home' || isAnyDrawerOpen())) {
+    // Barmoq ekranning chap chekkasida (<= 75px) boshlansa:
+    if (touchStartX <= 75) {
       isEdgeSwipeGesture = true;
     }
   }, { passive: true });
@@ -1270,7 +1413,7 @@
 
     isEdgeSwipeGesture = false;
 
-    // Gorizontal o'ngga surish: kamida 40px o'ngga surilsa, vertikaldan ustun bo'lsa va 700ms ichida bo'lsa
+    // Gorizontal o'ngga surish: kamida 40px o'ngga surilsa va 700ms ichida bo'lsa
     if (diffX >= 40 && diffX > diffY * 1.05 && elapsed < 700) {
       goBack();
     }
@@ -1304,66 +1447,53 @@
     }
   }
 
-  // 2. Savatga qo'shish tugmasining jonli Apple-style animatsiyasi (Spinner -> Checkmark Pop -> Asl holat)
+  // 2. Savatga qo'shish tugmasining "Buyurtmaga" holatiga jonli o'tish animatsiyasi
   function animateCartButton(btn) {
-    if (!btn || btn.dataset.animating === 'true') return;
+    if (!btn) return;
     btn.dataset.animating = 'true';
+    btn.classList.add('btn-goto-order');
 
-    const originalContent = btn.innerHTML;
-    const currentWidth = btn.offsetWidth;
-    if (currentWidth > 0) {
-      btn.style.minWidth = `${currentWidth}px`;
+    // Tugma ichini darhol "Buyurtmaga" matni va belgilari bilan to'ldirish
+    if (btn.classList.contains('pd-add-btn')) {
+      btn.innerHTML = `
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+        <span id="pdBtnText">${t('go_to_order')}</span>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m9 18 6-6-6-6"/>
+        </svg>
+      `;
+    } else if (btn.classList.contains('deal-cart-btn')) {
+      btn.innerHTML = `
+        <span class="deal-cart-icon">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        </span>
+        <span>${t('go_to_order')}</span>
+      `;
+    } else {
+      btn.innerHTML = `
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        <span>${t('go_to_order')}</span>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+      `;
     }
 
-    // 1-bosqich: Smooth tactile bosilish va aylanuvchi spinner (Spinner + "Qo'shilmoqda...")
-    btn.style.transform = 'scale(0.96)';
-    btn.style.transition = 'transform 0.1s cubic-bezier(0.2, 0, 0, 1)';
+    // Mayin tactile bosilish va elastik sakrash (Apple Spring bounce)
+    btn.style.transform = 'scale(0.95)';
+    btn.style.transition = 'transform 0.08s cubic-bezier(0.2, 0, 0, 1)';
 
-    const addingText = (typeof t === 'function' ? t('adding') : null) || "Qo'shilmoqda...";
-    btn.innerHTML = `<span class="btn-spinner"></span><span>${addingText}</span>`;
-
-    // Mayin elastik kengayish (Smooth spring release)
     setTimeout(() => {
-      btn.style.transform = 'scale(1)';
+      btn.style.transform = 'scale(1.04)';
       btn.style.transition = 'transform 0.22s cubic-bezier(0.25, 1.4, 0.5, 1)';
+      setTimeout(() => {
+        btn.style.transform = '';
+        btn.style.transition = '';
+        btn.dataset.animating = 'false';
+      }, 180);
     }, 60);
 
-    // 2-bosqich: Spinner aylanib bo'lgach (280ms), Yashil ptichka sakrashi (Checkmark Pop + "Qo'shildi!")
-    setTimeout(() => {
-      btn.classList.add('is-success');
-      btn.style.transform = 'scale(1.02)';
-      btn.style.transition = 'transform 0.22s cubic-bezier(0.25, 1.4, 0.5, 1), background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease';
-
-      const addedText = (typeof t === 'function' ? t('added') : null) || "Qo'shildi!";
-      btn.innerHTML = `
-        <svg class="checkmark-pop-anim" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; flex-shrink:0;">
-          <circle cx="12" cy="12" r="9.5" fill="rgba(16, 185, 129, 0.18)"></circle>
-          <polyline points="8 12 11 15 16 9"></polyline>
-        </svg>
-        <span>${addedText}</span>
-      `;
-
-      setTimeout(() => {
-        btn.style.transform = 'scale(1)';
-      }, 140);
-
-      triggerHaptic('success');
-
-      // 3-bosqich: Yashil ptichka holatidan mayin asl holatiga qaytish
-      setTimeout(() => {
-        btn.style.transform = 'scale(0.96)';
-        btn.style.transition = 'transform 0.12s ease';
-
-        setTimeout(() => {
-          btn.classList.remove('is-success');
-          btn.innerHTML = originalContent;
-          btn.style.transform = '';
-          btn.style.transition = '';
-          btn.style.minWidth = '';
-          btn.dataset.animating = 'false';
-        }, 120);
-      }, 750);
-    }, 280);
+    triggerHaptic('success');
   }
 
   // 3. Telegram kanaldagi postni ochish funksiyasi
@@ -1397,7 +1527,7 @@
     }
     saveCart();
 
-    // A) Tugmani jonlantirish (Spinner -> Yashil Ptichka -> Asl holat)
+    // A) Tugmani "Buyurtmaga" holatiga jonlantirish
     if (btn) animateCartButton(btn);
 
     // B) Bosilishi bilan bir vaqtda savat va nishon darhol elastik sakraydi (uchuvchi rasmsiz)
@@ -1423,6 +1553,7 @@
       localStorage.setItem('demostore_cart', JSON.stringify(state.cart));
     } catch (e) {}
     updateCartBadges();
+    syncAllProductButtons();
   }
 
   function updateCartBadges() {
@@ -1633,10 +1764,7 @@
               <span class="price-uzs">≈ ${formatPriceUzs(p.price)}</span>
             </div>
             <div class="card-actions-stack">
-              <button class="btn-buy btn-add-cart btn-bounce" data-id="${p.id}" data-haptic="medium">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
-                <span>Savatga</span>
-              </button>
+              ${getCartButtonHtml(p.id)}
               ${p.post_url ? `
                 <button class="btn-channel-link btn-liquid" data-post-url="${p.post_url}" data-id="${p.id}" data-haptic="light">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1674,6 +1802,10 @@
     const addCartBtn = e.target.closest('.btn-add-cart');
     if (addCartBtn) {
       e.stopPropagation();
+      if (addCartBtn.classList.contains('btn-goto-order') || (state.cart && state.cart[pid])) {
+        switchTab('cart');
+        return;
+      }
       handleAddToCart(prod, addCartBtn);
       return;
     }
@@ -1761,10 +1893,7 @@
               <span class="price-uzs">≈ ${formatPriceUzs(p.price)}</span>
             </div>
             <div class="card-actions-stack">
-              <button class="btn-buy btn-add-cart btn-bounce" data-id="${p.id}" data-haptic="medium">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
-                <span>${t('add_to_cart')}</span>
-              </button>
+              ${getCartButtonHtml(p.id)}
               ${p.post_url ? `
                 <button class="btn-channel-link btn-liquid" data-post-url="${p.post_url}" data-id="${p.id}" data-haptic="light">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1801,6 +1930,10 @@
     const addCartBtn = e.target.closest('.btn-add-cart');
     if (addCartBtn) {
       e.stopPropagation();
+      if (addCartBtn.classList.contains('btn-goto-order') || (state.cart && state.cart[pid])) {
+        switchTab('cart');
+        return;
+      }
       handleAddToCart(prod, addCartBtn);
       return;
     }
@@ -2035,6 +2168,9 @@
       });
     }
 
+    const inCart = Boolean(state.cart && state.cart[prod.id]);
+    updatePdCartButton(inCart);
+
     switchTab('product-detail');
   }
 
@@ -2046,10 +2182,21 @@
     }
   });
 
-  pdAddToCartBtnEl?.addEventListener('click', () => {
+  pdAddToCartBtnEl?.addEventListener('click', (e) => {
+    e.stopPropagation();
     if (state.selectedProduct) {
+      const pid = state.selectedProduct.id;
+      if (pdAddToCartBtnEl.classList.contains('btn-goto-order') || (state.cart && state.cart[pid])) {
+        switchTab('cart');
+        return;
+      }
       handleAddToCart(state.selectedProduct, pdAddToCartBtnEl);
     }
+  });
+
+  pdBackBtnEl?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    goBack();
   });
 
   pdChannelIconBtnEl?.addEventListener('click', () => {
@@ -2182,10 +2329,7 @@
               <span class="price-uzs">≈ ${formatPriceUzs(p.price)}</span>
             </div>
             <div class="card-actions-stack">
-              <button class="btn-buy btn-add-cart btn-bounce" data-id="${p.id}" data-haptic="medium">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
-                <span>${t('add_to_cart')}</span>
-              </button>
+              ${getCartButtonHtml(p.id)}
               ${p.post_url ? `
                 <button class="btn-channel-link btn-liquid" data-post-url="${p.post_url}" data-id="${p.id}" data-haptic="light">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -2222,6 +2366,10 @@
     const addCartBtn = e.target.closest('.btn-add-cart');
     if (addCartBtn) {
       e.stopPropagation();
+      if (addCartBtn.classList.contains('btn-goto-order') || (state.cart && state.cart[pid])) {
+        switchTab('cart');
+        return;
+      }
       handleAddToCart(prod, addCartBtn);
       return;
     }
