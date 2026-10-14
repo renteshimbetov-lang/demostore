@@ -133,6 +133,7 @@ class Database:
                     post_url TEXT,
                     views_count INTEGER DEFAULT 0,
                     is_active INTEGER DEFAULT 1,
+                    is_discount INTEGER DEFAULT 0,
                     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
                 );
             """)
@@ -147,6 +148,7 @@ class Database:
                 ALTER TABLE products ADD COLUMN IF NOT EXISTS post_url TEXT;
                 ALTER TABLE products ADD COLUMN IF NOT EXISTS views_count INTEGER DEFAULT 0;
                 ALTER TABLE products ADD COLUMN IF NOT EXISTS is_active INTEGER DEFAULT 1;
+                ALTER TABLE products ADD COLUMN IF NOT EXISTS is_discount INTEGER DEFAULT 0;
             """)
 
             # 5. Savat jadvali
@@ -503,8 +505,26 @@ class Database:
             WHERE id = ANY($1::int[]);
         """, product_ids)
 
-    async def activate_product_by_id(self, product_id: int):
-        await self.execute("UPDATE products SET is_active = 1, is_available = 1 WHERE id = $1;", product_id)
+    async def activate_product_by_id(self, product_id: int, is_discount: Optional[int] = None):
+        if is_discount is not None:
+            await self.execute("UPDATE products SET is_active = 1, is_available = 1, is_discount = $1 WHERE id = $2;", is_discount, product_id)
+        else:
+            await self.execute("UPDATE products SET is_active = 1, is_available = 1 WHERE id = $1;", product_id)
+
+    async def activate_product_as_discount(self, product_id: int):
+        await self.execute("UPDATE products SET is_active = 1, is_available = 1, is_discount = 1 WHERE id = $1;", product_id)
+
+    async def set_product_discount(self, product_id: int, is_discount: int = 1):
+        await self.execute("UPDATE products SET is_discount = $1 WHERE id = $2;", is_discount, product_id)
+
+    async def get_discount_products(self) -> List[Dict[str, Any]]:
+        return await self.fetch("""
+            SELECT p.*, c.name as category_name
+            FROM products p
+            LEFT JOIN categories c ON p.category_id = c.id
+            WHERE p.is_active = 1 AND p.is_discount = 1
+            ORDER BY p.id DESC;
+        """)
 
     async def deactivate_product_by_id(self, product_id: int):
         await self.execute("UPDATE products SET is_active = 0, is_available = 0 WHERE id = $1;", product_id)

@@ -23,14 +23,17 @@ def setup_admin_router(db: Database, bot: Bot) -> Router:
             inline_keyboard=[
                 [InlineKeyboardButton(text="📢 Kanalga yangi post tayyorlash & joylash", callback_data="admin_create_post")],
                 [
-                    InlineKeyboardButton(text="📊 Statistika", callback_data="admin_stats"),
-                    InlineKeyboardButton(text="📦 Buyurtmalar", callback_data="admin_orders")
+                    InlineKeyboardButton(text="🔥 Hafta chegirmalari", callback_data="admin_discounts"),
+                    InlineKeyboardButton(text="📊 Statistika", callback_data="admin_stats")
+                ],
+                [
+                    InlineKeyboardButton(text="📦 Buyurtmalar", callback_data="admin_orders"),
+                    InlineKeyboardButton(text="➕ Yangi mahsulot", callback_data="admin_add_product")
                 ],
                 [
                     InlineKeyboardButton(text="✉️ Xabar tarqatish (Broadcast)", callback_data="admin_broadcast"),
-                    InlineKeyboardButton(text="➕ Yangi mahsulot", callback_data="admin_add_product")
-                ],
-                [InlineKeyboardButton(text="🔄 Kanal postlarini sinxronlash", callback_data="admin_sync_channel")]
+                    InlineKeyboardButton(text="🔄 Kanal postlarini sinxronlash", callback_data="admin_sync_channel")
+                ]
             ]
         )
 
@@ -52,6 +55,7 @@ def setup_admin_router(db: Database, bot: Bot) -> Router:
     @router.message(Command("admin"))
     @router.message(F.text == "Admin Panel")
     @router.message(F.text == "⚙️ Admin Panel")
+    @router.message(F.text == "⚙️ Admin Boshqaruv Paneli")
     async def admin_panel_handler(message: Message, state: FSMContext):
         # Faqat adminlar ko'ra oladigan tekshiruv
         if not message.from_user or not is_admin(message.from_user.id):
@@ -60,7 +64,7 @@ def setup_admin_router(db: Database, bot: Bot) -> Router:
         await state.clear()
         stats = await db.get_stats()
         text = (
-            f"👑 <b>ADMIN BOSHQARUV PANELI</b>\n"
+            f"⚙️ <b>ADMIN BOSHQARUV PANELI</b>\n"
             f"━━━━━━━━━━━━━━━━━━━━━━\n"
             f"👥 Foydalanuvchilar: <b>{stats['users_count']}</b> nafar\n"
             f"📦 Faol mahsulotlar: <b>{stats['products_count']}</b> ta\n"
@@ -110,7 +114,7 @@ def setup_admin_router(db: Database, bot: Bot) -> Router:
         await state.clear()
         stats = await db.get_stats()
         text = (
-            f"👑 <b>ADMIN BOSHQARUV PANELI</b>\n"
+            f"⚙️ <b>ADMIN BOSHQARUV PANELI</b>\n"
             f"━━━━━━━━━━━━━━━━━━━━━━\n"
             f"👥 Foydalanuvchilar: <b>{stats['users_count']}</b> nafar\n"
             f"📦 Faol mahsulotlar: <b>{stats['products_count']}</b> ta\n"
@@ -126,6 +130,58 @@ def setup_admin_router(db: Database, bot: Bot) -> Router:
             else:
                 await callback.message.edit_text(text, reply_markup=get_admin_menu_inline(), parse_mode="HTML")
         await callback.answer()
+
+    @router.callback_query(F.data == "admin_discounts")
+    async def show_discounts_callback(callback: CallbackQuery):
+        if not is_admin(callback.from_user.id):
+            return
+
+        discounts = await db.get_discount_products()
+        if not discounts:
+            text = (
+                "🔥 <b>HAFTA CHEGIRMALARI RO'YXATI</b>\n"
+                "━━━━━━━━━━━━━━━━━━━━━━\n"
+                "Hozircha hafta chegirmalariga maxsus mahsulotlar belgilanmagan.\n\n"
+                "💡 <i>Kanalga yangi post qo'yilganda '🔥 Hafta chegirmaga qo'shish' tugmasi orqali tovarlarni bu yerga biriktirishingiz mumkin.</i>"
+            )
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="Ortga", callback_data="admin_main")]
+            ])
+            if callback.message:
+                await callback.message.edit_text(text, reply_markup=keyboard, parse_mode="HTML")
+            await callback.answer()
+            return
+
+        text = (
+            f"🔥 <b>HAFTA CHEGIRMALARI RO'YXATI ({len(discounts)} ta)</b>\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"<i>Chegirmadan chiqarish uchun mahsulot ustiga bosing:</i>\n"
+        )
+        buttons = []
+        for p in discounts:
+            buttons.append([
+                InlineKeyboardButton(
+                    text=f"❌ O'chirish: {p['name']} (${p['price']})",
+                    callback_data=f"rem_disc_{p['id']}"
+                )
+            ])
+        buttons.append([InlineKeyboardButton(text="Ortga", callback_data="admin_main")])
+
+        if callback.message:
+            await callback.message.edit_text(text, reply_markup=InlineKeyboardMarkup(inline_keyboard=buttons), parse_mode="HTML")
+        await callback.answer()
+
+    @router.callback_query(F.data.startswith("rem_disc_"))
+    async def remove_discount_callback(callback: CallbackQuery):
+        if not is_admin(callback.from_user.id):
+            return
+
+        prod_id = int(callback.data.split("_")[2])
+        await db.set_product_discount(prod_id, 0)
+        prod = await db.get_product(prod_id)
+        name = prod["name"] if prod else "Mahsulot"
+        await callback.answer(f"'{name}' Hafta chegirmalaridan chiqarildi.", show_alert=True)
+        await show_discounts_callback(callback)
 
     @router.callback_query(F.data == "admin_orders")
     async def show_orders_callback(callback: CallbackQuery):
@@ -601,7 +657,7 @@ def setup_admin_router(db: Database, bot: Bot) -> Router:
         await callback.answer("❌ Post bekor qilindi.", show_alert=False)
 
     # =========================================================================
-    # 2. Kanaldan kelgan postlarni moderatsiya qilish (Approve / Reject / Rasm almashtirish)
+    # 2. Kanaldan kelgan postlarni moderatsiya qilish (Approve / Reject / Hafta chegirmasiga qo'shish)
     # =========================================================================
     @router.callback_query(F.data.startswith("chan_approve_"))
     async def approve_channel_post_callback(callback: CallbackQuery):
@@ -617,7 +673,7 @@ def setup_admin_router(db: Database, bot: Bot) -> Router:
             img = prod.get("image_url")
             if img and img in gallery:
                 await db.update_product_gallery(prod_id, img, [img] + [g for g in gallery if g != img])
-        await db.activate_product_by_id(prod_id)
+        await db.activate_product_by_id(prod_id, is_discount=0)
         name = prod["name"] if prod else "Mahsulot"
 
         # Chat toza (clean) turishi uchun tasdiqlash xabari darhol o'chiriladi!
@@ -627,6 +683,29 @@ def setup_admin_router(db: Database, bot: Bot) -> Router:
             except Exception:
                 pass
         await callback.answer(f"✅ '{name}' tasdiqlandi va mini ilovaga joylandi!", show_alert=True)
+
+    @router.callback_query(F.data.startswith("chan_discount_"))
+    async def approve_channel_post_as_discount_callback(callback: CallbackQuery):
+        if not is_admin(callback.from_user.id):
+            return
+        from bot.utils.moderation import parse_gallery
+
+        prod_id = int(callback.data.split("_")[2])
+        prod = await db.get_product(prod_id)
+        if prod:
+            gallery = parse_gallery(prod)
+            img = prod.get("image_url")
+            if img and img in gallery:
+                await db.update_product_gallery(prod_id, img, [img] + [g for g in gallery if g != img])
+        await db.activate_product_as_discount(prod_id)
+        name = prod["name"] if prod else "Mahsulot"
+
+        if callback.message:
+            try:
+                await callback.message.delete()
+            except Exception:
+                pass
+        await callback.answer(f"🔥 '{name}' 'Hafta chegirmalari' bo'limiga muvaffaqiyatli joylandi!", show_alert=True)
 
     @router.callback_query(F.data.startswith("chan_reject_"))
     async def reject_channel_post_callback(callback: CallbackQuery):

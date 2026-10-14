@@ -38,7 +38,7 @@ def setup_common_router(db: Database) -> Router:
             buttons.append([InlineKeyboardButton(text="🛍 Do'konni ochish (Mini App)", web_app=WebAppInfo(url=config.webapp_url))])
         
         if is_admin_user:
-            buttons.append([InlineKeyboardButton(text="👑 Admin Boshqaruv Paneli", callback_data="admin_main")])
+            buttons.append([InlineKeyboardButton(text="⚙️ Admin Boshqaruv Paneli", callback_data="admin_main")])
 
         inline_kb = InlineKeyboardMarkup(inline_keyboard=buttons) if buttons else None
         
@@ -48,7 +48,7 @@ def setup_common_router(db: Database) -> Router:
         )
         if is_admin_user:
             welcome_text += (
-                f"\n\n👑 <b>Siz tizim adminisiz!</b>\n"
+                f"\n\n⚙️ <b>Siz tizim adminisiz!</b>\n"
                 f"Kanal postlari moderatsiyasi va boshqaruv uchun <b>Admin Panel</b> tugmasidan foydalaning."
             )
         

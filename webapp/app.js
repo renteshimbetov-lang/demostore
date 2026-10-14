@@ -1045,8 +1045,15 @@
 
     if (!state.products || state.products.length === 0) return;
 
-    // Dastlabki 8 ta mahsulotni haftalik chegirmalarga olamiz
-    const discountItems = state.products.slice(0, 8);
+    // 1. Admin tomonidan 'Hafta chegirmalari'ga biriktirilgan (is_discount === 1) tovarlar birinchi navbatda chiqadi
+    const explicitDiscounts = state.products.filter(p => Number(p.is_discount) === 1);
+    let discountItems = [];
+    if (explicitDiscounts.length > 0) {
+      const otherProducts = state.products.filter(p => Number(p.is_discount) !== 1);
+      discountItems = explicitDiscounts.concat(otherProducts).slice(0, Math.max(8, explicitDiscounts.length));
+    } else {
+      discountItems = state.products.slice(0, 8);
+    }
     const discountRates = [15, 20, 12, 18, 25, 16, 22, 10];
 
     let html = '';
