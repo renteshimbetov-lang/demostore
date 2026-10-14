@@ -335,7 +335,16 @@
         return;
       }
 
-      // 8. Kafolat
+      // 8. IMEI / Kod / Part number
+      if (raw.includes('📟') || lower.includes('imei') || lower.includes('part number') || lower.includes('seriya')) {
+        const val = stripAllEmojis(raw.replace(/^[^\w\d]+/, ''));
+        if (val) {
+          addSpec('Kod / IMEI', val);
+          return;
+        }
+      }
+
+      // 9. Kafolat
       if (lower.includes('kafolat') || lower.includes('гарантия')) {
         const val = stripAllEmojis(raw.replace(/^[^\w\d]+/, ''));
         addSpec('Kafolat', val);
@@ -1124,14 +1133,12 @@
 
     if (!state.products || state.products.length === 0) return;
 
-    // 1. Admin tomonidan 'Hafta chegirmalari'ga biriktirilgan (is_discount === 1) tovarlar birinchi navbatda chiqadi
-    const explicitDiscounts = state.products.filter(p => Number(p.is_discount) === 1);
-    let discountItems = [];
-    if (explicitDiscounts.length > 0) {
-      const otherProducts = state.products.filter(p => Number(p.is_discount) !== 1);
-      discountItems = explicitDiscounts.concat(otherProducts).slice(0, Math.max(8, explicitDiscounts.length));
-    } else {
-      discountItems = state.products.slice(0, 8);
+    // 1. FAQAT va FAQAT admin tomonidan 'Hafta chegirmalari'ga biriktirilgan (is_discount === 1) tovarlar chiqadi!
+    // Oddiy 'Ha, joylansin' bilan tasdiqlangan tovarlar hech qachon bu yerga kirmaydi!
+    const discountItems = state.products.filter(p => Number(p.is_discount) === 1);
+    if (discountItems.length === 0) {
+      if (discountsSliderSectionEl) discountsSliderSectionEl.classList.add('hidden');
+      return;
     }
     const discountRates = [15, 20, 12, 18, 25, 16, 22, 10];
 
@@ -2211,16 +2218,14 @@
             `).join('')}
           </div>
         </div>
-      ` : ''}
-
-      ${cleanDesc ? `
-        <div class="specs-container pd-full-desc-container">
-          <div class="specs-title">Mahsulot haqida toʻliq maʼlumot</div>
+      ` : (cleanDesc ? `
+        <div class="specs-container">
+          <div class="specs-title">Asosiy parametrlar va xususiyatlar</div>
           <div class="pd-description-body">
             ${cleanDesc.split('\n').map(l => l.trim() ? `<p class="pd-desc-line">${escapeHtml(l)}</p>` : `<div class="pd-desc-spacer"></div>`).join('')}
           </div>
         </div>
-      ` : ''}
+      ` : '')}
 
       ${installmentPlan ? `
         <div class="pd-installment-card">
