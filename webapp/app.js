@@ -914,6 +914,13 @@
   const pdBtnTextEl = document.getElementById('pdBtnText');
   const pdChannelIconBtnEl = document.getElementById('pdChannelIconBtn');
 
+  // To'liq ekranda rasm ko'rish (Lightbox) elementlari
+  const fsViewerEl = document.getElementById('fullscreenImageViewer');
+  const fsViewerTrackEl = document.getElementById('fsViewerTrack');
+  const fsViewerCounterEl = document.getElementById('fsViewerCounter');
+  const fsViewerCloseBtnEl = document.getElementById('fsViewerCloseBtn');
+  const fsViewerDotsEl = document.getElementById('fsViewerDots');
+
   // ==========================================================================
   // TILNI QO'LLASH (APPLY LANGUAGE DYNAMICALLY)
   // ==========================================================================
@@ -1257,11 +1264,11 @@
   }
 
   function updateBackButtons() {
-    // Faqat mahsulot batafsil sahifasida Telegram BackButton ko'rsatiladi.
-    // Asosiy bo'limlarda (Home, Catalog, Cart, Wishlist, Profile) Telegramning o'zini native "X" (Yopish) tugmasi turadi!
+    // Mahsulot batafsil yoki rasm fullscreen lightbox ochilganda Telegram BackButton ko'rsatiladi
     if (tg?.BackButton) {
       try {
-        if (state.currentTab === 'product-detail') {
+        const isFsOpen = fsViewerEl && !fsViewerEl.classList.contains('hidden');
+        if (state.currentTab === 'product-detail' || isFsOpen) {
           tg.BackButton.show();
         } else {
           tg.BackButton.hide();
@@ -1272,6 +1279,12 @@
 
   function goBack() {
     triggerHaptic('light');
+
+    // 0. Agar rasm fullscreen lightbox ochiq bo'lsa, avval uni yopamiz
+    if (fsViewerEl && !fsViewerEl.classList.contains('hidden')) {
+      closeFullscreenGallery();
+      return;
+    }
 
     // 1. Agar yon menyu yoki filtr ochiq bo'lsa, avval uni yopamiz
     if (isAnyDrawerOpen()) {
@@ -1287,18 +1300,22 @@
       return;
     }
 
-    // 3. Agar foydalanuvchi Bosh sahifada (home) bo'lmasa, Bosh sahifaga qaytish (1 qadam)
+    // 3. Agar qidiruv yoki filtr aktiv bo'lsa -> tozalash
+    if (state.searchQuery || state.selectedCategory !== 0 || (state.selectedSort && state.selectedSort !== 'default')) {
+      resetHomeView();
+      return;
+    }
+
+    // 4. Agar foydalanuvchi Bosh sahifada (home) bo'lmasa, Bosh sahifaga qaytish (1 qadam)
     if (state.currentTab !== 'home') {
       switchTab('home', null, false);
       return;
     }
 
-    // 4. Agar allaqachon Bosh sahifada (home) turib chiqish qilinsa -> Telegram mini ilovani yopish!
-    if (tg?.close) {
-      try {
-        tg.close();
-      } catch (e) {}
-    }
+    // 5. Agar allaqachon Bosh sahifada (home) turgan bo'lsa:
+    // FOYDALANUVCHI TALABI: Mini ilovadan chiqib ketish MUTLAQO TAQIQLANGAN!
+    // tg.close() chaqirilmaydi. Bosh sahifa yuqorisiga silliq scroll qiladi.
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   function resetHomeView() {
@@ -1448,15 +1465,17 @@
     } catch (e) {}
   }
 
-  // Brauzer / Android apparat tugmasi / iOS Safari popstate
+  // Brauzer / Android apparat tugmasi / iOS Safari / MacBook trackpad popstate
+  try {
+    history.pushState({ app: 'demostore' }, '', location.href);
+  } catch (e) {}
+
   window.addEventListener('popstate', (e) => {
-    // Agar foydalanuvchi mahsulot batafsil oynasida bo'lsa va orqaga sursa:
-    if (state.currentTab === 'product-detail') {
-      const returnTab = (state.previousTab && state.previousTab !== 'product-detail') ? state.previousTab : 'home';
-      switchTab(returnTab, null, false, true);
-    } else {
-      goBack();
-    }
+    // Mini ilovadan trackpad yoki brauzer orqaga tugmasi orqali tasodifiy chiqib ketmaslik uchun tarixni ushlab turamiz
+    try {
+      history.pushState({ app: 'demostore' }, '', location.href);
+    } catch (err) {}
+    goBack();
   });
 
   // Klaviatura Escape tugmasi
@@ -1467,8 +1486,7 @@
   // 1. Klaviatura va sichqoncha qo'shimcha tugmalari
   window.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
-      const fsEl = document.getElementById('fullscreenImageViewer');
-      if (fsEl && !fsEl.classList.contains('hidden')) {
+      if (fsViewerEl && !fsViewerEl.classList.contains('hidden')) {
         closeFullscreenGallery();
         return;
       }
@@ -1501,6 +1519,13 @@
 
   window.addEventListener('touchstart', (e) => {
     if (e.touches.length !== 1) return;
+    // Agar fullscreen rasm tomoshasi ochiq bo'lsa, chetdan surish to'xtatiladi
+    if (fsViewerEl && !fsViewerEl.classList.contains('hidden')) return;
+
+    // Faqat orqaga qaytadigan sahifa yoki ochiq menyu bo'lsa
+    const canGoBack = state.currentTab !== 'home' || isAnyDrawerOpen() || Boolean(state.searchQuery || state.selectedCategory !== 0);
+    if (!canGoBack) return;
+
     const touch = e.touches[0];
     touchStartX = touch.clientX;
     touchStartY = touch.clientY;
@@ -1508,9 +1533,9 @@
     isEdgeSwipeGesture = false;
 
     // Chetdan boshlanish chegarasi:
-    // Mahsulot batafsil yoki ochiq menyuda kengroq (ekranning 35% gacha), odatiy holatda chap chekka (<= 95px)
+    // Mahsulot batafsil yoki ochiq menyuda kengroq (ekranning 35% gacha), odatiy holatda chap chekka (<= 80px)
     const isModalOrDetail = state.currentTab === 'product-detail' || isAnyDrawerOpen();
-    const edgeLimit = isModalOrDetail ? Math.min(window.innerWidth * 0.35, 140) : 95;
+    const edgeLimit = isModalOrDetail ? Math.min(window.innerWidth * 0.35, 140) : 80;
 
     if (touchStartX <= edgeLimit) {
       isEdgeSwipeGesture = true;
@@ -2307,12 +2332,6 @@
   // ==========================================================================
   // TO'LIQ EKRANDA RASM KO'RISH (FULLSCREEN LIGHTBOX VIEWER)
   // ==========================================================================
-  const fsViewerEl = document.getElementById('fullscreenImageViewer');
-  const fsViewerTrackEl = document.getElementById('fsViewerTrack');
-  const fsViewerCounterEl = document.getElementById('fsViewerCounter');
-  const fsViewerCloseBtnEl = document.getElementById('fsViewerCloseBtn');
-  const fsViewerDotsEl = document.getElementById('fsViewerDots');
-
   function openFullscreenGallery(images, startIndex = 0, title = 'Mahsulot') {
     if (!fsViewerEl || !fsViewerTrackEl || !Array.isArray(images) || images.length === 0) return;
     triggerHaptic('medium');
@@ -2335,8 +2354,18 @@
       fsViewerCounterEl.textContent = `${startIndex + 1} / ${images.length}`;
     }
 
+    // Holatni tozalash
+    fsViewerEl.style.opacity = '';
+    fsViewerEl.style.backgroundColor = '';
+    fsViewerEl.style.transition = '';
+    fsViewerTrackEl.style.scrollSnapType = '';
+    fsViewerTrackEl.style.overflowX = '';
+
     fsViewerEl.classList.remove('hidden');
     document.body.style.overflow = 'hidden';
+
+    // Telegram BackButton ni ko'rsatish
+    updateBackButtons();
 
     // Boshlang'ich rasmga skroll qilish
     setTimeout(() => {
@@ -2352,6 +2381,19 @@
     triggerHaptic('light');
     fsViewerEl.classList.add('hidden');
     document.body.style.overflow = '';
+    fsViewerEl.style.opacity = '';
+    fsViewerEl.style.backgroundColor = '';
+    fsViewerEl.style.transition = '';
+    if (fsViewerTrackEl) {
+      fsViewerTrackEl.style.scrollSnapType = '';
+      fsViewerTrackEl.style.overflowX = '';
+      Array.from(fsViewerTrackEl.children).forEach(slide => {
+        slide.style.transition = '';
+        slide.style.transform = '';
+        slide.style.opacity = '';
+      });
+    }
+    updateBackButtons();
   }
 
   fsViewerCloseBtnEl?.addEventListener('click', (e) => {
@@ -2373,6 +2415,131 @@
       dots.forEach((d, i) => d.classList.toggle('active', i === newIdx));
     }
   }, { passive: true });
+
+  // --------------------------------------------------------------------------
+  // PASTGA TORTIB YOPISH (PULL DOWN TO DISMISS / SWIPE DOWN LIGHTBOX)
+  // --------------------------------------------------------------------------
+  let fsTouchStartX = 0;
+  let fsTouchStartY = 0;
+  let fsTouchStartTime = 0;
+  let fsIsPullingDown = false;
+  let fsDeltaY = 0;
+  let fsActiveSlideEl = null;
+  let fsHasMoved = false;
+
+  fsViewerTrackEl?.addEventListener('touchstart', (e) => {
+    if (e.touches.length !== 1) return;
+    const touch = e.touches[0];
+    fsTouchStartX = touch.clientX;
+    fsTouchStartY = touch.clientY;
+    fsTouchStartTime = Date.now();
+    fsIsPullingDown = false;
+    fsDeltaY = 0;
+    fsHasMoved = false;
+
+    const width = fsViewerTrackEl.clientWidth || window.innerWidth;
+    const currentIdx = Math.round(fsViewerTrackEl.scrollLeft / width);
+    fsActiveSlideEl = fsViewerTrackEl.children[currentIdx] || null;
+  }, { passive: true });
+
+  fsViewerTrackEl?.addEventListener('touchmove', (e) => {
+    if (e.touches.length !== 1) return;
+    const touch = e.touches[0];
+    const diffX = touch.clientX - fsTouchStartX;
+    const diffY = touch.clientY - fsTouchStartY;
+
+    if (Math.abs(diffX) > 6 || Math.abs(diffY) > 6) {
+      fsHasMoved = true;
+    }
+
+    // Agar foydalanuvchi gorizontal surayotgan bo'lsa, slaydlararo o'tish ishlaydi
+    if (!fsIsPullingDown && Math.abs(diffX) > 12 && Math.abs(diffX) > Math.abs(diffY)) {
+      return;
+    }
+
+    // Pastga tortish harakati boshlanishi
+    if (!fsIsPullingDown) {
+      if (diffY > 8 && diffY > Math.abs(diffX) * 1.15) {
+        fsIsPullingDown = true;
+        fsViewerTrackEl.style.scrollSnapType = 'none';
+      }
+    }
+
+    if (fsIsPullingDown && diffY > 0) {
+      fsDeltaY = diffY;
+      if (e.cancelable) e.preventDefault();
+
+      // Telegram / iOS uslubidagi silliq dinamik fizika
+      const scale = Math.max(0.72, 1 - (fsDeltaY / 1200));
+      const bgOpacity = Math.max(0.18, 0.95 - (fsDeltaY / 450) * 0.78);
+
+      if (fsActiveSlideEl) {
+        fsActiveSlideEl.style.transition = 'none';
+        fsActiveSlideEl.style.transform = `translate3d(0, ${fsDeltaY}px, 0) scale(${scale})`;
+      }
+      if (fsViewerEl) {
+        fsViewerEl.style.backgroundColor = `rgba(0, 0, 0, ${bgOpacity})`;
+      }
+    }
+  }, { passive: false });
+
+  function finishFsPullDown() {
+    if (!fsIsPullingDown) return;
+    fsIsPullingDown = false;
+    fsViewerTrackEl.style.scrollSnapType = '';
+
+    const elapsed = Date.now() - fsTouchStartTime;
+    const velocity = fsDeltaY / Math.max(1, elapsed);
+
+    // Agar 75px dan ko'proq pastga tortilgan bo'lsa yoki siltash tezligi yuqori bo'lsa -> yopamiz
+    if (fsDeltaY > 75 || (fsDeltaY > 35 && velocity > 0.38)) {
+      if (fsActiveSlideEl) {
+        fsActiveSlideEl.style.transition = 'transform 0.22s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 0.22s ease';
+        fsActiveSlideEl.style.transform = `translate3d(0, ${window.innerHeight}px, 0) scale(0.6)`;
+        fsActiveSlideEl.style.opacity = '0';
+      }
+      if (fsViewerEl) {
+        fsViewerEl.style.transition = 'background-color 0.22s ease, opacity 0.22s ease';
+        fsViewerEl.style.opacity = '0';
+      }
+
+      setTimeout(() => {
+        closeFullscreenGallery();
+      }, 220);
+    } else {
+      // Yopishga yetmadi -> silliq o'z joyiga qaytarish (bounce-back)
+      if (fsActiveSlideEl) {
+        fsActiveSlideEl.style.transition = 'transform 0.2s cubic-bezier(0.2, 0.9, 0.3, 1)';
+        fsActiveSlideEl.style.transform = '';
+      }
+      if (fsViewerEl) {
+        fsViewerEl.style.transition = 'background-color 0.2s ease';
+        fsViewerEl.style.backgroundColor = '';
+      }
+
+      setTimeout(() => {
+        if (fsActiveSlideEl) fsActiveSlideEl.style.transition = '';
+        if (fsViewerEl) fsViewerEl.style.transition = '';
+      }, 210);
+    }
+  }
+
+  fsViewerTrackEl?.addEventListener('touchend', finishFsPullDown, { passive: true });
+  fsViewerTrackEl?.addEventListener('touchcancel', finishFsPullDown, { passive: true });
+
+  // MacBook trackpad yoki sichqoncha g'ildiragi bilan pastga surilganda ham yopish
+  fsViewerTrackEl?.addEventListener('wheel', (e) => {
+    if (e.deltaY > 55 && Math.abs(e.deltaY) > Math.abs(e.deltaX) * 1.4) {
+      closeFullscreenGallery();
+    }
+  }, { passive: true });
+
+  // Rasm atrofidagi bo'sh qora fonga (backdrop) bosilganda yopish
+  fsViewerTrackEl?.addEventListener('click', (e) => {
+    if (e.target.tagName !== 'IMG' && !fsHasMoved) {
+      closeFullscreenGallery();
+    }
+  });
 
   pdWishlistBtnEl?.addEventListener('click', () => {
     if (state.selectedProduct) {
