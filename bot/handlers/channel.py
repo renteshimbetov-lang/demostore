@@ -1,4 +1,5 @@
 import asyncio
+import html
 import logging
 from typing import Dict, List, Optional
 from aiogram import Router, Bot
@@ -98,6 +99,7 @@ def setup_channel_router(db: Database, bot: Bot) -> Router:
 
         image_url = ""
         gallery_urls: List[str] = []
+        file_ids: List[str] = []
         primary_file_id = None
         if not keep_media:
             # 1-manba: Telegram file_id lar (doimiy, tezkor, xatosiz tartibda)
@@ -116,6 +118,46 @@ def setup_channel_router(db: Database, bot: Bot) -> Router:
                 else:
                     image_url = "/static/apple_3d_logo.png"
                     gallery_urls = [image_url]
+
+        # Takroriy mahsulot tekshiruvi: Agar kanalga ilgari faollashtirilgan ayni shu mahsulot
+        # qaytadan tashlangan bo'lsa (bir xil rasm, kod yoki ma'lumotlar), mini ilovaga avtomat qayta qo'shmaymiz!
+        if not is_edit and not existing:
+            duplicate = await db.find_duplicate_product(
+                name=name,
+                description=description,
+                price=price,
+                photo_file_id=primary_file_id,
+                gallery_file_ids=file_ids if not keep_media else []
+            )
+            if duplicate:
+                dup_id = duplicate["id"]
+                new_post_url = build_post_url(main_msg)
+                logger.info(f"Kanalda takroriy mahsulot aniqlandi! ID #{dup_id} ({name}, ${price}). Mini ilovaga ikkinchi marta qo'shilmadi.")
+                if new_post_url:
+                    await db.execute("""
+                        UPDATE products 
+                        SET post_url = $1, channel_id = $2, message_id = $3 
+                        WHERE id = $4;
+                    """, new_post_url, str(channel_id), int(message_id), dup_id)
+                else:
+                    await db.execute("""
+                        UPDATE products 
+                        SET channel_id = $1, message_id = $2 
+                        WHERE id = $3;
+                    """, str(channel_id), int(message_id), dup_id)
+
+                dup_msg = (
+                    f"ℹ️ <b>Kanalga takroriy mahsulot joylandi:</b>\n\n"
+                    f"📦 <b>{html.escape(name)}</b> — <b>${price}</b>\n"
+                    f"Ushbu mahsulot allaqachon mini ilovada mavjud (ID: <code>#{dup_id}</code>).\n"
+                    f"✅ <i>Mini ilovaga takroriy qo'shilmadi, kanal havolasi yangilandi.</i>"
+                )
+                for admin_id in config.admin_ids:
+                    try:
+                        await bot.send_message(chat_id=admin_id, text=dup_msg, parse_mode="HTML")
+                    except Exception:
+                        pass
+                return
 
         async with _db_write_lock:
             product_id = await db.upsert_product_from_channel(

@@ -1529,11 +1529,11 @@ html.dark .gallery-dots .dot {
 
 .fs-viewer-header {
   position: absolute;
-  top: calc(var(--app-safe-top, env(safe-area-inset-top, 20px)) + 54px);
+  top: calc(var(--app-safe-top, env(safe-area-inset-top, 14px)) + 14px);
   left: 0;
   right: 0;
-  height: 52px;
-  padding: 0 20px;
+  height: 48px;
+  padding: 0 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1603,21 +1603,30 @@ html.dark .gallery-dots .dot {
   align-items: center;
   justify-content: center;
   scroll-snap-align: center;
-  padding: 70px 16px 50px 16px;
+  padding: 56px 12px 34px 12px;
   box-sizing: border-box;
   will-change: transform, opacity;
   user-select: none;
+  overflow: hidden;
+  position: relative;
 }
 
 .fs-viewer-slide img {
-  max-width: 95vw;
-  max-height: 75vh;
+  max-width: 96vw;
+  max-height: 80vh;
   object-fit: contain;
   border-radius: 12px;
   user-select: none;
   -webkit-user-drag: none;
   box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
   pointer-events: auto;
+  transform-origin: center center;
+  touch-action: none;
+  cursor: grab;
+}
+
+.fs-viewer-slide img:active {
+  cursor: grabbing;
 }
 
 .fs-viewer-dots {

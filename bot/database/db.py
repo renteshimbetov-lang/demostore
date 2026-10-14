@@ -412,6 +412,82 @@ class Database:
             WHERE channel_id = $1 AND message_id = $2;
         """, str(channel_id), int(message_id))
 
+    async def find_duplicate_product(
+        self,
+        name: str,
+        description: str,
+        price: int,
+        photo_file_id: Optional[str] = None,
+        gallery_file_ids: Optional[List[str]] = None
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Kanalga qayta tashlangan bir xil mahsulotni aniqlash:
+        1. Rasm file_id lari orqali (eng ishonchli).
+        2. Kod / IMEI (masalan: F007, 698490, H005) orqali.
+        3. Bir xil narx, nomi va tozalangan tavsif matni bo'yicha.
+        """
+        import re
+
+        # 1. Rasm file_id lari bo'yicha qidirish
+        fids_to_check = []
+        if photo_file_id:
+            fids_to_check.append(photo_file_id)
+        if gallery_file_ids:
+            for fid in gallery_file_ids:
+                if fid and fid not in fids_to_check:
+                    fids_to_check.append(fid)
+
+        for fid in fids_to_check:
+            row = await self.fetchrow("""
+                SELECT * FROM products 
+                WHERE (photo_file_id = $1 OR gallery_images LIKE '%' || $1 || '%') 
+                ORDER BY is_active DESC, id DESC
+                LIMIT 1;
+            """, fid)
+            if row:
+                return dict(row)
+
+        # 2. Kod / IMEI / Qurilma identifikatori orqali qidirish (masalan: 🔎H005, 📟 698490, #F007)
+        code_match = re.search(r'(?:imei|seriya|kod|🔎|📟|#)\s*[:\s]*([a-z0-9/-]{3,20})', description or "", re.I)
+        if code_match:
+            code = code_match.group(1).strip()
+            code_upper = code.upper()
+            common_regions = {'LL/A', 'VC/A', 'CH/A', 'KH/A', 'ZP/A', 'MY/A', 'J/A', 'RU/A', 'FD/A', 'AH/A'}
+            if code_upper not in common_regions and (len(code) >= 4 or (len(code) >= 3 and not code.isdigit())):
+                row = await self.fetchrow("""
+                    SELECT * FROM products 
+                    WHERE description ILIKE '%' || $1 || '%' 
+                    ORDER BY is_active DESC, id DESC
+                    LIMIT 1;
+                """, code)
+                if row:
+                    return dict(row)
+
+        # 3. Nomi, narxi va tozalangan tavsif bo'yicha qidirish
+        def _clean_text(t: str) -> str:
+            if not t:
+                return ""
+            t = re.sub(r'[\U00010000-\U0010ffff]', '', t)  # Emojilar
+            t = re.sub(r'@\w+', '', t)  # @username
+            t = re.sub(r'\+?\d[\d\s-]{7,}\d', '', t)  # Telefon raqamlar
+            t = re.sub(r'https?://\S+', '', t)  # Havolalar
+            t = re.sub(r'\s+', '', t)  # Bo'shliqlar
+            return t.lower()
+
+        new_clean = _clean_text(description or "")
+        if len(new_clean) >= 20:
+            candidates = await self.fetch("""
+                SELECT * FROM products 
+                WHERE price = $1 
+                ORDER BY is_active DESC, id DESC LIMIT 20;
+            """, price)
+            for cand in candidates:
+                cand_clean = _clean_text(cand.get("description") or "")
+                if cand_clean and (new_clean == cand_clean or (len(new_clean) >= 30 and (new_clean in cand_clean or cand_clean in new_clean))):
+                    return dict(cand)
+
+        return None
+
     async def upsert_product_from_channel(
         self,
         channel_id: str,
