@@ -389,6 +389,42 @@
     return specs;
   }
 
+  // Mahsulot matnidan faqat mahsulotga oid to'liq ma'lumotlarni qoldirish (do'kon reklamalari, kontaktlar va narxlarni olib tashlash)
+  function getCleanProductDescription(desc) {
+    if (!desc) return '';
+    const lines = desc.split('\n');
+    const cleaned = [];
+
+    lines.forEach(line => {
+      const trimmed = line.trim();
+      if (!trimmed) {
+        if (cleaned.length > 0 && cleaned[cleaned.length - 1] !== '') {
+          cleaned.push('');
+        }
+        return;
+      }
+      const lower = trimmed.toLowerCase();
+
+      // Kontaktlar, menejer, manzil va narx satrlarini tozalash
+      if (
+        lower.includes('menejer') || lower.includes('telefon') || lower.includes('+998') ||
+        lower.includes('lokatsiya') || lower.includes('malika') || lower.includes('beruniy') ||
+        lower.includes('bog’lanish') || lower.includes('bog\'lanish') || lower.includes('murojaat') ||
+        lower.includes('t.me/') || lower.includes('telegram kanal') ||
+        (lower.includes('@') && !lower.includes('display')) ||
+        lower.includes('manzil') || lower.includes('do\'kon') || lower.includes('dokon') ||
+        lower.startsWith('narxi:') || lower.startsWith('narx:') || lower.startsWith('baho:') ||
+        lower.includes('муддатли тулов') || lower.includes('бошига:') || lower.includes('muddatli to\'lov')
+      ) {
+        return;
+      }
+
+      cleaned.push(trimmed);
+    });
+
+    return cleaned.join('\n').trim();
+  }
+
   // Bo'lib to'lash (Muddatli to'lov) rejalarini ajratib olish
   function parseInstallmentPlan(desc) {
     if (!desc) return null;
@@ -1424,6 +1460,11 @@
   // 1. Klaviatura va sichqoncha qo'shimcha tugmalari
   window.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
+      const fsEl = document.getElementById('fullscreenImageViewer');
+      if (fsEl && !fsEl.classList.contains('hidden')) {
+        closeFullscreenGallery();
+        return;
+      }
       goBack();
       return;
     }
@@ -1445,51 +1486,7 @@
     }
   });
 
-  // 2. MacBook Trackpad (2 barmoq bilan o'ngga surish orqali orqaga qaytish)
-  let macTrackpadDeltaX = 0;
-  let macTrackpadTimer = null;
-  let isTrackpadNavigating = false;
-
-  window.addEventListener('wheel', (e) => {
-    if (Math.abs(e.deltaX) < 12) return;
-
-    // Gorizontal skroll bo'ladigan ichki elementlarni tekshirish (masalan: toifalar, slaydlar)
-    let el = e.target;
-    while (el && el !== document.body && el !== document.documentElement) {
-      if (el.scrollWidth > el.clientWidth + 6) {
-        const style = window.getComputedStyle(el);
-        if (style.overflowX === 'auto' || style.overflowX === 'scroll') {
-          // Agar element o'ngroqda turgan bo'lsa va chapga skroll qilayotgan bo'lsa, elementning o'zini suramiz
-          if (el.scrollLeft > 6 && e.deltaX < 0) {
-            return;
-          }
-        }
-      }
-      el = el.parentElement;
-    }
-
-    // Ikki barmoq bilan chapdan o'ngga surish (e.deltaX < 0)
-    if (e.deltaX < -15 && Math.abs(e.deltaX) > Math.abs(e.deltaY) * 1.15) {
-      macTrackpadDeltaX += Math.abs(e.deltaX);
-      clearTimeout(macTrackpadTimer);
-      macTrackpadTimer = setTimeout(() => {
-        macTrackpadDeltaX = 0;
-      }, 260);
-
-      if (macTrackpadDeltaX >= 55 && !isTrackpadNavigating) {
-        macTrackpadDeltaX = 0;
-        isTrackpadNavigating = true;
-        goBack();
-        setTimeout(() => {
-          isTrackpadNavigating = false;
-        }, 450);
-      }
-    } else if (e.deltaX > 0) {
-      macTrackpadDeltaX = 0;
-    }
-  }, { passive: true });
-
-  // 3. Sensor ekranlar (iPhone, iPad, Android) chetidan surish (Touch Edge-Swipe)
+  // 2. Sensor ekranlar (iPhone, iPad, Android) chetidan surish (Touch Edge-Swipe)
   let touchStartX = 0;
   let touchStartY = 0;
   let touchStartTime = 0;
@@ -2171,23 +2168,19 @@
       pdBottomPriceUzsEl.textContent = `≈ ${formatPriceUzs(prod.price)}`;
     }
 
+    const cleanDesc = getCleanProductDescription(prod.description);
+
     let galleryHTML = `
       <div class="modal-gallery-wrap">
         <div class="modal-gallery-track" id="pdGalleryTrack">
           ${images.map((img, i) => `
             <div class="gallery-slide" data-index="${i}">
-              <img src="${img}" alt="${escapeHtml(prod.name)}" decoding="async" onerror="this.onerror=null; this.src='${FALLBACK_IMAGE_URL}';" />
+              <img src="${img}" alt="${escapeHtml(prod.name)}" data-index="${i}" decoding="async" onerror="this.onerror=null; this.src='${FALLBACK_IMAGE_URL}';" />
             </div>
           `).join('')}
         </div>
         ${images.length > 1 ? `
           <div class="gallery-counter"><span id="pdGalleryCounter">1</span> / ${images.length}</div>
-          <button class="gallery-arrow arrow-prev" id="pdGalleryPrevBtn" aria-label="Oldingi rasm">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"></path></svg>
-          </button>
-          <button class="gallery-arrow arrow-next" id="pdGalleryNextBtn" aria-label="Keyingi rasm">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 18 6-6-6-6"></path></svg>
-          </button>
           <div class="gallery-dots" id="pdGalleryDots">
             ${images.map((_, i) => `<span class="dot ${i === 0 ? 'active' : ''}"></span>`).join('')}
           </div>
@@ -2218,12 +2211,16 @@
             `).join('')}
           </div>
         </div>
-      ` : (prod.description ? `
-        <div class="specs-container">
-          <div class="specs-title">Mahsulot haqida maʼlumot</div>
-          <p style="font-size: 0.85rem; color: var(--text-sub); line-height: 1.5; white-space: pre-line;">${escapeHtml(prod.description)}</p>
+      ` : ''}
+
+      ${cleanDesc ? `
+        <div class="specs-container pd-full-desc-container">
+          <div class="specs-title">Mahsulot haqida toʻliq maʼlumot</div>
+          <div class="pd-description-body">
+            ${cleanDesc.split('\n').map(l => l.trim() ? `<p class="pd-desc-line">${escapeHtml(l)}</p>` : `<div class="pd-desc-spacer"></div>`).join('')}
+          </div>
         </div>
-      ` : '')}
+      ` : ''}
 
       ${installmentPlan ? `
         <div class="pd-installment-card">
@@ -2259,6 +2256,15 @@
       </div>
     `;
 
+    // Rasm ustiga bosilganda to'liq ekranda ochish (Fullscreen Lightbox)
+    document.querySelectorAll('#pdGalleryTrack .gallery-slide').forEach(slide => {
+      slide.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const idx = parseInt(slide.dataset.index, 10) || 0;
+        openFullscreenGallery(images, idx, prod.name);
+      });
+    });
+
     // Kanaldan ko'rish tugmasi hodisasi
     document.getElementById('pdChannelViewBtn')?.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -2267,36 +2273,12 @@
       }
     });
 
-    // Karusel hodisalarini ulash
+    // Karusel surish hodisasini ulash
     if (images.length > 1) {
       const track = document.getElementById('pdGalleryTrack');
-      const prevBtn = document.getElementById('pdGalleryPrevBtn');
-      const nextBtn = document.getElementById('pdGalleryNextBtn');
       const counter = document.getElementById('pdGalleryCounter');
       const dots = document.querySelectorAll('#pdGalleryDots .dot');
       let currentIndex = 0;
-
-      function updateSlide(idx) {
-        if (idx < 0) idx = images.length - 1;
-        if (idx >= images.length) idx = 0;
-        currentIndex = idx;
-        const slideWidth = track.clientWidth;
-        track.scrollTo({ left: slideWidth * idx, behavior: 'smooth' });
-        if (counter) counter.textContent = (idx + 1).toString();
-        dots.forEach((d, i) => d.classList.toggle('active', i === idx));
-      }
-
-      prevBtn?.addEventListener('click', (e) => {
-        e.stopPropagation();
-        triggerHaptic('light');
-        updateSlide(currentIndex - 1);
-      });
-
-      nextBtn?.addEventListener('click', (e) => {
-        e.stopPropagation();
-        triggerHaptic('light');
-        updateSlide(currentIndex + 1);
-      });
 
       track?.addEventListener('scroll', () => {
         const slideWidth = track.clientWidth;
@@ -2308,7 +2290,7 @@
             dots.forEach((d, i) => d.classList.toggle('active', i === newIdx));
           }
         }
-      });
+      }, { passive: true });
     }
 
     const inCart = Boolean(state.cart && state.cart[prod.id]);
@@ -2316,6 +2298,76 @@
 
     switchTab('product-detail');
   }
+
+  // ==========================================================================
+  // TO'LIQ EKRANDA RASM KO'RISH (FULLSCREEN LIGHTBOX VIEWER)
+  // ==========================================================================
+  const fsViewerEl = document.getElementById('fullscreenImageViewer');
+  const fsViewerTrackEl = document.getElementById('fsViewerTrack');
+  const fsViewerCounterEl = document.getElementById('fsViewerCounter');
+  const fsViewerCloseBtnEl = document.getElementById('fsViewerCloseBtn');
+  const fsViewerDotsEl = document.getElementById('fsViewerDots');
+
+  function openFullscreenGallery(images, startIndex = 0, title = 'Mahsulot') {
+    if (!fsViewerEl || !fsViewerTrackEl || !Array.isArray(images) || images.length === 0) return;
+    triggerHaptic('medium');
+
+    fsViewerTrackEl.innerHTML = images.map((img, i) => `
+      <div class="fs-viewer-slide" data-index="${i}">
+        <img src="${img}" alt="${escapeHtml(title)}" decoding="async" onerror="this.onerror=null; this.src='${FALLBACK_IMAGE_URL}';" />
+      </div>
+    `).join('');
+
+    if (fsViewerDotsEl) {
+      if (images.length > 1) {
+        fsViewerDotsEl.innerHTML = images.map((_, i) => `<span class="dot ${i === startIndex ? 'active' : ''}"></span>`).join('');
+      } else {
+        fsViewerDotsEl.innerHTML = '';
+      }
+    }
+
+    if (fsViewerCounterEl) {
+      fsViewerCounterEl.textContent = `${startIndex + 1} / ${images.length}`;
+    }
+
+    fsViewerEl.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+
+    // Boshlang'ich rasmga skroll qilish
+    setTimeout(() => {
+      const slideWidth = fsViewerTrackEl.clientWidth;
+      if (slideWidth > 0 && startIndex > 0) {
+        fsViewerTrackEl.scrollTo({ left: slideWidth * startIndex, behavior: 'instant' });
+      }
+    }, 20);
+  }
+
+  function closeFullscreenGallery() {
+    if (!fsViewerEl) return;
+    triggerHaptic('light');
+    fsViewerEl.classList.add('hidden');
+    document.body.style.overflow = '';
+  }
+
+  fsViewerCloseBtnEl?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    closeFullscreenGallery();
+  });
+
+  // Fullscreen treki orqali surishda hisoblagich va nuqtalarni yangilash
+  fsViewerTrackEl?.addEventListener('scroll', () => {
+    const width = fsViewerTrackEl.clientWidth;
+    if (width <= 0) return;
+    const newIdx = Math.round(fsViewerTrackEl.scrollLeft / width);
+    const total = fsViewerTrackEl.children.length;
+    if (fsViewerCounterEl && total > 0 && newIdx >= 0 && newIdx < total) {
+      fsViewerCounterEl.textContent = `${newIdx + 1} / ${total}`;
+    }
+    const dots = fsViewerDotsEl?.querySelectorAll('.dot');
+    if (dots) {
+      dots.forEach((d, i) => d.classList.toggle('active', i === newIdx));
+    }
+  }, { passive: true });
 
   pdWishlistBtnEl?.addEventListener('click', () => {
     if (state.selectedProduct) {

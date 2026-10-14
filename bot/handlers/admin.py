@@ -676,7 +676,7 @@ def setup_admin_router(db: Database, bot: Bot) -> Router:
             img = prod.get("image_url")
             if img and img in gallery:
                 await db.update_product_gallery(prod_id, img, [img] + [g for g in gallery if g != img])
-        await db.activate_product_by_id(prod_id, is_discount=0)
+        await db.execute("UPDATE products SET is_active = 1, is_available = 1, is_discount = 0 WHERE id = $1;", prod_id)
         name = prod["name"] if prod else "Mahsulot"
 
         # Chat toza (clean) turishi uchun tasdiqlash xabari darhol o'chiriladi!
@@ -685,7 +685,7 @@ def setup_admin_router(db: Database, bot: Bot) -> Router:
                 await callback.message.delete()
             except Exception:
                 pass
-        await callback.answer(f"✅ '{name}' tasdiqlandi va mini ilovaga joylandi!", show_alert=True)
+        await callback.answer(f"✅ '{name}' mini ilovaga joylandi (chegirmalarsiz)!", show_alert=True)
 
     @router.callback_query(F.data.startswith("chan_discount_"))
     async def approve_channel_post_as_discount_callback(callback: CallbackQuery):
@@ -700,7 +700,7 @@ def setup_admin_router(db: Database, bot: Bot) -> Router:
             img = prod.get("image_url")
             if img and img in gallery:
                 await db.update_product_gallery(prod_id, img, [img] + [g for g in gallery if g != img])
-        await db.activate_product_as_discount(prod_id)
+        await db.execute("UPDATE products SET is_active = 1, is_available = 1, is_discount = 1 WHERE id = $1;", prod_id)
         name = prod["name"] if prod else "Mahsulot"
 
         if callback.message:
@@ -708,7 +708,7 @@ def setup_admin_router(db: Database, bot: Bot) -> Router:
                 await callback.message.delete()
             except Exception:
                 pass
-        await callback.answer(f"🔥 '{name}' 'Hafta chegirmalari' bo'limiga muvaffaqiyatli joylandi!", show_alert=True)
+        await callback.answer(f"🔥 '{name}' mini ilovaga hamda 'Hafta chegirmalari' bo'limiga muvaffaqiyatli joylandi!", show_alert=True)
 
     @router.callback_query(F.data.startswith("chan_reject_"))
     async def reject_channel_post_callback(callback: CallbackQuery):

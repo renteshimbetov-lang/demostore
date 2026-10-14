@@ -77,7 +77,6 @@ def setup_channel_router(db: Database, bot: Bot) -> Router:
         """Bir yoki bir nechta xabardan (albomdan) mahsulotni yaratish yoki yangilash"""
         import json
         from bot.config import config
-        from bot.utils.photo_selector import select_best_index_async
         from bot.utils.moderation import build_moderation_caption, build_moderation_keyboard, photo_input
 
         raw_text = (main_msg.caption or main_msg.text or "").strip()
@@ -101,24 +100,22 @@ def setup_channel_router(db: Database, bot: Bot) -> Router:
         gallery_urls: List[str] = []
         primary_file_id = None
         if not keep_media:
-            # 1-manba: Telegram file_id lar (doimiy, muddati tugamaydi, edit_media bilan ishlaydi)
+            # 1-manba: Telegram file_id lar (doimiy, tezkor, xatosiz tartibda)
             file_ids = extract_all_photo_file_ids(all_messages)
             if file_ids:
                 gallery_urls = [f"/api/photo/{fid}" for fid in file_ids]
+                image_url = gallery_urls[0]
+                primary_file_id = file_ids[0]
             else:
                 # 2-manba: ommaviy kanal CDN rasmlari
                 chan_user = main_msg.chat.username or config.channel_username
                 gallery_urls = await asyncio.to_thread(fetch_channel_embed_photos, chan_user, message_id) if chan_user else []
-
-            if gallery_urls:
-                best_idx = await select_best_index_async(name, description, gallery_urls, bot)
-                image_url = gallery_urls[best_idx]
-                # Tanlangan rasm galereyada birinchi bo'ladi
-                gallery_urls = [image_url] + [g for i, g in enumerate(gallery_urls) if i != best_idx]
-                primary_file_id = photo_input(image_url) if image_url.startswith("/api/photo/") else None
-            else:
-                image_url = "/static/apple_3d_logo.png"
-                gallery_urls = [image_url]
+                if gallery_urls:
+                    image_url = gallery_urls[0]
+                    primary_file_id = None
+                else:
+                    image_url = "/static/apple_3d_logo.png"
+                    gallery_urls = [image_url]
 
         async with _db_write_lock:
             product_id = await db.upsert_product_from_channel(
@@ -164,9 +161,9 @@ def setup_channel_router(db: Database, bot: Bot) -> Router:
                     pass
 
     async def _process_debounced_media_group(mg_id: str):
-        """Albomning barcha 2-4 ta rasmi Telegramdan kelib bo'lgach (1.2s debounce) qayta ishlash"""
+        """Albomning barcha 2-4 ta rasmi Telegramdan kelib bo'lgach (0.4s debounce) tezkor qayta ishlash"""
         try:
-            await asyncio.sleep(1.2)
+            await asyncio.sleep(0.4)
             messages = _media_group_buffers.pop(mg_id, [])
             _media_group_tasks.pop(mg_id, None)
 

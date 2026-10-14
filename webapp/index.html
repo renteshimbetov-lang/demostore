@@ -738,13 +738,28 @@
     </div>
 
 
+    <!-- To'liq ekranda rasm ko'rish (Fullscreen Lightbox Viewer) -->
+    <div id="fullscreenImageViewer" class="fs-image-viewer hidden" aria-modal="true" role="dialog">
+      <div class="fs-viewer-header">
+        <span class="fs-viewer-counter" id="fsViewerCounter">1 / 1</span>
+        <button class="fs-viewer-close-btn" id="fsViewerCloseBtn" aria-label="Yopish">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="fs-viewer-track" id="fsViewerTrack"></div>
+      <div class="fs-viewer-dots" id="fsViewerDots"></div>
+    </div>
+
     <!-- Toast Bildirishnoma -->
     <div id="toast" class="toast">
       <span id="toastMsg"></span>
     </div>
   </div>
 
-  <script src="/static/mini_app_core.js?v=52.0"></script>
-  <script src="/static/app.js?v=52.0"></script>
+  <script src="/static/mini_app_core.js?v=53.0"></script>
+  <script src="/static/app.js?v=53.0"></script>
 </body>
 </html>

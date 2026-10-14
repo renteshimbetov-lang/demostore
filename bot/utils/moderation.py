@@ -63,10 +63,10 @@ def build_moderation_keyboard(prod_id: int, idx: int, total: int) -> InlineKeybo
             InlineKeyboardButton(text="▶️", callback_data=f"chan_photo_{prod_id}_{next_i}"),
         ])
     rows.append([
-        InlineKeyboardButton(text="🟢 Ha, joylash", callback_data=f"chan_approve_{prod_id}"),
-        InlineKeyboardButton(text="🔥 Hafta chegirmaga qo'shish", callback_data=f"chan_discount_{prod_id}"),
+        InlineKeyboardButton(text="🟢 Ha, joylansin", callback_data=f"chan_approve_{prod_id}"),
+        InlineKeyboardButton(text="🔥 Hafta chegirmalariga joylash", callback_data=f"chan_discount_{prod_id}"),
     ])
     rows.append([
-        InlineKeyboardButton(text="🔴 Yo'q", callback_data=f"chan_reject_{prod_id}"),
+        InlineKeyboardButton(text="🔴 Rad etish", callback_data=f"chan_reject_{prod_id}"),
     ])
     return InlineKeyboardMarkup(inline_keyboard=rows)
