@@ -35,37 +35,49 @@ def _get_fallback_image(webapp_dir: str) -> Tuple[bytes, str]:
         "image/png"
     )
 
+_shared_photo_session: Optional[aiohttp.ClientSession] = None
+
+async def _get_photo_session() -> aiohttp.ClientSession:
+    global _shared_photo_session
+    if _shared_photo_session is None or _shared_photo_session.closed:
+        connector = aiohttp.TCPConnector(ssl=False, limit=30, ttl_dns_cache=300)
+        timeout = aiohttp.ClientTimeout(total=15, connect=5)
+        _shared_photo_session = aiohttp.ClientSession(connector=connector, timeout=timeout)
+    return _shared_photo_session
+
 async def _fetch_telegram_photo(file_id: str, bot_token: str) -> Optional[Tuple[bytes, str]]:
-    """Telegram API orqali rasmni xavfsiz yuklab olish"""
+    """Telegram API orqali rasmni xavfsiz va barqaror yuklab olish (qayta urinish bilan)"""
     if not bot_token or not file_id:
         return None
     api_url = f"https://api.telegram.org/bot{bot_token}/getFile?file_id={file_id}"
-    connector = aiohttp.TCPConnector(ssl=False)
-    timeout = aiohttp.ClientTimeout(total=10)
-    try:
-        async with aiohttp.ClientSession(connector=connector, timeout=timeout) as session:
+    
+    for attempt in range(2):
+        try:
+            session = await _get_photo_session()
             async with session.get(api_url) as resp:
                 if resp.status != 200:
-                    return None
+                    continue
                 data = await resp.json()
                 if not data.get("ok"):
-                    return None
+                    continue
                 file_path = data.get("result", {}).get("file_path")
                 if not file_path:
-                    return None
+                    continue
 
             download_url = f"https://api.telegram.org/file/bot{bot_token}/{file_path}"
             async with session.get(download_url) as file_resp:
                 if file_resp.status != 200:
-                    return None
+                    continue
                 img_bytes = await file_resp.read()
                 content_type = file_resp.headers.get("Content-Type", "image/jpeg")
                 if not content_type.startswith("image/"):
                     content_type = "image/jpeg"
                 return img_bytes, content_type
-    except Exception as e:
-        logger.warning(f"Telegram rasm olishda xatolik ({file_id}): {e}")
-        return None
+        except Exception as e:
+            if attempt == 1:
+                logger.warning(f"Telegram rasm olishda xatolik ({file_id}): {e}")
+            await asyncio.sleep(0.3)
+    return None
 
 def create_web_app(db: Database, webapp_dir: str) -> web.Application:
     app = web.Application()
@@ -174,7 +186,7 @@ def create_web_app(db: Database, webapp_dir: str) -> web.Application:
                 return web.Response(
                     body=fb_bytes,
                     content_type=fb_type,
-                    headers={"Cache-Control": "public, max-age=300"}
+                    headers={"Cache-Control": "no-cache, no-store, must-revalidate"}
                 )
 
     async def get_categories(request: web.Request) -> web.Response:

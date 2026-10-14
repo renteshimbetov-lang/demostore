@@ -231,9 +231,18 @@
 
     function addSpec(key, val) {
       if (!key || !val) return;
-      const cleanVal = stripAllEmojis(val);
+      let cleanVal = stripAllEmojis(val).trim();
       if (!cleanVal) return;
-      const cleanKey = stripAllEmojis(key);
+      const cleanKey = stripAllEmojis(key).trim();
+
+      // Agar qiymat boshida kalit so'zi (masalan, "Protsessor: M1", "Ekran: 13.3") takrorlangan bo'lsa, tozalaymiz
+      const keyPrefix = cleanKey.split(/[\s(]/)[0].trim();
+      if (keyPrefix) {
+        cleanVal = cleanVal.replace(new RegExp(`^${keyPrefix}[:\\s-]*`, 'i'), '').trim();
+      }
+      cleanVal = cleanVal.replace(/^(?:protsessor|chip|ekran|display|rangi?|xotira|ram|holat|holati?)[:\\s-]*/i, '').trim();
+
+      if (!cleanVal) return;
       if (seenKeys.has(cleanKey)) return;
       seenKeys.add(cleanKey);
       specs.push({ key: cleanKey, val: cleanVal });
@@ -315,7 +324,7 @@
       }
 
       // 6. Karobka & Hujjatlar
-      if (raw.includes('📦') || lower.includes('box') || lower.includes('karobka')) {
+      if (raw.includes('📦') || raw.includes('🎁') || lower.includes('box') || lower.includes('karobka')) {
         if (lower.includes('nobox') || raw.includes('❌')) {
           addSpec('Karobka & Hujjat', 'Nobox (Karobkasiz)');
         } else {
@@ -336,7 +345,7 @@
       }
 
       // 8. IMEI / Kod / Part number
-      if (raw.includes('📟') || lower.includes('imei') || lower.includes('part number') || lower.includes('seriya')) {
+      if (raw.includes('📟') || raw.includes('🔎') || lower.includes('imei') || lower.includes('part number') || lower.includes('seriya') || /^[a-z]\d{3,5}$/i.test(raw.replace(/^[^\w\d]+/, '').trim())) {
         const val = stripAllEmojis(raw.replace(/^[^\w\d]+/, ''));
         if (val) {
           addSpec('Kod / IMEI', val);
@@ -362,7 +371,9 @@
 
       // 10. Protsessor
       if (lower.includes('protsessor') || lower.includes('chip')) {
-        const val = stripAllEmojis(raw.replace(/^(?:protsessor|chip)[:\s]*/i, '').replace(/^[^\w\d]+/, ''));
+        let val = stripAllEmojis(raw);
+        val = val.replace(/^(?:protsessor|chip)[:\s-]*/i, '').trim();
+        val = val.replace(/^[^\w\d]+/, '').trim();
         if (val) {
           addSpec('Protsessor', val);
           return;
@@ -371,7 +382,9 @@
 
       // 11. Ekran
       if (lower.includes('ekran') || lower.includes('display')) {
-        const val = stripAllEmojis(raw.replace(/^(?:ekran|display)[:\s]*/i, '').replace(/^[^\w\d]+/, ''));
+        let val = stripAllEmojis(raw);
+        val = val.replace(/^(?:ekran|display)[:\s-]*/i, '').trim();
+        val = val.replace(/^[^\w\d]+/, '').trim();
         if (val) {
           addSpec('Ekran', val);
           return;
@@ -1447,14 +1460,22 @@
       renderProfileSection();
     }
 
-    // Skroll holatini boshqarish
+    // Skroll holatini boshqarish: yangi bo'limga (ayniqsa Cart/Savatga) o'tganda TEPADAN boshlansin!
     if (restoreScroll) {
       const targetY = state.savedScroll[tabKey] || 0;
       setTimeout(() => {
         window.scrollTo({ top: targetY, behavior: 'instant' });
+        const mc = document.getElementById('mainContent');
+        if (mc) mc.scrollTop = targetY;
       }, 15);
-    } else if (tabKey === 'product-detail') {
+    } else {
       window.scrollTo({ top: 0, behavior: 'instant' });
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+      const mc = document.getElementById('mainContent');
+      if (mc) mc.scrollTop = 0;
+      const sec = sections[tabKey];
+      if (sec) sec.scrollTop = 0;
     }
   }
 
@@ -1746,6 +1767,12 @@
   }
 
   function renderCartSection() {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    const mc = document.getElementById('mainContent');
+    if (mc) mc.scrollTop = 0;
+
     if (!cartSectionContentEl || !cartSectionEmptyEl) return;
     const items = Object.values(state.cart);
     const totalCount = items.reduce((sum, i) => sum + i.qty, 0);
@@ -2327,6 +2354,21 @@
     updatePdCartButton(inCart);
 
     switchTab('product-detail');
+
+    // Mahsulot ochilganda rasm karuseli har doim 1-rasmdan (1 / N) boshlansin
+    setTimeout(() => {
+      const track = document.getElementById('pdGalleryTrack');
+      const counter = document.getElementById('pdGalleryCounter');
+      const dots = document.querySelectorAll('#pdGalleryDots .dot');
+      if (track) {
+        track.scrollLeft = 0;
+        track.scrollTo({ left: 0, behavior: 'instant' });
+      }
+      if (counter) counter.textContent = '1';
+      if (dots.length > 0) {
+        dots.forEach((d, i) => d.classList.toggle('active', i === 0));
+      }
+    }, 15);
   }
 
   // ==========================================================================

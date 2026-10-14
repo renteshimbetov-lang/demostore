@@ -1486,8 +1486,12 @@ html.light .modal-gallery-wrap {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.35);
+  background: rgba(0, 0, 0, 0.22);
   transition: all 0.25s ease;
+}
+
+html.dark .gallery-dots .dot {
+  background: rgba(255, 255, 255, 0.35);
 }
 
 .gallery-dots .dot.active {
