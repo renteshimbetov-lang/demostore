@@ -147,21 +147,64 @@
     if (el) el.style.display = 'none';
   }
 
-  // Markaziy Bank kursini API orqali olish
-  async function fetchLiveCurrencyRate() {
+  const CURRENCY_CACHE_TTL_MS = 10 * 60 * 1000; // 10 daqiqa (10-15 daqiqalik yengil kesh)
+
+  // Barcha sahifalardagi so'm narxlarini joriy kurs bo'yicha dinamik yangilash
+  function refreshAllUzsPrices() {
+    if (Array.isArray(state.products)) {
+      state.products.forEach(p => {
+        p.current_usd_rate = state.currentUsdRate;
+        p.price_uzs = Math.round((p.price || 0) * state.currentUsdRate);
+      });
+      try {
+        localStorage.setItem('demostore_cached_products', JSON.stringify(state.products));
+      } catch (e) {}
+    }
+
+    // 1. Asosiy va katalog mahsulot kartalarini yangilash
+    if (typeof renderProducts === 'function') renderProducts(true);
+    if (typeof renderCatalogProducts === 'function') renderCatalogProducts();
+    if (typeof renderDiscountsSlider === 'function') renderDiscountsSlider();
+
+    // 2. Savatcha va to'lov summasini yangilash
+    if (typeof renderCartSection === 'function') renderCartSection();
+    if (typeof updateCartBadges === 'function') updateCartBadges();
+
+    // 3. Agar mahsulot tafsilot sahifasi/modal ochiq bo'lsa, undagi so'm narxini yangilash
+    if (state.selectedProduct) {
+      const pdBottomPriceUzsEl = document.getElementById('pdBottomPriceUzs');
+      if (pdBottomPriceUzsEl) {
+        pdBottomPriceUzsEl.textContent = `≈ ${formatPriceUzs(state.selectedProduct.price)}`;
+      }
+      const pdHeroUzsEl = document.querySelector('.pd-hero-uzs');
+      if (pdHeroUzsEl) {
+        pdHeroUzsEl.textContent = `≈ ${formatPriceUzs(state.selectedProduct.price)}`;
+      }
+    }
+  }
+
+  // Markaziy Bank kursini API orqali olish (10 daqiqalik yengil kesh mexanizmi bilan)
+  async function fetchLiveCurrencyRate(force = false) {
     try {
-      const res = await fetch('/api/currency');
+      const lastFetchTime = parseInt(localStorage.getItem('demostore_cached_usd_rate_time') || '0', 10);
+      const now = Date.now();
+      if (!force && lastFetchTime && (now - lastFetchTime) < CURRENCY_CACHE_TTL_MS && state.currentUsdRate > 1000) {
+        return; // Keshdagi kurs 10 daqiqadan oshmagan, ortiqcha so'rov yuborilmaydi
+      }
+
+      const res = await fetch('/api/currency' + (force ? '?force=1' : ''));
       if (res.ok) {
         const data = await res.json();
-        if (data && data.rate) {
+        if (data && data.rate && data.rate > 0) {
+          const oldRate = state.currentUsdRate;
           state.currentUsdRate = data.rate;
+          localStorage.setItem('demostore_cached_usd_rate', String(data.rate));
+          localStorage.setItem('demostore_cached_usd_rate_time', String(now));
           updateLiveUsdBadge(data.rate);
-          // Agar mahsulotlar allaqachon yuklangan bo'lsa, narxlarni qayta render qilish
-          if (state.products && state.products.length > 0) {
-            if (typeof renderProducts === 'function') renderProducts(true);
-            if (typeof renderCatalogProducts === 'function') renderCatalogProducts();
-            if (typeof renderDiscountsSlider === 'function') renderDiscountsSlider();
-            if (typeof renderCartSection === 'function') renderCartSection();
+
+          // Kurs o'zgarsa yoki yangilansa ilovadagi barcha so'm narxlarini qayta hisoblash
+          if (oldRate !== data.rate || (state.products && state.products.length > 0)) {
+            refreshAllUzsPrices();
           }
         }
       }
@@ -2333,12 +2376,16 @@
         state.products = data;
         if (data[0] && data[0].current_usd_rate) {
           state.currentUsdRate = data[0].current_usd_rate;
+          localStorage.setItem('demostore_cached_usd_rate', String(state.currentUsdRate));
+          localStorage.setItem('demostore_cached_usd_rate_time', String(Date.now()));
           updateLiveUsdBadge(data[0].current_usd_rate);
         }
       } else if (data && data.products) {
         state.products = data.products;
         if (data.current_usd_rate) {
           state.currentUsdRate = data.current_usd_rate;
+          localStorage.setItem('demostore_cached_usd_rate', String(state.currentUsdRate));
+          localStorage.setItem('demostore_cached_usd_rate_time', String(Date.now()));
           updateLiveUsdBadge(data.current_usd_rate);
         }
       }
@@ -2348,6 +2395,7 @@
         try {
           localStorage.setItem('demostore_cached_products', JSON.stringify(state.products));
           localStorage.setItem('demostore_cached_usd_rate', String(state.currentUsdRate));
+          localStorage.setItem('demostore_cached_usd_rate_time', String(Date.now()));
         } catch (e) {}
       }
 
@@ -2936,6 +2984,7 @@
 
     // 3. Yangi ma'lumotlarni fonda sokin yangilash (kesh bo'lsa, silent = true)
     loadProducts(hasCache);
+    fetchLiveCurrencyRate();
 
     // 60 soniyalik sokin fon yangilanishi
     setInterval(() => {
@@ -2944,10 +2993,10 @@
       }
     }, 60000);
 
-    // Har 30 daqiqada valyuta kursini sokin yangilab turish
+    // Har 10 daqiqada valyuta kursini sokin yangilab turish (10-15 daqiqalik yengil kesh)
     setInterval(() => {
       fetchLiveCurrencyRate();
-    }, 30 * 60 * 1000);
+    }, 10 * 60 * 1000);
   }
 
   if (document.readyState === 'loading') {

@@ -17,6 +17,7 @@ class Config:
     webapp_url: str
     web_port: int
     usd_rate: int
+    cbu_api_url: str
     channel_id: str
     channel_username: str
     channel_url: str
@@ -41,6 +42,9 @@ def load_config() -> Config:
     webapp_url = os.getenv("WEBAPP_URL", "").strip() or render_external_url or "http://localhost:8080"
     web_port = int(os.getenv("PORT", "8080").strip())
     usd_rate = int(os.getenv("USD_RATE", "12800").strip())
+    cbu_api_url = os.getenv("CBU_API_URL", "https://cbu.uz/oz/arkhiv-kursov-valyut/json/USD/").strip()
+    if not cbu_api_url:
+        cbu_api_url = "https://cbu.uz/oz/arkhiv-kursov-valyut/json/USD/"
     
     channel_id = os.getenv("CHANNEL_ID", "-1004332313799").strip()
     channel_username = os.getenv("CHANNEL_USERNAME", "shbdbdjdhdjjdhd").strip().lstrip("@")
@@ -57,6 +61,7 @@ def load_config() -> Config:
         webapp_url=webapp_url,
         web_port=web_port,
         usd_rate=usd_rate,
+        cbu_api_url=cbu_api_url,
         channel_id=channel_id,
         channel_username=channel_username,
         channel_url=channel_url

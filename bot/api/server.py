@@ -182,12 +182,14 @@ def create_web_app(db: Database, webapp_dir: str) -> web.Application:
         return web.json_response(categories)
 
     async def get_currency(request: web.Request) -> web.Response:
-        from bot.utils.currency import get_cbu_usd_rate, format_rate_compact
-        rate = await get_cbu_usd_rate()
+        from bot.utils.currency import get_cbu_usd_rate, format_rate_compact, CACHE_TTL_SECONDS
+        force = request.query.get("force", "").strip().lower() in ("1", "true")
+        rate = await get_cbu_usd_rate(force_refresh=force)
         return web.json_response({
             "rate": rate,
             "currency": "USD",
-            "formatted": format_rate_compact(rate)
+            "formatted": format_rate_compact(rate),
+            "cache_ttl_seconds": CACHE_TTL_SECONDS
         })
 
     async def get_products(request: web.Request) -> web.Response:

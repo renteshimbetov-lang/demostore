@@ -469,7 +469,10 @@ def setup_admin_router(db: Database, bot: Bot) -> Router:
             primary_fid = None
             ordered_fids = []
 
-        price_uzs = format_price(price * config.usd_rate)
+        from bot.utils.currency import get_cbu_usd_rate, convert_usd_to_uzs, format_uzs_currency
+        curr_rate = await get_cbu_usd_rate()
+        uzs_val = convert_usd_to_uzs(price, curr_rate)
+        price_uzs = format_uzs_currency(uzs_val)
         await state.update_data(
             name=name,
             description=description,

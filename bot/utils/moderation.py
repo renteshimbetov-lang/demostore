@@ -4,6 +4,7 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from bot.config import config
 from bot.utils.helpers import format_price
+from bot.utils.currency import convert_usd_to_uzs, format_uzs_currency
 
 
 def parse_gallery(prod: Dict[str, Any]) -> List[str]:
@@ -32,7 +33,8 @@ def photo_input(ref: str) -> Optional[str]:
 
 def build_moderation_caption(prod: Dict[str, Any], idx: int, total: int) -> str:
     price = prod.get("price") or 0
-    price_uzs = format_price(price * config.usd_rate).replace("$", "")
+    uzs_amount = convert_usd_to_uzs(price)
+    price_uzs = format_uzs_currency(uzs_amount)
     post_url = prod.get("post_url") or ""
     photo_line = (
         f"🖼 <b>Mini ilovadagi asosiy rasm:</b> {idx + 1}-rasm ({total} tadan)\n"
@@ -42,7 +44,7 @@ def build_moderation_caption(prod: Dict[str, Any], idx: int, total: int) -> str:
         f"🔔 <b>KANALDAN YANGI POST QABUL QILINDI!</b>\n"
         f"━━━━━━━━━━━━━━━━━━━━━━\n"
         f"📱 <b>Model:</b> {prod.get('name', '')}\n"
-        f"💵 <b>Narxi:</b> ${price} (≈ {price_uzs} so'm)\n"
+        f"💵 <b>Narxi:</b> ${price} (≈ {price_uzs})\n"
         f"🔗 <b>Kanal posti:</b> <a href=\"{post_url}\">Postni ko'rish</a>\n"
         f"{photo_line}"
         f"━━━━━━━━━━━━━━━━━━━━━━\n"
