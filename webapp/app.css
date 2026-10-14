@@ -2726,119 +2726,104 @@ html.light .btn-channel-pd {
   animation: checkmarkPop 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
 
-/* Tugmaning "Buyurtmaga" faol holati — "Sotib olish" bosilganda o'zidan yorqin nur taratadi */
+/* Tugmaning "Buyurtmaga" holati — Asl qora Apple dizaynida (shaffof qora fon, oq yozuv, yarqirab turuvchi nur to'lqini bilan) */
 .btn-buy.btn-goto-order,
 .pd-add-btn.btn-goto-order,
 .deal-cart-btn.btn-goto-order {
   position: relative !important;
-  overflow: visible !important;
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
-  border: 1px solid #059669 !important;
+  overflow: hidden !important;
+  background: rgba(9, 9, 11, 0.94) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.22) !important;
   color: #ffffff !important;
-  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.15) !important;
   cursor: pointer !important;
   pointer-events: auto !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
   gap: 6px !important;
-  animation: gotoOrderPulse 0.55s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  transform: none !important;
+  animation: none !important; /* Sakrashi shart emas — turg'un va tekis */
 }
 
 .btn-buy.btn-goto-order:active,
 .pd-add-btn.btn-goto-order:active,
 .deal-cart-btn.btn-goto-order:active {
-  transform: scale(0.95) !important;
-  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.22) !important;
+  transform: scale(0.96) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25) !important;
   transition: transform 0.08s cubic-bezier(0.2, 0, 0, 1) !important;
 }
 
-/* Sakragan paytda tugma ichidagi savat/ptichka ikonkasi o'zidan nur taratib sakrashi */
+/* Tugma ichidagi oq belgilar (sakramaydi) */
 .btn-buy.btn-goto-order svg,
 .pd-add-btn.btn-goto-order svg,
 .deal-cart-btn.btn-goto-order svg {
   stroke: #ffffff !important;
   color: #ffffff !important;
-  animation: buttonCartIconJumpGlow 0.55s cubic-bezier(0.25, 1.4, 0.5, 1) forwards;
+  animation: none !important;
+  transform: none !important;
+  filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.5));
 }
 
-@keyframes buttonCartIconJumpGlow {
+/* Buyurtmaga so'zi ham mayin nur taratib yarqirab turishi */
+.btn-buy.btn-goto-order span,
+.pd-add-btn.btn-goto-order #pdBtnText,
+.deal-cart-btn.btn-goto-order span,
+.btn-order-text {
+  color: #ffffff !important;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.45);
+  animation: orderTextGleam 2.2s ease-in-out infinite alternate;
+}
+
+@keyframes orderTextGleam {
   0% {
-    transform: scale(0.8) translateY(0);
-    filter: drop-shadow(0 0 0 rgba(255, 255, 255, 0));
-  }
-  35% {
-    transform: scale(1.35) translateY(-3px);
-    filter: drop-shadow(0 0 6px #ffffff) drop-shadow(0 0 12px rgba(255, 255, 255, 0.95)) drop-shadow(0 0 20px rgba(16, 185, 129, 0.9));
-  }
-  70% {
-    transform: scale(0.95) translateY(1px);
-    filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.6));
+    text-shadow: 0 0 3px rgba(255, 255, 255, 0.25);
+    opacity: 0.94;
   }
   100% {
-    transform: scale(1) translateY(0);
-    filter: drop-shadow(0 0 0 rgba(255, 255, 255, 0));
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.95), 0 0 18px rgba(255, 255, 255, 0.45);
+    opacity: 1;
   }
 }
 
-/* Sakrash paytida tugmadan tashqariga taraladigan nur (Radiant Light Burst) */
+/* Tugma yuzasidan mayin o'tib turuvchi nur to'lqini (Liquid Sheen Sweep) */
 .btn-buy.btn-goto-order::before,
 .pd-add-btn.btn-goto-order::before,
 .deal-cart-btn.btn-goto-order::before {
   content: '';
   position: absolute;
-  inset: -4px;
-  border-radius: inherit;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.95) 0%, rgba(16, 185, 129, 0.8) 40%, rgba(245, 158, 11, 0.5) 60%, rgba(16, 185, 129, 0) 80%);
-  opacity: 0;
+  top: -50%;
+  left: -120%;
+  width: 60%;
+  height: 200%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.05) 20%,
+    rgba(255, 255, 255, 0.35) 50%,
+    rgba(255, 255, 255, 0.05) 80%,
+    transparent 100%
+  );
+  transform: rotate(25deg);
+  animation: orderSheenPass 2.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
   pointer-events: none;
-  animation: buttonRadiantBurst 0.65s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
-  z-index: -1;
+  z-index: 1;
 }
 
-@keyframes buttonRadiantBurst {
+@keyframes orderSheenPass {
   0% {
-    opacity: 0;
-    transform: scale(0.85);
-    filter: blur(1px);
+    left: -120%;
   }
-  30% {
-    opacity: 1;
-    transform: scale(1.15);
-    filter: blur(3px);
-  }
-  70% {
-    opacity: 0.6;
-    transform: scale(1.3);
-    filter: blur(6px);
-  }
-  100% {
-    opacity: 0;
-    transform: scale(1.45);
-    filter: blur(10px);
+  45%, 100% {
+    left: 170%;
   }
 }
 
-@keyframes gotoOrderPulse {
-  0% {
-    transform: scale(0.92);
-    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.8);
-  }
-  35% {
-    transform: scale(1.06);
-    box-shadow: 0 0 25px 6px rgba(16, 185, 129, 0.9), 0 0 40px 10px rgba(245, 158, 11, 0.6), 0 0 55px 15px rgba(255, 255, 255, 0.7);
-  }
-  70% {
-    transform: scale(0.98);
-    box-shadow: 0 0 15px 3px rgba(16, 185, 129, 0.5);
-  }
-  100% {
-    transform: scale(1);
-    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
-  }
-}
-
-/* Tugmaning "Qo'shildi" yashil holati */
+/* Tugmaning "Qo'shildi" yashil holati (bosilgandagi bosqich) */
 .btn-buy.is-success,
 .pd-add-btn.is-success,
 .deal-cart-btn.is-success {
@@ -2846,6 +2831,12 @@ html.light .btn-channel-pd {
   border: 1.5px solid #10b981 !important;
   color: #10b981 !important;
   box-shadow: 0 4px 18px rgba(16, 185, 129, 0.3) !important;
+}
+.btn-buy.is-success svg,
+.pd-add-btn.is-success svg,
+.deal-cart-btn.is-success svg {
+  stroke: #10b981 !important;
+  color: #10b981 !important;
 }
 
 /* 3. TEPADAGI SAVAT (HEADER CART) MUTLAQO QIMIRLAMAYDI — 100% STATIK VA HARAKATSIZ */
@@ -2859,27 +2850,27 @@ html.light .btn-channel-pd {
   transition: transform 0.08s cubic-bezier(0.2, 0, 0, 1) !important;
 }
 
-/* Pastki Dockdagi savatning o'zi elastik sakraydi va sakragan paytda o'zidan nur taratadi */
+/* Pastki Dockdagi savatning o'zi elastik sakraydi va sakragan paytda o'zidan yorqin sariq/oltin nur taratadi (Yashil rangsiz!) */
 @keyframes mobileCartSpringJump {
   0% {
     transform: scale(1) translateY(0);
-    filter: drop-shadow(0 0 0 rgba(16, 185, 129, 0));
+    filter: drop-shadow(0 0 0 rgba(245, 158, 11, 0));
   }
   25% {
     transform: scale(1.18, 0.86) translateY(2px);
-    filter: drop-shadow(0 0 10px rgba(16, 185, 129, 0.8)) drop-shadow(0 0 20px rgba(245, 158, 11, 0.5));
+    filter: drop-shadow(0 0 10px rgba(251, 191, 36, 0.95)) drop-shadow(0 0 20px rgba(245, 158, 11, 0.75));
   }
   50% {
     transform: scale(0.92, 1.22) translateY(-10px);
-    filter: drop-shadow(0 0 16px rgba(16, 185, 129, 1)) drop-shadow(0 0 30px rgba(245, 158, 11, 0.85)) drop-shadow(0 0 45px rgba(255, 255, 255, 0.9));
+    filter: drop-shadow(0 0 18px rgba(255, 235, 130, 1)) drop-shadow(0 0 32px rgba(245, 158, 11, 0.95)) drop-shadow(0 0 46px rgba(251, 191, 36, 0.85));
   }
   75% {
     transform: scale(1.08, 0.94) translateY(0);
-    filter: drop-shadow(0 0 10px rgba(16, 185, 129, 0.6));
+    filter: drop-shadow(0 0 12px rgba(251, 191, 36, 0.7));
   }
   100% {
     transform: scale(1) translateY(0);
-    filter: drop-shadow(0 0 0 rgba(16, 185, 129, 0));
+    filter: drop-shadow(0 0 0 rgba(245, 158, 11, 0));
   }
 }
 
@@ -2890,7 +2881,7 @@ html.light .btn-channel-pd {
   will-change: transform, filter !important;
 }
 
-/* Sakragan vaqtida savat atrofida aylanma yorqin nur to'lqini (Radiant Glow Aura) */
+/* Sakragan vaqtida savat atrofida aylanma yorqin sariq/oltin nur to'lqini (Radiant Yellow Halo) */
 .bottom-cart-jump-anim::after {
   content: '';
   position: absolute;
@@ -2900,7 +2891,7 @@ html.light .btn-channel-pd {
   height: 28px;
   border-radius: 50%;
   transform: translate(-50%, -50%) scale(0.4);
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.95) 0%, rgba(16, 185, 129, 0.85) 35%, rgba(245, 158, 11, 0.6) 60%, rgba(16, 185, 129, 0) 80%);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.98) 0%, rgba(254, 240, 138, 0.9) 32%, rgba(245, 158, 11, 0.7) 62%, rgba(245, 158, 11, 0) 82%);
   animation: cartRadiantHalo 0.65s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
   pointer-events: none;
   z-index: 0;
@@ -2917,12 +2908,12 @@ html.light .btn-channel-pd {
     filter: blur(1px);
   }
   50% {
-    transform: translate(-50%, -50%) scale(2.2);
-    opacity: 0.9;
+    transform: translate(-50%, -50%) scale(2.3);
+    opacity: 0.95;
     filter: blur(3px);
   }
   100% {
-    transform: translate(-50%, -50%) scale(3.2);
+    transform: translate(-50%, -50%) scale(3.4);
     opacity: 0;
     filter: blur(6px);
   }

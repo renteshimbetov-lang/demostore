@@ -961,13 +961,14 @@
 
   function updatePdCartButton(inCart) {
     if (!pdAddToCartBtnEl) return;
+    if (pdAddToCartBtnEl.dataset.animating === 'true') return;
     if (inCart) {
       pdAddToCartBtnEl.classList.add('btn-goto-order');
       pdAddToCartBtnEl.innerHTML = `
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="20 6 9 17 4 12"></polyline>
         </svg>
-        <span id="pdBtnText">${t('go_to_order')}</span>
+        <span id="pdBtnText" class="btn-order-text">${t('go_to_order')}</span>
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="m9 18 6-6-6-6"/>
         </svg>
@@ -983,13 +984,14 @@
 
   function syncAllProductButtons() {
     document.querySelectorAll('.btn-add-cart[data-id]').forEach(btn => {
+      if (btn.dataset.animating === 'true') return;
       const pid = parseInt(btn.dataset.id, 10);
       const inCart = Boolean(state.cart && state.cart[pid]);
       if (inCart) {
         btn.classList.add('btn-goto-order');
         btn.innerHTML = `
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-          <span>${t('go_to_order')}</span>
+          <span class="btn-order-text">${t('go_to_order')}</span>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
         `;
       } else {
@@ -1002,6 +1004,7 @@
     });
 
     document.querySelectorAll('.deal-cart-btn[data-id]').forEach(btn => {
+      if (btn.dataset.animating === 'true') return;
       const pid = parseInt(btn.dataset.id, 10);
       const inCart = Boolean(state.cart && state.cart[pid]);
       if (inCart) {
@@ -1010,7 +1013,7 @@
           <span class="deal-cart-icon">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
           </span>
-          <span>${t('go_to_order')}</span>
+          <span class="btn-order-text">${t('go_to_order')}</span>
         `;
       } else {
         btn.classList.remove('btn-goto-order');
@@ -1023,7 +1026,7 @@
       }
     });
 
-    if (state.selectedProduct && pdAddToCartBtnEl) {
+    if (state.selectedProduct && pdAddToCartBtnEl && pdAddToCartBtnEl.dataset.animating !== 'true') {
       updatePdCartButton(Boolean(state.cart && state.cart[state.selectedProduct.id]));
     }
   }
@@ -1364,15 +1367,79 @@
   });
 
   // Klaviatura Escape tugmasi
-  document.addEventListener('keydown', (e) => {
+  // ==========================================================================
+  // UNIVERSAL EDGE EXIT & SWIPE-TO-BACK (Barcha qurilmalar uchun: iPhone, Android, MacBook Trackpad)
+  // ==========================================================================
+
+  // 1. Klaviatura va sichqoncha qo'shimcha tugmalari
+  window.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
+      goBack();
+      return;
+    }
+    const tag = document.activeElement?.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+
+    // Mac Cmd+[ yoki Windows/Linux Alt+LeftArrow
+    if ((e.metaKey && e.key === '[') || (e.altKey && e.key === 'ArrowLeft')) {
+      e.preventDefault();
       goBack();
     }
   });
 
-  // ==========================================================================
-  // IPHONE SWIPE-TO-BACK GESTURE (Chap chetdan o'ngga surish orqali orqaga qaytish)
-  // ==========================================================================
+  window.addEventListener('mouseup', (e) => {
+    // Sichqonchaning "Orqaga" (Back - button 3) tugmasi
+    if (e.button === 3) {
+      e.preventDefault();
+      goBack();
+    }
+  });
+
+  // 2. MacBook Trackpad (2 barmoq bilan o'ngga surish orqali orqaga qaytish)
+  let macTrackpadDeltaX = 0;
+  let macTrackpadTimer = null;
+  let isTrackpadNavigating = false;
+
+  window.addEventListener('wheel', (e) => {
+    if (Math.abs(e.deltaX) < 12) return;
+
+    // Gorizontal skroll bo'ladigan ichki elementlarni tekshirish (masalan: toifalar, slaydlar)
+    let el = e.target;
+    while (el && el !== document.body && el !== document.documentElement) {
+      if (el.scrollWidth > el.clientWidth + 6) {
+        const style = window.getComputedStyle(el);
+        if (style.overflowX === 'auto' || style.overflowX === 'scroll') {
+          // Agar element o'ngroqda turgan bo'lsa va chapga skroll qilayotgan bo'lsa, elementning o'zini suramiz
+          if (el.scrollLeft > 6 && e.deltaX < 0) {
+            return;
+          }
+        }
+      }
+      el = el.parentElement;
+    }
+
+    // Ikki barmoq bilan chapdan o'ngga surish (e.deltaX < 0)
+    if (e.deltaX < -15 && Math.abs(e.deltaX) > Math.abs(e.deltaY) * 1.15) {
+      macTrackpadDeltaX += Math.abs(e.deltaX);
+      clearTimeout(macTrackpadTimer);
+      macTrackpadTimer = setTimeout(() => {
+        macTrackpadDeltaX = 0;
+      }, 260);
+
+      if (macTrackpadDeltaX >= 55 && !isTrackpadNavigating) {
+        macTrackpadDeltaX = 0;
+        isTrackpadNavigating = true;
+        goBack();
+        setTimeout(() => {
+          isTrackpadNavigating = false;
+        }, 450);
+      }
+    } else if (e.deltaX > 0) {
+      macTrackpadDeltaX = 0;
+    }
+  }, { passive: true });
+
+  // 3. Sensor ekranlar (iPhone, iPad, Android) chetidan surish (Touch Edge-Swipe)
   let touchStartX = 0;
   let touchStartY = 0;
   let touchStartTime = 0;
@@ -1386,8 +1453,12 @@
     touchStartTime = Date.now();
     isEdgeSwipeGesture = false;
 
-    // Barmoq ekranning chap chekkasida (<= 75px) boshlansa:
-    if (touchStartX <= 75) {
+    // Chetdan boshlanish chegarasi:
+    // Mahsulot batafsil yoki ochiq menyuda kengroq (ekranning 35% gacha), odatiy holatda chap chekka (<= 95px)
+    const isModalOrDetail = state.currentTab === 'product-detail' || isAnyDrawerOpen();
+    const edgeLimit = isModalOrDetail ? Math.min(window.innerWidth * 0.35, 140) : 95;
+
+    if (touchStartX <= edgeLimit) {
       isEdgeSwipeGesture = true;
     }
   }, { passive: true });
@@ -1398,8 +1469,8 @@
     const diffX = touch.clientX - touchStartX;
     const diffY = Math.abs(touch.clientY - touchStartY);
 
-    // Agar vertikal skroll ustun bo'lsa (diffY > 25 va diffY > diffX), jestni bekor qilamiz
-    if (diffY > 25 && diffY > diffX) {
+    // Agar vertikal skroll ustun bo'lsa, jestni to'xtatamiz
+    if (diffY > 28 && diffY > diffX * 1.15) {
       isEdgeSwipeGesture = false;
     }
   }, { passive: true });
@@ -1413,8 +1484,8 @@
 
     isEdgeSwipeGesture = false;
 
-    // Gorizontal o'ngga surish: kamida 40px o'ngga surilsa va 700ms ichida bo'lsa
-    if (diffX >= 40 && diffX > diffY * 1.05 && elapsed < 700) {
+    // Kamida 42px o'ngga surilsa va gorizontal harakat bo'lsa
+    if (diffX >= 42 && diffX > diffY * 1.05 && elapsed < 650) {
       goBack();
     }
   }, { passive: true });
@@ -1447,53 +1518,74 @@
     }
   }
 
-  // 2. Savatga qo'shish tugmasining "Buyurtmaga" holatiga jonli o'tish animatsiyasi
+  // 2. Savatga qo'shish tugmasining "Buyurtmaga" holatiga jonli ko'p bosqichli o'tish animatsiyasi
   function animateCartButton(btn) {
     if (!btn) return;
     btn.dataset.animating = 'true';
-    btn.classList.add('btn-goto-order');
 
-    // Tugma ichini darhol "Buyurtmaga" matni va belgilari bilan to'ldirish
-    if (btn.classList.contains('pd-add-btn')) {
+    // 1-bosqich: Aylanuvchi yuklanish spinneri (Spinner + "Qo'shilmoqda...")
+    btn.classList.remove('is-success', 'btn-goto-order');
+    const addingText = t('adding') || "Qo'shilmoqda...";
+    btn.innerHTML = `<span class="btn-spinner"></span><span>${addingText}</span>`;
+
+    // Mayin bosilish hissi
+    btn.style.transform = 'scale(0.96)';
+    btn.style.transition = 'transform 0.08s cubic-bezier(0.2, 0, 0, 1)';
+    setTimeout(() => {
+      btn.style.transform = 'scale(1)';
+      btn.style.transition = 'transform 0.2s cubic-bezier(0.25, 1.4, 0.5, 1)';
+    }, 80);
+
+    // 2-bosqich: 280ms o'tgach, Yashil ptichka sakrashi (Checkmark Pop + "Qo'shildi!")
+    // Aynan shu lahzada pastki dockdagi savatcha ham yorqin sariq/oltin nur sochib sakraydi!
+    setTimeout(() => {
+      btn.classList.add('is-success');
+      const addedText = t('added') || "Qo'shildi!";
       btn.innerHTML = `
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <svg class="checkmark-pop-anim" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="20 6 9 17 4 12"></polyline>
         </svg>
-        <span id="pdBtnText">${t('go_to_order')}</span>
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="m9 18 6-6-6-6"/>
-        </svg>
+        <span>${addedText}</span>
       `;
-    } else if (btn.classList.contains('deal-cart-btn')) {
-      btn.innerHTML = `
-        <span class="deal-cart-icon">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-        </span>
-        <span>${t('go_to_order')}</span>
-      `;
-    } else {
-      btn.innerHTML = `
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-        <span>${t('go_to_order')}</span>
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
-      `;
-    }
+      triggerHaptic('success');
+      triggerCartJump(); // Savatcha sariq nur bilan sakraydi!
 
-    // Mayin tactile bosilish va elastik sakrash (Apple Spring bounce)
-    btn.style.transform = 'scale(0.95)';
-    btn.style.transition = 'transform 0.08s cubic-bezier(0.2, 0, 0, 1)';
-
-    setTimeout(() => {
-      btn.style.transform = 'scale(1.04)';
-      btn.style.transition = 'transform 0.22s cubic-bezier(0.25, 1.4, 0.5, 1)';
+      // 3-bosqich: "Qo'shildi!" dan so'ng (650ms o'tgach), tugma shaffof qora Apple dizaynidagi "Buyurtmaga" holatiga o'tadi
       setTimeout(() => {
+        btn.classList.remove('is-success');
+        btn.classList.add('btn-goto-order');
+
+        if (btn.classList.contains('pd-add-btn')) {
+          btn.innerHTML = `
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            <span id="pdBtnText" class="btn-order-text">${t('go_to_order')}</span>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m9 18 6-6-6-6"/>
+            </svg>
+          `;
+        } else if (btn.classList.contains('deal-cart-btn')) {
+          btn.innerHTML = `
+            <span class="deal-cart-icon">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            </span>
+            <span class="btn-order-text">${t('go_to_order')}</span>
+          `;
+        } else {
+          btn.innerHTML = `
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <span class="btn-order-text">${t('go_to_order')}</span>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          `;
+        }
+
         btn.style.transform = '';
         btn.style.transition = '';
         btn.dataset.animating = 'false';
-      }, 180);
-    }, 60);
-
-    triggerHaptic('success');
+        syncAllProductButtons();
+      }, 650);
+    }, 280);
   }
 
   // 3. Telegram kanaldagi postni ochish funksiyasi
@@ -1527,11 +1619,12 @@
     }
     saveCart();
 
-    // A) Tugmani "Buyurtmaga" holatiga jonlantirish
-    if (btn) animateCartButton(btn);
-
-    // B) Bosilishi bilan bir vaqtda savat va nishon darhol elastik sakraydi (uchuvchi rasmsiz)
-    triggerCartJump();
+    // A) Tugmani ko'p bosqichli jonlantirish (Spinner -> Yashil Qo'shildi! + Savat sakrashi -> Shaffof qora Buyurtmaga)
+    if (btn) {
+      animateCartButton(btn);
+    } else {
+      triggerCartJump();
+    }
   }
 
   // ==========================================================================
