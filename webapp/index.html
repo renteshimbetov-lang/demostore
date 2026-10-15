@@ -19,7 +19,7 @@
   </noscript>
   
   <link rel="stylesheet" href="/static/mini_app_buttons.css?v=50.0" />
-  <link rel="stylesheet" href="/static/app.css?v=62.0" />
+  <link rel="stylesheet" href="/static/app.css?v=63.0" />
 </head>
 <body>
   <!-- To'liq ekranli Parda (Curtain Reveal) Kirish Animatsiyasi -->
@@ -178,19 +178,6 @@
           </svg>
         </button>
       </div>
-
-      <!-- Qidiruv valyutasi & Tezkor filtr bar (USD / SO'M) -->
-      <div class="search-currency-bar" id="searchCurrencyBar">
-        <button type="button" class="search-curr-pill active" data-curr="ALL">
-          <span>Barchasi</span>
-        </button>
-        <button type="button" class="search-curr-pill" data-curr="USD">
-          <span>USD ($)</span>
-        </button>
-        <button type="button" class="search-curr-pill" data-curr="UZS">
-          <span>SOʻM</span>
-        </button>
-      </div>
     </header>
 
     <!-- Asosiy Kontent (Haqiqiy Bo'limlar Tizimi) -->
@@ -271,19 +258,6 @@
             <button id="resetFiltersBtn" class="btn-buy" style="margin-top: 14px; width: auto; padding: 10px 24px;">
               Filtrlarni tozalash
             </button>
-
-            <!-- Tavsiya etilgan qidiruvlar (Suggestions) -->
-            <div class="empty-suggestions">
-              <span class="empty-suggestions-title">Tavsiya etilgan qidiruvlar:</span>
-              <div class="empty-suggestions-chips" id="emptySuggestionsChips">
-                <button type="button" class="suggestion-chip" data-search="MacBook">MacBook</button>
-                <button type="button" class="suggestion-chip" data-search="iPhone">iPhone</button>
-                <button type="button" class="suggestion-chip" data-search="Watch">Apple Watch</button>
-                <button type="button" class="suggestion-chip" data-search="AirPods">AirPods</button>
-                <button type="button" class="suggestion-chip" data-search="500$">$500 gacha</button>
-                <button type="button" class="suggestion-chip" data-search="6 mln">6 mln soʻm gacha</button>
-              </div>
-            </div>
           </div>
         </div>
       </section>
@@ -307,32 +281,24 @@
           <button class="category-pill" data-category="5" data-i18n="cat_accessories">Aksessuarlar</button>
         </div>
 
-        <!-- Katalogda narx bo'yicha qidirish (So'm dan - So'm gacha) -->
+        <!-- Katalogda narx bo'yicha qidirish ($ Dan - $ Gacha) -->
         <div class="catalog-price-filter-card" id="catalogPriceFilterCard">
           <div class="cpf-header">
-            <span class="cpf-title">Narx boʻyicha qidirish (soʻmda)</span>
+            <span class="cpf-title">Narx boʻyicha qidirish ($)</span>
             <button type="button" class="cpf-reset-btn hidden" id="btnCatalogResetPrice">Tozalash</button>
           </div>
           <div class="cpf-inputs-row">
             <div class="cpf-input-group">
               <span class="cpf-input-prefix">Dan</span>
               <input type="number" id="catalogPriceMin" class="cpf-input" placeholder="0" inputmode="numeric" />
-              <span class="cpf-input-suffix">soʻm</span>
+              <span class="cpf-input-suffix">$</span>
             </div>
             <span class="cpf-divider">—</span>
             <div class="cpf-input-group">
               <span class="cpf-input-prefix">Gacha</span>
-              <input type="number" id="catalogPriceMax" class="cpf-input" placeholder="Masalan: 15 000 000" inputmode="numeric" />
-              <span class="cpf-input-suffix">soʻm</span>
+              <input type="number" id="catalogPriceMax" class="cpf-input" placeholder="1500" inputmode="numeric" />
+              <span class="cpf-input-suffix">$</span>
             </div>
-          </div>
-          <!-- Tezkor so'm oraliq chiplari -->
-          <div class="cpf-quick-chips" id="catalogQuickChips">
-            <button type="button" class="cpf-chip active" data-min="" data-max="">Barchasi</button>
-            <button type="button" class="cpf-chip" data-min="" data-max="6000000">&lt; 6 mln</button>
-            <button type="button" class="cpf-chip" data-min="6000000" data-max="12000000">6 — 12 mln</button>
-            <button type="button" class="cpf-chip" data-min="12000000" data-max="20000000">12 — 20 mln</button>
-            <button type="button" class="cpf-chip" data-min="20000000" data-max="">&gt; 20 mln</button>
           </div>
         </div>
 
@@ -815,6 +781,6 @@
   </div>
 
   <script src="/static/mini_app_core.js?v=60.0"></script>
-  <script src="/static/app.js?v=62.0"></script>
+  <script src="/static/app.js?v=63.0"></script>
 </body>
 </html>
