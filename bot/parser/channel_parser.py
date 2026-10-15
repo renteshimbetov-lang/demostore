@@ -2,8 +2,21 @@ import re
 import time
 from typing import Optional, Tuple, Dict
 
-# USD kursi (agar so'mda kiritilsa, dollarga aylantirish uchun)
-DEFAULT_USD_RATE = 12800
+# USD kursi zaxirasi
+DEFAULT_USD_RATE = 12850.0
+
+def get_effective_usd_rate(provided_rate: Optional[float] = None) -> float:
+    """Haqiqiy jonli Markaziy Bank kursini olish (fallback zaxirasi bilan)"""
+    if provided_rate and provided_rate > 0:
+        return float(provided_rate)
+    try:
+        from bot.utils.currency import get_current_usd_rate_sync
+        rate = get_current_usd_rate_sync()
+        if rate and rate > 0:
+            return float(rate)
+    except Exception:
+        pass
+    return DEFAULT_USD_RATE
 
 # Media group (albom) larni qayta ishlash keshi (media_group_id -> timestamp)
 _processed_media_groups: Dict[str, float] = {}
@@ -29,17 +42,19 @@ def normalize_keycaps_and_currency(text: str) -> str:
         
     return res
 
-def parse_price(text: str, usd_rate: int = DEFAULT_USD_RATE) -> Optional[int]:
+def parse_price(text: str, usd_rate: Optional[float] = None) -> Optional[int]:
     """
     Kanal postidagi narxni har doim AQSH dollari ($) da aniqlaydi:
     - 6️⃣3️⃣9️⃣💲 -> 639
     - $879 -> 879
     - 579$ -> 579
     - 150 usd -> 150
+    - 299 000 so'm -> joriy CBU kursi bo'yicha $25
     """
     if not text:
         return None
 
+    rate = get_effective_usd_rate(usd_rate)
     normalized = normalize_keycaps_and_currency(text)
     normalized = re.sub(r"['’ʻʼ`]", "'", normalized.lower())
 
@@ -72,7 +87,7 @@ def parse_price(text: str, usd_rate: int = DEFAULT_USD_RATE) -> Optional[int]:
             if cleaned.isdigit():
                 val = int(cleaned)
                 if val >= 1000:
-                    return round(val / usd_rate)
+                    return max(1, round(val / rate))
 
     # 3. 'k' formatlari (masalan: 1.2k$ yoki 650k)
     k_pattern = r"(\d+(?:[.,]\d+)?)\s*k(?:\$|\s*\$|\b)"
@@ -84,7 +99,7 @@ def parse_price(text: str, usd_rate: int = DEFAULT_USD_RATE) -> Optional[int]:
             if val_float < 100: # Masalan 1.2k$ -> 1200$
                 return int(val_float * 1000)
             elif val_float >= 100: # 650k so'm -> dollarga
-                return round((val_float * 1000) / usd_rate)
+                return max(1, round((val_float * 1000) / rate))
         except ValueError:
             pass
 
@@ -95,7 +110,7 @@ def parse_price(text: str, usd_rate: int = DEFAULT_USD_RATE) -> Optional[int]:
         if cleaned.isdigit():
             val = int(cleaned)
             if val >= 10000:
-                return round(val / usd_rate)
+                return max(1, round(val / rate))
             elif val > 0:
                 return val
 
@@ -122,9 +137,9 @@ def clean_title_text(raw_line: str, full_text: str = "") -> str:
     cleaned = re.sub(r"\s+", " ", cleaned).strip()
     return cleaned if cleaned else "Mahsulot"
 
-def parse_channel_post_content(raw_text: str) -> Tuple[str, str, int]:
+def parse_channel_post_content(raw_text: str, usd_rate: Optional[float] = None) -> Tuple[str, str, int]:
     text = (raw_text or "").strip()
-    price = parse_price(text) or 0
+    price = parse_price(text, usd_rate=usd_rate) or 0
 
     lines = [line.strip() for line in text.split("\n") if line.strip()]
     if not lines:

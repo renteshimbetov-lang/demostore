@@ -90,7 +90,9 @@ def setup_channel_router(db: Database, bot: Bot) -> Router:
             logger.info(f"Post #{message_id} sotildi deb belgilandi va nofaol qilindi.")
             return
 
-        name, description, price = parse_channel_post_content(raw_text)
+        from bot.utils.currency import get_cbu_usd_rate
+        live_rate = await get_cbu_usd_rate()
+        name, description, price = parse_channel_post_content(raw_text, usd_rate=live_rate)
         existing = await db.get_product_by_channel_post(channel_id, message_id)
 
         # Tahrirlangan postda Telegram faqat bitta xabarni yuboradi —
