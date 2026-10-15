@@ -247,7 +247,11 @@ def create_web_app(db: Database, webapp_dir: str) -> web.Application:
                 p["gallery_images"] = [p["image_url"]]
 
             p["current_usd_rate"] = current_rate
-            p["price_uzs"] = convert_usd_to_uzs(p.get("price", 0), current_rate)
+            if p.get("currency") == "UZS" and p.get("price_uzs"):
+                p["price_uzs"] = int(p["price_uzs"])
+            else:
+                p["currency"] = p.get("currency") or "USD"
+                p["price_uzs"] = convert_usd_to_uzs(p.get("price", 0), current_rate)
 
         return web.json_response({
             "products": products,

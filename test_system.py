@@ -30,10 +30,16 @@ async def run_full_tests():
         print(f"  [OK] '{raw}' => ${parsed}")
 
     print("\n--- 2. Kanal post matnini tahlil qilish (Parser) ---")
-    name, desc, price = parse_channel_post_content("MacBook Air M3\nJuda yaxshi holatda\nNarxi: 1200$")
+    name, desc, price, currency, price_uzs = parse_channel_post_content("MacBook Air M3\nJuda yaxshi holatda\nNarxi: 1200$")
     assert "MacBook" in name
     assert price == 1200
+    assert currency == "USD"
     print(f"  [OK] Post tahlili muvaffaqiyatli: {name}, ${price}")
+
+    name2, desc2, price2, curr2, uzs2 = parse_channel_post_content("Apple TYPE-C Adapter\n299 000 so'm")
+    assert curr2 == "UZS"
+    assert uzs2 == 299000
+    print(f"  [OK] So'mda post tahlili muvaffaqiyatli: {name2}, {uzs2} so'm, valyuta={curr2}")
 
     print("\n--- 3. Ma'lumotlar bazasi va Sinxronizatsiya testlari (Neon PostgreSQL) ---")
     from bot.config import config

@@ -449,7 +449,7 @@ def setup_admin_router(db: Database, bot: Bot) -> Router:
             )
             return
 
-        name, description, price = parse_channel_post_content(raw_text)
+        name, description, price, currency, parsed_price_uzs = parse_channel_post_content(raw_text)
         file_ids = extract_admin_photos(msgs)
 
         # Rasm tanlash mantig'i:

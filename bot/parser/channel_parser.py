@@ -42,28 +42,29 @@ def normalize_keycaps_and_currency(text: str) -> str:
         
     return res
 
-def parse_price(text: str, usd_rate: Optional[float] = None) -> Optional[int]:
+def parse_price_and_currency(text: str, usd_rate: Optional[float] = None) -> Tuple[int, str, Optional[int]]:
     """
-    Kanal postidagi narxni har doim AQSH dollari ($) da aniqlaydi:
-    - 6️⃣3️⃣9️⃣💲 -> 639
-    - $879 -> 879
-    - 579$ -> 579
-    - 150 usd -> 150
-    - 299 000 so'm -> joriy CBU kursi bo'yicha $25
+    Kanal postidagi narx va valyutani aniqlaydi:
+    Returns (price_usd, currency, price_uzs)
+    - currency: 'UZS' agar xabar faqat so'mda tashlangan bo'lsa
+    - currency: 'USD' agar xabarda dollar ($ yoki usd) belgisi bo'lsa
+    - price_uzs: so'mda kiritilgan asl narx (masalan 299000, 2690000)
     """
     if not text:
-        return None
+        return 0, "USD", None
 
     rate = get_effective_usd_rate(usd_rate)
     normalized = normalize_keycaps_and_currency(text)
     normalized = re.sub(r"['’ʻʼ`]", "'", normalized.lower())
 
+    has_usd_symbol = bool(re.search(r"(?:\$|\busd\b|\bdollar\b)", normalized))
+
     # 1. Dollar formatlari: $639, 639$, 150 usd, $ 1,500
     usd_patterns = [
-        r"\$\s*(\d[\d., ]*)",                        # $639, $ 1,500
-        r"(\d[\d., ]*)\s*\$",                        # 639$, 150 $
-        r"(\d[\d., ]*)\s*(?:usd|dollar)",            # 639 usd, 150 dollar
-        r"(?:usd|dollar)\s*(\d[\d., ]*)"             # usd 639
+        r"\$\s*(\d[\d., ]*)",
+        r"(\d[\d., ]*)\s*\$",
+        r"(\d[\d., ]*)\s*(?:usd|dollar)",
+        r"(?:usd|dollar)\s*(\d[\d., ]*)"
     ]
     for pattern in usd_patterns:
         match = re.search(pattern, normalized)
@@ -72,9 +73,9 @@ def parse_price(text: str, usd_rate: Optional[float] = None) -> Optional[int]:
             if raw_num.isdigit():
                 val = int(raw_num)
                 if 1 <= val <= 100000:
-                    return val
+                    return val, "USD", None
 
-    # 2. So'm formatlari kiritilgan bo'lsa, dollarga ($) o'tkazish
+    # 2. So'm formatlari: "299 000 so'm", "2 690 000 so'm"
     sum_patterns = [
         r"([\d\s.,]+)\s*(?:so[']?m|som|uzs)",
         r"(?:narxi|narx|baho|qiymati)[:\s]+([\d\s.,]+)\s*(?:so[']?m|som|uzs)"
@@ -87,7 +88,9 @@ def parse_price(text: str, usd_rate: Optional[float] = None) -> Optional[int]:
             if cleaned.isdigit():
                 val = int(cleaned)
                 if val >= 1000:
-                    return max(1, round(val / rate))
+                    curr = "USD" if has_usd_symbol else "UZS"
+                    usd_val = max(1, round(val / rate))
+                    return usd_val, curr, val
 
     # 3. 'k' formatlari (masalan: 1.2k$ yoki 650k)
     k_pattern = r"(\d+(?:[.,]\d+)?)\s*k(?:\$|\s*\$|\b)"
@@ -96,10 +99,12 @@ def parse_price(text: str, usd_rate: Optional[float] = None) -> Optional[int]:
         val_str = k_match.group(1).replace(",", ".")
         try:
             val_float = float(val_str)
-            if val_float < 100: # Masalan 1.2k$ -> 1200$
-                return int(val_float * 1000)
-            elif val_float >= 100: # 650k so'm -> dollarga
-                return max(1, round((val_float * 1000) / rate))
+            if val_float < 100:
+                return int(val_float * 1000), "USD", None
+            elif val_float >= 100:
+                uzs_val = int(val_float * 1000)
+                curr = "USD" if has_usd_symbol else "UZS"
+                return max(1, round(uzs_val / rate)), curr, uzs_val
         except ValueError:
             pass
 
@@ -110,11 +115,24 @@ def parse_price(text: str, usd_rate: Optional[float] = None) -> Optional[int]:
         if cleaned.isdigit():
             val = int(cleaned)
             if val >= 10000:
-                return max(1, round(val / rate))
+                curr = "USD" if has_usd_symbol else "UZS"
+                return max(1, round(val / rate)), curr, val
             elif val > 0:
-                return val
+                return val, "USD", None
 
-    return None
+    return 0, "USD", None
+
+def parse_price(text: str, usd_rate: Optional[float] = None) -> Optional[int]:
+    """
+    Kanal postidagi narxni har doim AQSH dollari ($) da aniqlaydi:
+    - 6️⃣3️⃣9️⃣💲 -> 639
+    - $879 -> 879
+    - 579$ -> 579
+    - 150 usd -> 150
+    - 299 000 so'm -> joriy CBU kursi bo'yicha $25
+    """
+    price, _, _ = parse_price_and_currency(text, usd_rate)
+    return price if price > 0 else None
 
 def clean_title_text(raw_line: str, full_text: str = "") -> str:
     """Sarlavhadan barcha emojilar, stikerlar, 'Nomi:' prefikslari va ortiqcha qavslarni tozalash (100% toza model nomi)"""
@@ -137,13 +155,13 @@ def clean_title_text(raw_line: str, full_text: str = "") -> str:
     cleaned = re.sub(r"\s+", " ", cleaned).strip()
     return cleaned if cleaned else "Mahsulot"
 
-def parse_channel_post_content(raw_text: str, usd_rate: Optional[float] = None) -> Tuple[str, str, int]:
+def parse_channel_post_content(raw_text: str, usd_rate: Optional[float] = None) -> Tuple[str, str, int, str, Optional[int]]:
     text = (raw_text or "").strip()
-    price = parse_price(text, usd_rate=usd_rate) or 0
+    price, currency, price_uzs = parse_price_and_currency(text, usd_rate=usd_rate)
 
     lines = [line.strip() for line in text.split("\n") if line.strip()]
     if not lines:
-        return "Yangi mahsulot", "", price
+        return "Yangi mahsulot", "", price, currency, price_uzs
 
     first_line = lines[0]
     first_line_clean = re.sub(r"[#\W_]+", " ", first_line).strip().lower()
@@ -158,4 +176,4 @@ def parse_channel_post_content(raw_text: str, usd_rate: Optional[float] = None) 
     if len(name) > 100:
         name = name[:97] + "..."
 
-    return name, description, price
+    return name, description, price, currency, price_uzs

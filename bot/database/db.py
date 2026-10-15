@@ -134,6 +134,8 @@ class Database:
                     views_count INTEGER DEFAULT 0,
                     is_active INTEGER DEFAULT 1,
                     is_discount INTEGER DEFAULT 0,
+                    currency VARCHAR(10) DEFAULT 'USD',
+                    price_uzs BIGINT,
                     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
                 );
             """)
@@ -149,6 +151,8 @@ class Database:
                 ALTER TABLE products ADD COLUMN IF NOT EXISTS views_count INTEGER DEFAULT 0;
                 ALTER TABLE products ADD COLUMN IF NOT EXISTS is_active INTEGER DEFAULT 1;
                 ALTER TABLE products ADD COLUMN IF NOT EXISTS is_discount INTEGER DEFAULT 0;
+                ALTER TABLE products ADD COLUMN IF NOT EXISTS currency VARCHAR(10) DEFAULT 'USD';
+                ALTER TABLE products ADD COLUMN IF NOT EXISTS price_uzs BIGINT;
             """)
 
             # 5. Savat jadvali
@@ -544,7 +548,9 @@ class Database:
         category_id: Optional[int] = None,
         photo_file_id: Optional[str] = None,
         gallery_images: Optional[str] = None,
-        is_active: Optional[int] = 0
+        is_active: Optional[int] = 0,
+        currency: str = "USD",
+        price_uzs: Optional[int] = None
     ) -> int:
         """Kanal postidan mahsulotni Neon bazasiga xatosiz qo'shish yoki yangilash (yangi mahsulotlar admin tasdiqlaguncha is_active=0 bo'ladi)"""
         if not category_id:
@@ -596,9 +602,10 @@ class Database:
                     media_group_id = COALESCE(NULLIF($7::text, ''), media_group_id),
                     photo_file_id = COALESCE(NULLIF($8::text, ''), photo_file_id),
                     gallery_images = COALESCE(NULLIF($9::text, ''), gallery_images),
-                    is_active = $10, is_available = $11
-                WHERE channel_id = $12 AND message_id = $13;
-            """, category_id, name, description, price, image_url or "", post_url, media_group_id, photo_file_id, gallery_images, active_val, avail_val, str(channel_id), int(message_id))
+                    is_active = $10, is_available = $11,
+                    currency = $12, price_uzs = $13
+                WHERE channel_id = $14 AND message_id = $15;
+            """, category_id, name, description, price, image_url or "", post_url, media_group_id, photo_file_id, gallery_images, active_val, avail_val, currency, price_uzs, str(channel_id), int(message_id))
             return existing['id']
         else:
             new_active = is_active if is_active is not None else 0
@@ -608,11 +615,12 @@ class Database:
                     category_id, name, description, price, image_url, 
                     channel_id, message_id, media_group_id, post_url, 
                     photo_file_id, gallery_images,
-                    views_count, is_active, is_available
+                    views_count, is_active, is_available,
+                    currency, price_uzs
                 )
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 0, $12, $13)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 0, $12, $13, $14, $15)
                 RETURNING id;
-            """, category_id, name, description, price, image_url or "", str(channel_id), int(message_id), media_group_id, post_url, photo_file_id, gallery_images, new_active, new_avail)
+            """, category_id, name, description, price, image_url or "", str(channel_id), int(message_id), media_group_id, post_url, photo_file_id, gallery_images, new_active, new_avail, currency, price_uzs)
             return prod_id
 
     async def deactivate_product_by_channel_post(self, channel_id: str, message_id: int):

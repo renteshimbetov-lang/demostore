@@ -133,12 +133,35 @@
     return '$' + amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
   }
 
+  // So'm miqdorini formatlash (masalan 299 000 soʻm)
+  function formatUzsAmount(amount) {
+    if (!amount) return '0 soʻm';
+    return Math.round(Number(amount)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' soʻm';
+  }
+
   // Narxni joriy jonli dollar kursi bo'yicha so'mda chiqarish
   function formatPriceUzs(amountUsd) {
     if (!amountUsd) return '0 soʻm';
     const rate = state?.currentUsdRate || 12850;
     const uzs = Math.round(amountUsd * rate);
-    return uzs.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' soʻm';
+    return formatUzsAmount(uzs);
+  }
+
+  // Mahsulot kartochkasi narx blokini chizish (so'mda kiritilgan mahsulotlar FAQAT SO'MDA chiqadi)
+  function renderProductPriceBlock(p) {
+    if (p && p.currency === 'UZS' && p.price_uzs) {
+      return `
+        <div class="price-wrap">
+          <span class="price-current">${formatUzsAmount(p.price_uzs)}</span>
+        </div>
+      `;
+    }
+    return `
+      <div class="price-wrap">
+        <span class="price-current">${formatPrice(p.price)}</span>
+        <span class="price-uzs">≈ ${formatPriceUzs(p.price)}</span>
+      </div>
+    `;
   }
 
   // Sarlavhadagi jonli kurs belgisini (badge) yangilash (foydalanuvchi talabiga ko'ra o'chirildi)
@@ -154,7 +177,9 @@
     if (Array.isArray(state.products)) {
       state.products.forEach(p => {
         p.current_usd_rate = state.currentUsdRate;
-        p.price_uzs = Math.round((p.price || 0) * state.currentUsdRate);
+        if (p.currency !== 'UZS' || !p.price_uzs) {
+          p.price_uzs = Math.round((p.price || 0) * state.currentUsdRate);
+        }
       });
       try {
         localStorage.setItem('demostore_cached_products', JSON.stringify(state.products));
@@ -172,13 +197,14 @@
 
     // 3. Agar mahsulot tafsilot sahifasi/modal ochiq bo'lsa, undagi so'm narxini yangilash
     if (state.selectedProduct) {
+      const isUzsOnly = Boolean(state.selectedProduct.currency === 'UZS' && state.selectedProduct.price_uzs);
       const pdBottomPriceUzsEl = document.getElementById('pdBottomPriceUzs');
       if (pdBottomPriceUzsEl) {
-        pdBottomPriceUzsEl.textContent = `≈ ${formatPriceUzs(state.selectedProduct.price)}`;
+        pdBottomPriceUzsEl.textContent = isUzsOnly ? '' : `≈ ${formatPriceUzs(state.selectedProduct.price)}`;
       }
       const pdHeroUzsEl = document.querySelector('.pd-hero-uzs');
       if (pdHeroUzsEl) {
-        pdHeroUzsEl.textContent = `≈ ${formatPriceUzs(state.selectedProduct.price)}`;
+        pdHeroUzsEl.textContent = isUzsOnly ? '' : `≈ ${formatPriceUzs(state.selectedProduct.price)}`;
       }
     }
   }
@@ -1235,14 +1261,20 @@
           </div>
           <div class="deal-content">
             <div class="deal-price-block">
-              <div class="deal-current-price">
-                ${formatPrice(p.price)}
-                <span class="deal-price-uzs">≈ ${formatPriceUzs(p.price)}</span>
-              </div>
-              <div class="deal-old-price-row">
-                <span class="deal-old-price">${formatPrice(oldPrice)}</span>
-                <span class="deal-drop-tag">-${rate}%</span>
-              </div>
+              ${p.currency === 'UZS' && p.price_uzs ? `
+                <div class="deal-current-price">
+                  ${formatUzsAmount(p.price_uzs)}
+                </div>
+              ` : `
+                <div class="deal-current-price">
+                  ${formatPrice(p.price)}
+                  <span class="deal-price-uzs">≈ ${formatPriceUzs(p.price)}</span>
+                </div>
+                <div class="deal-old-price-row">
+                  <span class="deal-old-price">${formatPrice(oldPrice)}</span>
+                  <span class="deal-drop-tag">-${rate}%</span>
+                </div>
+              `}
             </div>
             <h3 class="deal-title" title="${escapeHtml(getCleanCardTitle(p.name))}">${escapeHtml(getCleanCardTitle(p.name))}</h3>
             <div class="deal-footer-action">
@@ -1860,8 +1892,13 @@
             <span class="cart-section-item-brand">${brand}</span>
             <h4 class="cart-section-item-name">${escapeHtml(getCleanCardTitle(p.name))}</h4>
             <div class="cart-section-item-price">
-              ${formatPrice(p.price)}
-              <span class="cart-item-uzs-sub">(${formatPriceUzs(p.price * item.qty)})</span>
+              ${p.currency === 'UZS' && p.price_uzs ? `
+                <span class="price-current" style="font-size: 0.95rem; font-weight: 700;">${formatUzsAmount(p.price_uzs)}</span>
+                <span class="cart-item-uzs-sub">(${formatUzsAmount(p.price_uzs * item.qty)})</span>
+              ` : `
+                ${formatPrice(p.price)}
+                <span class="cart-item-uzs-sub">(${formatPriceUzs(p.price * item.qty)})</span>
+              `}
             </div>
           </div>
           <div class="cart-section-item-actions">
@@ -1925,7 +1962,11 @@
       const p = item.product;
       const subtotal = p.price * item.qty;
       total += subtotal;
-      text += `${idx + 1}. ${p.name} — ${item.qty} dona x ${formatPrice(p.price)} = ${formatPrice(subtotal)} (${formatPriceUzs(subtotal)})\n`;
+      if (p.currency === 'UZS' && p.price_uzs) {
+        text += `${idx + 1}. ${p.name} — ${item.qty} dona x ${formatUzsAmount(p.price_uzs)} = ${formatUzsAmount(p.price_uzs * item.qty)}\n`;
+      } else {
+        text += `${idx + 1}. ${p.name} — ${item.qty} dona x ${formatPrice(p.price)} = ${formatPrice(subtotal)} (${formatPriceUzs(subtotal)})\n`;
+      }
     });
     text += `\nJami summa: ${formatPrice(total)} (${formatPriceUzs(total)})\n`;
     const rateVal = Math.round(state.currentUsdRate || 12850).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
@@ -2012,10 +2053,7 @@
           <div class="card-body">
             <span class="product-brand">${brand}</span>
             <h3 class="product-title">${escapeHtml(getCleanCardTitle(p.name))}</h3>
-            <div class="price-wrap">
-              <span class="price-current">${formatPrice(p.price)}</span>
-              <span class="price-uzs">≈ ${formatPriceUzs(p.price)}</span>
-            </div>
+            ${renderProductPriceBlock(p)}
             <div class="card-actions-stack">
               ${getCartButtonHtml(p.id)}
               ${p.post_url ? `
@@ -2191,10 +2229,7 @@
           <div class="card-body">
             <span class="product-brand">${brand}</span>
             <h3 class="product-title">${escapeHtml(getCleanCardTitle(p.name))}</h3>
-            <div class="price-wrap">
-              <span class="price-current">${formatPrice(p.price)}</span>
-              <span class="price-uzs">≈ ${formatPriceUzs(p.price)}</span>
-            </div>
+            ${renderProductPriceBlock(p)}
             <div class="card-actions-stack">
               ${getCartButtonHtml(p.id)}
               ${p.post_url ? `
@@ -2321,14 +2356,15 @@
     const installmentPlan = parseInstallmentPlan(prod.description);
     const isFav = state.wishlist.has(prod.id);
 
+    const isUzsOnly = Boolean(prod.currency === 'UZS' && prod.price_uzs);
     if (pdWishlistBtnEl) {
       pdWishlistBtnEl.classList.toggle('active', isFav);
     }
     if (pdBottomPriceEl) {
-      pdBottomPriceEl.textContent = formatPrice(prod.price);
+      pdBottomPriceEl.textContent = isUzsOnly ? formatUzsAmount(prod.price_uzs) : formatPrice(prod.price);
     }
     if (pdBottomPriceUzsEl) {
-      pdBottomPriceUzsEl.textContent = `≈ ${formatPriceUzs(prod.price)}`;
+      pdBottomPriceUzsEl.textContent = isUzsOnly ? '' : `≈ ${formatPriceUzs(prod.price)}`;
     }
 
     const cleanDesc = getCleanProductDescription(prod.description);
@@ -2357,8 +2393,12 @@
         <span class="pd-hero-brand">APPLE</span>
         <h2 class="pd-hero-title">${escapeHtml(getCleanCardTitle(prod.name))}</h2>
         <div class="pd-hero-price-stack">
-          <div class="pd-hero-usd">${formatPrice(prod.price)}</div>
-          <div class="pd-hero-uzs">≈ ${formatPriceUzs(prod.price)}</div>
+          ${isUzsOnly ? `
+            <div class="pd-hero-usd">${formatUzsAmount(prod.price_uzs)}</div>
+          ` : `
+            <div class="pd-hero-usd">${formatPrice(prod.price)}</div>
+            <div class="pd-hero-uzs">≈ ${formatPriceUzs(prod.price)}</div>
+          `}
         </div>
       </div>
       
@@ -3076,10 +3116,7 @@
           <div class="card-body">
             <span class="product-brand">${brand}</span>
             <h3 class="product-title">${escapeHtml(getCleanCardTitle(p.name))}</h3>
-            <div class="price-wrap">
-              <span class="price-current">${formatPrice(p.price)}</span>
-              <span class="price-uzs">≈ ${formatPriceUzs(p.price)}</span>
-            </div>
+            ${renderProductPriceBlock(p)}
             <div class="card-actions-stack">
               ${getCartButtonHtml(p.id)}
               ${p.post_url ? `

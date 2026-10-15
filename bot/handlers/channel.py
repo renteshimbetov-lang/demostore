@@ -92,7 +92,7 @@ def setup_channel_router(db: Database, bot: Bot) -> Router:
 
         from bot.utils.currency import get_cbu_usd_rate
         live_rate = await get_cbu_usd_rate()
-        name, description, price = parse_channel_post_content(raw_text, usd_rate=live_rate)
+        name, description, price, currency, price_uzs = parse_channel_post_content(raw_text, usd_rate=live_rate)
         existing = await db.get_product_by_channel_post(channel_id, message_id)
 
         # Tahrirlangan postda Telegram faqat bitta xabarni yuboradi —
@@ -173,7 +173,9 @@ def setup_channel_router(db: Database, bot: Bot) -> Router:
                 media_group_id=main_msg.media_group_id,
                 photo_file_id=primary_file_id,
                 gallery_images=json.dumps(gallery_urls) if gallery_urls else None,
-                is_active=0  # Yangi postlar admin 'Ha' deguncha mini ilovada ko'rinmaydi!
+                is_active=0,  # Yangi postlar admin 'Ha' deguncha mini ilovada ko'rinmaydi!
+                currency=currency,
+                price_uzs=price_uzs
             )
 
         logger.info(f"Kanal posti qabul qilindi! ID: {product_id}, {name}, ${price}, asosiy rasm: {image_url[:60]}")
