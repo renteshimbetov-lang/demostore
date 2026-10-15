@@ -120,7 +120,8 @@ async def get_cbu_usd_rate(force_refresh: bool = False) -> float:
             return _cached_rate
 
         api_url = get_cbu_api_url()
-        connector = aiohttp.TCPConnector(ssl=False)
+        from bot.utils.ssl_context import get_ssl_context
+        connector = aiohttp.TCPConnector(ssl=get_ssl_context())
         timeout = aiohttp.ClientTimeout(total=8)
         headers = {"User-Agent": "Mozilla/5.0 (compatible; DemoStoreBot/1.0)"}
 

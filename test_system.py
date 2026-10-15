@@ -129,11 +129,66 @@ async def run_full_tests():
     assert prods_desc[0]['price'] >= prods_desc[-1]['price']
     print("  [OK] Mahsulotlarni narx bo'yicha o'sish va kamayish tartibida saralash to'g'ri ishladi.")
 
+    print("\n--- 4. Xavfsizlik va Spam himoyasi testlari (HMAC & Click Limiting) ---")
+    from bot.api.telegram_auth import generate_telegram_init_data, validate_telegram_init_data
+    import time
+
+    test_token = "123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11"
+    test_user = {"id": 888777666, "first_name": "SecureUser", "username": "secureuser"}
+
+    # 4.1 HMAC-SHA256 haqiqiy imzo tekshiruvi
+    valid_init_data = generate_telegram_init_data(test_user, test_token)
+    user_parsed = validate_telegram_init_data(valid_init_data, bot_token=test_token)
+    assert user_parsed is not None and user_parsed["id"] == 888777666
+    print("  [OK] Telegram initData HMAC-SHA256 imzosi muvaffaqiyatli tekshirildi.")
+
+    # 4.2 Soxta imzo (Tampered data)
+    tampered_data = valid_init_data.replace("SecureUser", "HackerUser")
+    assert validate_telegram_init_data(tampered_data, bot_token=test_token) is None
+    print("  [OK] Soxtalashtirilgan initData imzosi muvaffaqiyatli aniqlandi va rad etildi.")
+
+    # 4.3 Replay attack (vaqti o'tgan auth_date)
+    expired_data = generate_telegram_init_data(test_user, test_token, auth_date=int(time.time() - 90000))
+    assert validate_telegram_init_data(expired_data, max_age_seconds=86400, bot_token=test_token) is None
+    print("  [OK] Muddati o'tgan (replay attack) initData rad etildi.")
+
+    # 4.4 Bir user 1 soatda 1 marta bosishi (Spam/Bot click himoyasi)
+    # Yangi test mahsulot qo'shamiz
+    click_prod_id = await db.upsert_product_from_channel(
+        channel_id=test_channel_id,
+        message_id=99999,
+        name="Click Limit Test Product",
+        description="Test",
+        price=100,
+        image_url="https://example.com/click_test.jpg",
+        post_url="https://t.me/test_channel/99999"
+    )
+    # Oldingi test kliklarini tozalash
+    await db.execute("DELETE FROM product_clicks WHERE product_id = $1;", click_prod_id)
+    await db.execute("UPDATE products SET views_count = 0 WHERE id = $1;", click_prod_id)
+
+    # 1-klik (user1) -> muvaffaqiyatli oshishi kerak
+    inc1, count1 = await db.increment_views_safe(click_prod_id, 111222)
+    assert inc1 is True, "Birinchi klik hisoblanishi kerak"
+    assert count1 == 1, f"Kutilgan: 1, haqiqiy: {count1}"
+
+    # 2-klik (user1 ayni o'sha soatda yana bosdi) -> oshmasligi kerak!
+    inc2, count2 = await db.increment_views_safe(click_prod_id, 111222)
+    assert inc2 is False, "1 soat ichida qayta klik rad etilishi (False) kerak"
+    assert count2 == 1, f"Views oshmasligi kerak: kutilgan 1, haqiqiy {count2}"
+
+    # 3-klik (boshqa user2 bosdi) -> muvaffaqiyatli oshishi kerak
+    inc3, count3 = await db.increment_views_safe(click_prod_id, 333444)
+    assert inc3 is True, "Boshqa user bosganda hisoblanishi kerak"
+    assert count3 == 2, f"Kutilgan: 2, haqiqiy: {count3}"
+    print("  [OK] 1 soatlik foydalanuvchi klik limiti (product_clicks) to'liq ishonchli ishladi.")
+
     # Test mahsulotlarini Neon bazadan tozalash
+    await db.execute("DELETE FROM product_clicks WHERE product_id = $1;", click_prod_id)
     await db.execute("DELETE FROM products WHERE channel_id = $1;", test_channel_id)
     await db.close()
 
-    print("\n✅ Barcha sinovlar Neon PostgreSQL bazasida muvaffaqiyatli yakunlandi!")
+    print("\n✅ Barcha sinovlar va xavfsizlik tekshiruvlari muvaffaqiyatli yakunlandi!")
 
 if __name__ == "__main__":
     asyncio.run(run_full_tests())

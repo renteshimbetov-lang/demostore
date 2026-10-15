@@ -46,9 +46,12 @@ def load_config() -> Config:
     if not cbu_api_url:
         cbu_api_url = "https://cbu.uz/oz/arkhiv-kursov-valyut/json/USD/"
     
-    channel_id = os.getenv("CHANNEL_ID", "-1004332313799").strip()
-    channel_username = os.getenv("CHANNEL_USERNAME", "shbdbdjdhdjjdhd").strip().lstrip("@")
-    channel_url = os.getenv("CHANNEL_URL", "https://t.me/shbdbdjdhdjjdhd").strip()
+    channel_id = os.getenv("CHANNEL_ID", "").strip()
+    channel_username = os.getenv("CHANNEL_USERNAME", "").strip().lstrip("@")
+    channel_url = os.getenv("CHANNEL_URL", "").strip()
+
+    if not channel_id and not os.getenv("IGNORE_CONFIG_VALIDATION"):
+        raise ValueError("CHANNEL_ID .env da ko'rsatilishi shart!")
 
     return Config(
         bot_token=bot_token,

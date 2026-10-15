@@ -66,7 +66,8 @@ def pick_best_index(name: str, description: str, images: List[Optional[bytes]]) 
 
 def fetch_url_bytes(url: str, timeout: float = 5.0) -> Optional[bytes]:
     try:
-        ctx = ssl._create_unverified_context()
+        from bot.utils.ssl_context import get_ssl_context
+        ctx = get_ssl_context()
         req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
         with urllib.request.urlopen(req, timeout=timeout, context=ctx) as resp:
             return resp.read()

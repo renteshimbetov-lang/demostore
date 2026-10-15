@@ -192,7 +192,18 @@ class Database:
                 );
             """)
 
-            # 8. PostgreSQL optimallashtirilgan indekslar
+            # 8. Mahsulot kliklari jadvali (1 soatlik spam/botdan himoya)
+            await conn.execute("""
+                CREATE TABLE IF NOT EXISTS product_clicks (
+                    id SERIAL PRIMARY KEY,
+                    product_id INTEGER REFERENCES products(id) ON DELETE CASCADE,
+                    user_id BIGINT NOT NULL,
+                    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+                );
+                CREATE INDEX IF NOT EXISTS idx_product_clicks_user_prod ON product_clicks(user_id, product_id, created_at);
+            """)
+
+            # 9. PostgreSQL optimallashtirilgan indekslar
             await conn.execute("""
                 CREATE INDEX IF NOT EXISTS idx_products_category ON products(category_id);
                 CREATE INDEX IF NOT EXISTS idx_products_active ON products(is_active, is_available);
@@ -442,6 +453,34 @@ class Database:
             RETURNING views_count;
         """, product_id)
         return new_views or 0
+
+    async def increment_views_safe(self, product_id: int, user_id: int) -> Tuple[bool, int]:
+        """
+        Kanalga o'tish (views_count) sonini xavfsiz +1 oshirish.
+        Bir foydalanuvchi bir mahsulotga 1 soatda ko'pi bilan 1 marta hisoblanadi.
+        Qaytaradi: (incremented: bool, current_or_new_views: int)
+        """
+        # 1 soat ichida ushbu foydalanuvchi ushbu mahsulotni bosganligini tekshiramiz
+        recent = await self.fetchval("""
+            SELECT id FROM product_clicks 
+            WHERE product_id = $1 AND user_id = $2 
+              AND created_at > (NOW() - INTERVAL '1 hour')
+            LIMIT 1;
+        """, product_id, user_id)
+
+        if recent:
+            # 1 soat ichida allaqachon bosilgan - ko'rishlar sonini oshirmaymiz
+            curr = await self.fetchval("SELECT views_count FROM products WHERE id = $1;", product_id)
+            return False, (curr or 0)
+
+        # Yangi klikni qayd etamiz
+        await self.execute("""
+            INSERT INTO product_clicks (product_id, user_id) 
+            VALUES ($1, $2);
+        """, product_id, user_id)
+
+        new_views = await self.increment_views(product_id)
+        return True, new_views
 
     async def get_top_viewed_products(self, limit: int = 10) -> List[Dict[str, Any]]:
         """Eng ko'p ko'rilgan (Top) tovarlar ro'yxati"""

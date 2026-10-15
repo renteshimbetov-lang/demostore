@@ -55,9 +55,10 @@ def setup_channel_router(db: Database, bot: Bot) -> Router:
         """Ommaviy Telegram kanal postidan rasmiy CDN rasmlari (telesco.pe) ni olish"""
         if not channel_username:
             return []
-        import urllib.request, re, ssl
+        import urllib.request, re
+        from bot.utils.ssl_context import get_ssl_context
         url = f"https://t.me/{channel_username.lstrip('@')}/{message_id}?embed=1"
-        ctx = ssl._create_unverified_context()
+        ctx = get_ssl_context()
         req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
         try:
             with urllib.request.urlopen(req, timeout=6, context=ctx) as resp:
@@ -294,7 +295,8 @@ async def sync_deleted_channel_posts(db: Database, channel_username: str):
         return []
 
     import aiohttp
-    connector = aiohttp.TCPConnector(ssl=False)
+    from bot.utils.ssl_context import get_ssl_context
+    connector = aiohttp.TCPConnector(ssl=get_ssl_context())
     timeout = aiohttp.ClientTimeout(total=6)
     deleted_ids = []
 

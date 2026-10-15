@@ -8,6 +8,7 @@ import aiohttp
 from aiohttp import web
 from bot.config import config
 from bot.database.db import Database
+from bot.api.telegram_auth import extract_and_validate_telegram_user
 
 logger = logging.getLogger("APIServer")
 
@@ -40,7 +41,8 @@ _shared_photo_session: Optional[aiohttp.ClientSession] = None
 async def _get_photo_session() -> aiohttp.ClientSession:
     global _shared_photo_session
     if _shared_photo_session is None or _shared_photo_session.closed:
-        connector = aiohttp.TCPConnector(ssl=False, limit=30, ttl_dns_cache=300)
+        from bot.utils.ssl_context import get_ssl_context
+        connector = aiohttp.TCPConnector(ssl=get_ssl_context(), limit=30, ttl_dns_cache=300)
         timeout = aiohttp.ClientTimeout(total=15, connect=5)
         _shared_photo_session = aiohttp.ClientSession(connector=connector, timeout=timeout)
     return _shared_photo_session
@@ -89,9 +91,30 @@ def create_web_app(db: Database, webapp_dir: str) -> web.Application:
             response = web.Response(status=200)
         else:
             response = await handler(request)
-        response.headers["Access-Control-Allow-Origin"] = "*"
+
+        origin = request.headers.get("Origin", "").strip()
+        allowed = False
+        if origin:
+            if (
+                origin == "https://telegram.org"
+                or origin == "https://web.telegram.org"
+                or origin.endswith(".telegram.org")
+                or origin.endswith(".onrender.com")
+                or (config.webapp_url and origin == config.webapp_url.rstrip("/"))
+                or origin.startswith("http://localhost:")
+                or origin.startswith("http://127.0.0.1:")
+            ):
+                allowed = True
+                response.headers["Access-Control-Allow-Origin"] = origin
+
+        if not allowed:
+            # Standart Telegram domeni
+            response.headers["Access-Control-Allow-Origin"] = "https://web.telegram.org"
+
+        response.headers["Access-Control-Allow-Credentials"] = "true"
         response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
-        response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+        response.headers["Access-Control-Allow-Headers"] = "Content-Type, X-Telegram-Init-Data, Authorization"
+        response.headers["Access-Control-Max-Age"] = "86400"
 
         # Rasm proksi va statik resurslar uchun tezkor kesh
         clean_path = request.path.split("?")[0]
@@ -190,10 +213,16 @@ def create_web_app(db: Database, webapp_dir: str) -> web.Application:
                 )
 
     async def get_categories(request: web.Request) -> web.Response:
+        user = extract_and_validate_telegram_user(request)
+        if not user:
+            return web.json_response({"error": "Unauthorized"}, status=401)
         categories = await db.get_categories()
         return web.json_response(categories)
 
     async def get_currency(request: web.Request) -> web.Response:
+        user = extract_and_validate_telegram_user(request)
+        if not user:
+            return web.json_response({"error": "Unauthorized"}, status=401)
         from bot.utils.currency import get_cbu_usd_rate, format_rate_compact, CACHE_TTL_SECONDS
         force = request.query.get("force", "").strip().lower() in ("1", "true")
         rate = await get_cbu_usd_rate(force_refresh=force)
@@ -205,6 +234,9 @@ def create_web_app(db: Database, webapp_dir: str) -> web.Application:
         })
 
     async def get_products(request: web.Request) -> web.Response:
+        user = extract_and_validate_telegram_user(request)
+        if not user:
+            return web.json_response({"error": "Unauthorized"}, status=401)
         from bot.utils.currency import get_cbu_usd_rate, convert_usd_to_uzs, format_rate_compact
         category_id_param = request.query.get("category_id")
         sort_param = request.query.get("sort", "default")
@@ -260,15 +292,35 @@ def create_web_app(db: Database, webapp_dir: str) -> web.Application:
         })
 
     async def increment_product_click(request: web.Request) -> web.Response:
-        product_id = int(request.match_info["id"])
-        new_views = await db.increment_views(product_id)
+        user = extract_and_validate_telegram_user(request)
+        if not user:
+            return web.json_response({"error": "Unauthorized"}, status=401)
+
+        try:
+            product_id = int(request.match_info["id"])
+        except (ValueError, KeyError):
+            return web.json_response({"error": "Invalid product ID"}, status=400)
+
+        user_id = int(user.get("id") or 0)
+        if user_id <= 0:
+            return web.json_response({"error": "User ID not identified"}, status=400)
+
+        incremented, new_views = await db.increment_views_safe(product_id, user_id)
         return web.json_response({
             "success": True,
             "product_id": product_id,
-            "views_count": new_views
+            "views_count": new_views,
+            "incremented": incremented
         })
 
     async def get_stats(request: web.Request) -> web.Response:
+        user = extract_and_validate_telegram_user(request)
+        if not user:
+            return web.json_response({"error": "Unauthorized"}, status=401)
+        user_id = int(user.get("id") or 0)
+        if not config.admin_ids or user_id not in config.admin_ids:
+            return web.json_response({"error": "Forbidden: Admin access required"}, status=403)
+
         from bot.utils.currency import get_cbu_usd_rate
         stats = await db.get_stats()
         top_products = await db.get_top_viewed_products(limit=10)

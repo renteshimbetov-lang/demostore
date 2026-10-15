@@ -97,6 +97,22 @@
   });
   tg?.onEvent?.('viewportChanged', updateSafeArea);
 
+  // 1.1 Xavfsiz API so'rov yordamchisi (Telegram WebApp initData bilan)
+  function getTelegramInitData() {
+    return window.Telegram?.WebApp?.initData || '';
+  }
+
+  async function apiFetch(url, options = {}) {
+    const opts = { ...options };
+    const headers = { ...(opts.headers || {}) };
+    const initData = getTelegramInitData();
+    if (initData) {
+      headers['X-Telegram-Init-Data'] = initData;
+    }
+    opts.headers = headers;
+    return fetch(url, opts);
+  }
+
   function updateHeaderHeight() {
     const header = document.getElementById('mobileHeader');
     if (header && !header.classList.contains('hidden')) {
@@ -218,7 +234,7 @@
         return; // Keshdagi kurs 10 daqiqadan oshmagan, ortiqcha so'rov yuborilmaydi
       }
 
-      const res = await fetch('/api/currency' + (force ? '?force=1' : ''));
+      const res = await apiFetch('/api/currency' + (force ? '?force=1' : ''));
       if (res.ok) {
         const data = await res.json();
         if (data && data.rate && data.rate > 0) {
@@ -1784,7 +1800,7 @@
     // Bazada statistika (views_count) ni oshirish
     if (productId) {
       try {
-        fetch(`/api/products/${productId}/click`, { method: 'POST' }).catch(() => {});
+        apiFetch(`/api/products/${productId}/click`, { method: 'POST' }).catch(() => {});
       } catch (e) {}
     }
 
@@ -3174,7 +3190,7 @@
         params.append('max_price', maxUsd);
       }
 
-      const res = await fetch(`/api/products?${params.toString()}`);
+      const res = await apiFetch(`/api/products?${params.toString()}`);
       if (!res.ok) throw new Error('Mahsulotlar yuklanmadi');
       const data = await res.json();
       if (Array.isArray(data)) {
