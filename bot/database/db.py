@@ -505,22 +505,36 @@ class Database:
     ) -> int:
         """Kanal postidan mahsulotni Neon bazasiga xatosiz qo'shish yoki yangilash (yangi mahsulotlar admin tasdiqlaguncha is_active=0 bo'ladi)"""
         if not category_id:
-            full_search = f"{name} {description}".lower()
-            lower_name = name.lower()
-            if any(k in lower_name for k in ["macbook", "noutbuk", "laptop", "surface", "asus", "thinkpad", "lenovo", "dell", "hp"]):
-                c_name = "Noutbuklar"
-            elif any(k in lower_name for k in ["iphone", "samsung", "redmi", "xiaomi", "smartfon", "telefon", "galaxy", "pro max"]):
-                c_name = "Smartfonlar"
-            elif any(k in full_search for k in ["macbook", "noutbuk", "laptop", "surface", "asus", "thinkpad", "lenovo", "dell", "hp"]):
-                c_name = "Noutbuklar"
-            elif any(k in full_search for k in ["iphone", "samsung", "redmi", "xiaomi", "smartfon", "telefon", "galaxy", "pro max"]):
-                c_name = "Smartfonlar"
-            elif any(k in full_search for k in ["airpods", "quloqchin", "audio", "naushnik", "sony", "headphone"]):
-                c_name = "Quloqchinlar va Audio"
-            elif any(k in full_search for k in ["watch", "soat"]):
+            import re
+            lower_name = (name or "").lower()
+            # Kontakt ma'lumotlari (telefon raqamlar, admin/menejer username lar) tozalash
+            desc_clean = re.sub(r'(?:telefon|bog[\'’`]?lanish|tel|aloqa|menejer|admin)\s*[:\s]*[^\n]+', '', description or '', flags=re.I)
+            desc_clean = re.sub(r'@[a-z0-9_]+', '', desc_clean, flags=re.I)
+            full_search = f"{name} {desc_clean}".lower()
+
+            # 1-BOSQICH: Mahsulot nomi bo'yicha toifani aniqlash (eng aniq mezon)
+            if any(k in lower_name for k in ["watch", "soat", "iwatch", "ultra 1", "ultra 2", "series 6", "series 7", "series 8", "series 9", "series 10", "applewatch"]):
                 c_name = "Aqlli soatlar"
-            else:
+            elif any(k in lower_name for k in ["airpods", "airpod", "quloqchin", "naushnik", "headphone", "earbuds", "buds", "earphone", "audio"]):
+                c_name = "Quloqchinlar va Audio"
+            elif any(k in lower_name for k in ["macbook", "noutbuk", "laptop", "surface", "thinkpad", "asus", "lenovo", "dell", "hp", "acer", "matebook"]):
+                c_name = "Noutbuklar"
+            elif any(k in lower_name for k in ["iphone", "ayfon", "samsung", "galaxy", "redmi", "xiaomi", "smartfon", "pixel", "honor", "poco"]):
+                c_name = "Smartfonlar"
+            elif any(k in lower_name for k in ["chexol", "case", "kabel", "cable", "adapter", "blok", "zaryadka", "remeshok", "steklo"]):
                 c_name = "Aksessuarlar"
+
+            # 2-BOSQICH: Nomida to'liq chiqmasa, tavsif matni bo'yicha aniqlash
+            elif any(k in full_search for k in ["watch", "soat", "iwatch", "⌚", "remeshok", "apple watch"]):
+                c_name = "Aqlli soatlar"
+            elif any(k in full_search for k in ["airpods", "quloqchin", "naushnik", "audio", "headphone", "buds"]):
+                c_name = "Quloqchinlar va Audio"
+            elif any(k in full_search for k in ["macbook", "noutbuk", "laptop", "macos", "m1 pro", "m2 pro", "m3 pro", "m4 pro", "retina"]):
+                c_name = "Noutbuklar"
+            elif any(k in full_search for k in ["iphone", "ayfon", "samsung", "galaxy", "redmi", "xiaomi", "smartfon", "imei", "pixel"]):
+                c_name = "Smartfonlar"
+            else:
+                c_name = "Smartfonlar"
 
             c_id = await self.fetchval("SELECT id FROM categories WHERE name = $1 LIMIT 1;", c_name)
             category_id = c_id if c_id else 1

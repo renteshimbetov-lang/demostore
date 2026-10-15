@@ -507,7 +507,7 @@
     ) || 'Mahsulot';
   }
 
-  // Toifa bo'yicha qat'iy va xatosiz filtrlash (Noutbuklar hech qachon smartfonga kirmaydi)
+  // Toifa bo'yicha qat'iy va xatosiz filtrlash (Noutbuklar, soatlar, quloqchinlar hech qachon smartfonga kirmaydi)
   function isProductInCategory(p, catId) {
     if (!catId || catId === 0) return true;
     const name = (p.name || '').toLowerCase();
@@ -516,11 +516,16 @@
 
     // 1. SMARTFONLAR (Smartphones)
     if (catId === 1) {
-      if (name.includes('macbook') || name.includes('surface') || name.includes('asus') || name.includes('laptop') || name.includes('noutbuk')) {
+      // Noutbuk, soat, quloqchin hech qachon smartfon toifasiga kirmaydi
+      if (
+        name.includes('macbook') || name.includes('surface') || name.includes('asus') || name.includes('laptop') || name.includes('noutbuk') ||
+        name.includes('watch') || name.includes('soat') || name.includes('iwatch') ||
+        name.includes('airpods') || name.includes('quloqchin') || name.includes('naushnik') || name.includes('headphone')
+      ) {
         return false;
       }
-      if (p.category_id === 1) return true;
-      if (catName.includes('smartfon') || name.includes('iphone') || name.includes('samsung') || name.includes('galaxy') || name.includes('redmi') || desc.includes('iphone')) {
+      if (p.category_id === 1 && !catName.includes('soat') && !catName.includes('audio') && !catName.includes('noutbuk')) return true;
+      if (catName.includes('smartfon') || name.includes('iphone') || name.includes('samsung') || name.includes('galaxy') || name.includes('redmi')) {
         return true;
       }
       return false;
@@ -528,7 +533,11 @@
 
     // 2. NOUTBUKLAR (Laptops)
     if (catId === 2) {
-      if (name.includes('iphone') || name.includes('smartfon') || name.includes('redmi') || name.includes('galaxy')) {
+      if (
+        name.includes('iphone') || name.includes('smartfon') || name.includes('redmi') || name.includes('galaxy') ||
+        name.includes('watch') || name.includes('soat') || name.includes('iwatch') ||
+        name.includes('airpods') || name.includes('quloqchin')
+      ) {
         return false;
       }
       if (p.category_id === 2) return true;
@@ -540,12 +549,18 @@
 
     // 3. QULOQCHINLAR VA AUDIO
     if (catId === 3) {
-      return p.category_id === 3 || catName.includes('audio') || name.includes('airpods') || name.includes('quloqchin') || name.includes('naushnik');
+      if (name.includes('macbook') || name.includes('iphone') || name.includes('watch') || name.includes('soat') || name.includes('iwatch')) {
+        return false;
+      }
+      return p.category_id === 3 || catName.includes('audio') || name.includes('airpods') || name.includes('quloqchin') || name.includes('naushnik') || name.includes('buds');
     }
 
     // 4. AQLLI SOATLAR
     if (catId === 4) {
-      return p.category_id === 4 || catName.includes('soat') || name.includes('watch');
+      if (name.includes('macbook') || name.includes('iphone') || name.includes('airpods')) {
+        return false;
+      }
+      return p.category_id === 4 || catName.includes('soat') || name.includes('watch') || name.includes('soat') || name.includes('iwatch') || desc.includes('iwatch') || desc.includes('apple watch');
     }
 
     // 5. AKSESSUARLAR
