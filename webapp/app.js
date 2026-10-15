@@ -2526,6 +2526,8 @@
   let fsStartScale = 1;
   let fsStartPanX = 0;
   let fsStartPanY = 0;
+  let fsStartFocalX = 0;
+  let fsStartFocalY = 0;
   let fsLastTapTime = 0;
   let fsIsPinching = false;
   let fsIsPanning = false;
@@ -2536,6 +2538,49 @@
     const idx = Math.round(fsViewerTrackEl.scrollLeft / width);
     const slide = fsViewerTrackEl.children[idx];
     return slide ? slide.querySelector('img') : null;
+  }
+
+  function calcPanLimits(img, scale) {
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    let imgW = vw * 0.9;
+    let imgH = vh * 0.75;
+    if (img) {
+      const clientW = img.clientWidth;
+      const clientH = img.clientHeight;
+      if (clientW > 0 && clientH > 0) {
+        imgW = clientW;
+        imgH = clientH;
+      } else if (img.naturalWidth > 0 && img.naturalHeight > 0) {
+        const maxW = vw * 0.96;
+        const maxH = vh * 0.80;
+        const aspect = img.naturalWidth / img.naturalHeight;
+        if (maxW / aspect <= maxH) {
+          imgW = maxW;
+          imgH = maxW / aspect;
+        } else {
+          imgH = maxH;
+          imgW = maxH * aspect;
+        }
+      }
+    }
+
+    if (scale <= 1.02) {
+      return { maxX: 0, maxY: 0 };
+    }
+
+    const scaledW = imgW * scale;
+    const scaledH = imgH * scale;
+
+    // Chekkalar va burchaklarni bemalol ekranning o'rtasigacha va undan ham o'tkazib
+    // surib ko'rish imkonini beruvchi saxiy chegaralar (generous pan limits):
+    const baseMaxX = Math.max(0, (scaledW - vw) / 2);
+    const baseMaxY = Math.max(0, (scaledH - vh) / 2);
+
+    const maxX = Math.max(baseMaxX + vw * 0.45, scaledW / 2 + 50);
+    const maxY = Math.max(baseMaxY + vh * 0.45, scaledH / 2 + 50);
+
+    return { maxX, maxY };
   }
 
   function applyImgZoom(img, animated = false) {
@@ -2550,21 +2595,41 @@
       fsPanX = 0;
       fsPanY = 0;
       img.style.transform = '';
+      if (fsViewerDotsEl) {
+        fsViewerDotsEl.style.opacity = '1';
+        fsViewerDotsEl.style.pointerEvents = '';
+      }
       if (fsViewerTrackEl) {
         fsViewerTrackEl.style.overflowX = 'auto';
         fsViewerTrackEl.style.scrollSnapType = 'x mandatory';
+        fsViewerTrackEl.style.touchAction = 'pan-x';
       }
     } else {
-      // Chegaralarni hisoblash (pan chegaralari)
-      const maxPanX = (window.innerWidth * (fsZoomScale - 1)) / 2 + 40;
-      const maxPanY = (window.innerHeight * (fsZoomScale - 1)) / 2 + 40;
-      fsPanX = Math.max(-maxPanX, Math.min(maxPanX, fsPanX));
-      fsPanY = Math.max(-maxPanY, Math.min(maxPanY, fsPanY));
+      const limits = calcPanLimits(img, fsZoomScale);
 
-      img.style.transform = `translate3d(${fsPanX}px, ${fsPanY}px, 0) scale(${fsZoomScale})`;
+      if (!animated) {
+        // Faol surish/chimchilash paytida rezinka chegarasi
+        const overLimitMultiplier = 1.35;
+        const hardMaxX = limits.maxX * overLimitMultiplier;
+        const hardMaxY = limits.maxY * overLimitMultiplier;
+        fsPanX = Math.max(-hardMaxX, Math.min(hardMaxX, fsPanX));
+        fsPanY = Math.max(-hardMaxY, Math.min(hardMaxY, fsPanY));
+      } else {
+        // Barmoq qo'yib yuborilganda aniq chegaralarga qaytarish
+        fsPanX = Math.max(-limits.maxX, Math.min(limits.maxX, fsPanX));
+        fsPanY = Math.max(-limits.maxY, Math.min(limits.maxY, fsPanY));
+      }
+
+      img.style.transform = `translate3d(${fsPanX.toFixed(2)}px, ${fsPanY.toFixed(2)}px, 0) scale(${fsZoomScale.toFixed(4)})`;
+
+      if (fsViewerDotsEl) {
+        fsViewerDotsEl.style.opacity = '0';
+        fsViewerDotsEl.style.pointerEvents = 'none';
+      }
       if (fsViewerTrackEl) {
         fsViewerTrackEl.style.overflowX = 'hidden';
         fsViewerTrackEl.style.scrollSnapType = 'none';
+        fsViewerTrackEl.style.touchAction = 'none';
       }
     }
   }
@@ -2575,14 +2640,23 @@
     fsPanY = 0;
     fsIsPinching = false;
     fsIsPanning = false;
+    fsIsMouseDown = false;
+    if (fsViewerDotsEl) {
+      fsViewerDotsEl.style.opacity = '1';
+      fsViewerDotsEl.style.pointerEvents = '';
+    }
     if (fsViewerTrackEl) {
       fsViewerTrackEl.style.overflowX = 'auto';
       fsViewerTrackEl.style.scrollSnapType = 'x mandatory';
+      fsViewerTrackEl.style.touchAction = 'pan-x';
       Array.from(fsViewerTrackEl.children).forEach(slide => {
         const img = slide.querySelector('img');
         if (img) {
-          img.style.transition = '';
+          img.style.transition = 'transform 0.25s cubic-bezier(0.2, 0.9, 0.3, 1)';
           img.style.transform = '';
+          setTimeout(() => {
+            img.style.transition = '';
+          }, 260);
         }
       });
     }
@@ -2694,13 +2768,19 @@
       fsIsPinching = true;
       fsIsPanning = false;
       fsIsPullingDown = false;
+      fsHasMoved = true;
+      const t0 = e.touches[0];
+      const t1 = e.touches[1];
       fsInitialPinchDist = Math.hypot(
-        e.touches[0].clientX - e.touches[1].clientX,
-        e.touches[0].clientY - e.touches[1].clientY
+        t0.clientX - t1.clientX,
+        t0.clientY - t1.clientY
       );
+      fsStartFocalX = (t0.clientX + t1.clientX) / 2;
+      fsStartFocalY = (t0.clientY + t1.clientY) / 2;
       fsStartScale = fsZoomScale;
       fsStartPanX = fsPanX;
       fsStartPanY = fsPanY;
+      if (e.cancelable) e.preventDefault();
       return;
     }
 
@@ -2731,13 +2811,26 @@
   fsViewerTrackEl?.addEventListener('touchmove', (e) => {
     if (e.touches.length === 2 && fsIsPinching) {
       if (e.cancelable) e.preventDefault();
+      const t0 = e.touches[0];
+      const t1 = e.touches[1];
       const currentDist = Math.hypot(
-        e.touches[0].clientX - e.touches[1].clientX,
-        e.touches[0].clientY - e.touches[1].clientY
+        t0.clientX - t1.clientX,
+        t0.clientY - t1.clientY
       );
       if (fsInitialPinchDist > 0) {
         const factor = currentDist / fsInitialPinchDist;
-        fsZoomScale = Math.max(0.85, Math.min(4.0, fsStartScale * factor));
+        const targetScale = Math.max(0.75, Math.min(6.0, fsStartScale * factor));
+        const currFocalX = (t0.clientX + t1.clientX) / 2;
+        const currFocalY = (t0.clientY + t1.clientY) / 2;
+        const centerX = window.innerWidth / 2;
+        const centerY = window.innerHeight / 2;
+
+        // Nuqtaga tayangan (focal point) chimchilash formulasi:
+        // Barmoqlar ostidagi rasm nuqtasi harakat davomida aniq barmoqlar ostida qoladi
+        fsPanX = (currFocalX - centerX) - ((fsStartFocalX - centerX - fsStartPanX) / fsStartScale) * targetScale;
+        fsPanY = (currFocalY - centerY) - ((fsStartFocalY - centerY - fsStartPanY) / fsStartScale) * targetScale;
+        fsZoomScale = targetScale;
+
         const img = getActiveSlideImg();
         applyImgZoom(img, false);
       }
@@ -2795,13 +2888,28 @@
     }
   }, { passive: false });
 
-  function finishFsPullDown() {
+  function finishFsPullDown(e) {
+    // Agar 2 barmoqdan bittasi ko'tarilib, bittasi hali ekranda qolgan bo'lsa -> silliq pan qilishga o'tish
+    if (fsIsPinching && e && e.touches && e.touches.length === 1) {
+      fsIsPinching = false;
+      if (fsZoomScale > 1.05) {
+        fsIsPanning = true;
+        const remainingTouch = e.touches[0];
+        fsTouchStartX = remainingTouch.clientX;
+        fsTouchStartY = remainingTouch.clientY;
+        fsStartPanX = fsPanX;
+        fsStartPanY = fsPanY;
+      }
+      return;
+    }
+
     if (fsIsPinching) {
       fsIsPinching = false;
       const img = getActiveSlideImg();
-      if (fsZoomScale < 1.08) {
+      if (fsZoomScale < 1.05) {
         resetZoomState();
       } else {
+        if (fsZoomScale > 5.5) fsZoomScale = 5.5;
         applyImgZoom(img, true);
       }
       return;
@@ -2810,7 +2918,11 @@
     if (fsIsPanning) {
       fsIsPanning = false;
       const img = getActiveSlideImg();
-      applyImgZoom(img, true);
+      if (fsZoomScale < 1.05) {
+        resetZoomState();
+      } else {
+        applyImgZoom(img, true);
+      }
       return;
     }
 
@@ -2855,19 +2967,30 @@
   }
 
   fsViewerTrackEl?.addEventListener('touchend', (e) => {
+    // Agar chimchilash paytida hali bitta barmoq ekranda bo'lsa:
+    if (fsIsPinching && e.touches && e.touches.length === 1) {
+      finishFsPullDown(e);
+      return;
+    }
+
     // Double tap tekshiruvi (surilmasdan bitta barmog'i bilan 320ms ichida 2 marta bosganda)
     if (e.changedTouches && e.changedTouches.length === 1 && !fsHasMoved && !fsIsPinching) {
       const now = Date.now();
-      const targetImg = e.target.closest('.fs-viewer-slide img');
+      const touch = e.changedTouches[0];
+      const targetImg = e.target.closest('.fs-viewer-slide img') || (e.target.closest('.fs-viewer-slide')?.querySelector('img')) || getActiveSlideImg();
       if (targetImg && (now - fsLastTapTime < 320)) {
         e.preventDefault();
         triggerHaptic('light');
         if (fsZoomScale > 1.1) {
           resetZoomState();
         } else {
-          fsZoomScale = 2.4;
-          fsPanX = 0;
-          fsPanY = 0;
+          const centerX = window.innerWidth / 2;
+          const centerY = window.innerHeight / 2;
+          const targetScale = 2.6;
+          fsZoomScale = targetScale;
+          // Bosilgan nuqtaga qaratib kattalashtirish (focal zoom):
+          fsPanX = -(touch.clientX - centerX) * (targetScale - 1);
+          fsPanY = -(touch.clientY - centerY) * (targetScale - 1);
           applyImgZoom(targetImg, true);
         }
         fsLastTapTime = 0;
@@ -2876,23 +2999,26 @@
       fsLastTapTime = now;
     }
 
-    finishFsPullDown();
+    finishFsPullDown(e);
   }, { passive: false });
 
   fsViewerTrackEl?.addEventListener('touchcancel', finishFsPullDown, { passive: true });
 
-  // Double click (desktop / MacBook sichqoncha bilan ikki marta bosganda)
+  // Double click (desktop / MacBook sichqoncha bilan ikki marta bosganda bosilgan joyga yaqinlashtirish)
   fsViewerTrackEl?.addEventListener('dblclick', (e) => {
-    const targetImg = e.target.closest('.fs-viewer-slide img');
+    const targetImg = e.target.closest('.fs-viewer-slide img') || (e.target.closest('.fs-viewer-slide')?.querySelector('img')) || getActiveSlideImg();
     if (!targetImg) return;
     e.preventDefault();
     triggerHaptic('light');
     if (fsZoomScale > 1.1) {
       resetZoomState();
     } else {
-      fsZoomScale = 2.4;
-      fsPanX = 0;
-      fsPanY = 0;
+      const centerX = window.innerWidth / 2;
+      const centerY = window.innerHeight / 2;
+      const targetScale = 2.6;
+      fsZoomScale = targetScale;
+      fsPanX = -(e.clientX - centerX) * (targetScale - 1);
+      fsPanY = -(e.clientY - centerY) * (targetScale - 1);
       applyImgZoom(targetImg, true);
     }
   });
@@ -2902,8 +3028,20 @@
     // 1. MacBook trackpad chimchilash (pinch zoom - brauzerda e.ctrlKey=true beradi)
     if (e.ctrlKey) {
       e.preventDefault();
-      const delta = -e.deltaY * 0.012;
-      fsZoomScale = Math.max(1, Math.min(4.0, fsZoomScale + delta));
+      const delta = -e.deltaY * 0.015;
+      const prevScale = fsZoomScale;
+      const newScale = Math.max(1, Math.min(6.0, fsZoomScale + delta));
+      if (newScale <= 1.02) {
+        resetZoomState();
+        return;
+      }
+      const centerX = window.innerWidth / 2;
+      const centerY = window.innerHeight / 2;
+      const focalX = e.clientX;
+      const focalY = e.clientY;
+      fsPanX = (focalX - centerX) - ((focalX - centerX - fsPanX) / prevScale) * newScale;
+      fsPanY = (focalY - centerY) - ((focalY - centerY - fsPanY) / prevScale) * newScale;
+      fsZoomScale = newScale;
       const img = getActiveSlideImg();
       applyImgZoom(img, false);
       return;
@@ -2912,8 +3050,8 @@
     // 2. Agar rasm kattalashgan bo'lsa, trekpadda ikki barmoq bilan erkin pan qilish
     if (fsZoomScale > 1.05) {
       e.preventDefault();
-      fsPanX -= e.deltaX * 0.8;
-      fsPanY -= e.deltaY * 0.8;
+      fsPanX -= e.deltaX * 1.0;
+      fsPanY -= e.deltaY * 1.0;
       const img = getActiveSlideImg();
       applyImgZoom(img, false);
       return;
@@ -2924,6 +3062,45 @@
       closeFullscreenGallery();
     }
   }, { passive: false });
+
+  // Sichqoncha bilan erkin sudrash (Desktop mouse drag panning)
+  let fsIsMouseDown = false;
+  let fsMouseStartX = 0;
+  let fsMouseStartY = 0;
+
+  fsViewerTrackEl?.addEventListener('mousedown', (e) => {
+    if (e.button !== 0) return;
+    if (fsZoomScale > 1.05) {
+      fsIsMouseDown = true;
+      fsMouseStartX = e.clientX;
+      fsMouseStartY = e.clientY;
+      fsStartPanX = fsPanX;
+      fsStartPanY = fsPanY;
+      fsHasMoved = false;
+      e.preventDefault();
+    }
+  });
+
+  window.addEventListener('mousemove', (e) => {
+    if (!fsIsMouseDown || fsZoomScale <= 1.05) return;
+    const diffX = e.clientX - fsMouseStartX;
+    const diffY = e.clientY - fsMouseStartY;
+    if (Math.abs(diffX) > 4 || Math.abs(diffY) > 4) {
+      fsHasMoved = true;
+    }
+    fsPanX = fsStartPanX + diffX;
+    fsPanY = fsStartPanY + diffY;
+    const img = getActiveSlideImg();
+    applyImgZoom(img, false);
+  });
+
+  window.addEventListener('mouseup', () => {
+    if (fsIsMouseDown) {
+      fsIsMouseDown = false;
+      const img = getActiveSlideImg();
+      applyImgZoom(img, true);
+    }
+  });
 
   // Rasm atrofidagi bo'sh qora fonga (backdrop) bosilganda yopish
   fsViewerTrackEl?.addEventListener('click', (e) => {
