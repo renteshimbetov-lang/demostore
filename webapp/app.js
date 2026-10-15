@@ -3974,7 +3974,7 @@
         splashScreen.style.pointerEvents = 'none';
         setTimeout(() => {
           splashScreen.style.display = 'none';
-        }, 850);
+        }, 1100);
       }
     }
 
@@ -3985,8 +3985,8 @@
 
     splashScreen.addEventListener('click', openCurtains);
 
-    // 1.2 soniya davomida Apple 3D logo ajoyib ko'rinib, pardalar ikki tarafga silliq ochiladi
-    setTimeout(openCurtains, 1200);
+    // 2.4 soniya davomida Apple 3D logo va BlurText to'liq ko'rinib, pardalar silliq ochiladi
+    setTimeout(openCurtains, 2400);
   }
 
   // Katalogda narx bo'yicha qidirish ($ Dan - $ Gacha)

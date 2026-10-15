@@ -142,19 +142,19 @@ html, body {
 
 .splash-screen.curtain-open .curtain-left {
   transform: translate3d(-102%, 0, 0);
-  transition: transform 0.85s cubic-bezier(0.77, 0, 0.175, 1);
+  transition: transform 1.05s cubic-bezier(0.77, 0, 0.175, 1);
 }
 
 .splash-screen.curtain-open .curtain-right {
   transform: translate3d(102%, 0, 0);
-  transition: transform 0.85s cubic-bezier(0.77, 0, 0.175, 1);
+  transition: transform 1.05s cubic-bezier(0.77, 0, 0.175, 1);
 }
 
 /* Parda ochilayotganda markazdagi logo yo'q bo'ladi */
 .splash-screen.curtain-open .splash-center-content {
   opacity: 0;
-  transform: translate(-50%, -50%) scale(0.88);
-  transition: opacity 0.4s ease, transform 0.4s ease;
+  transform: translate(-50%, -50%) scale(0.9);
+  transition: opacity 0.55s ease, transform 0.55s ease;
 }
 .splash-center-content {
   position: absolute;
@@ -4127,8 +4127,8 @@ html:not(.light) .deal-cart-btn:not(.is-success):hover {
 .blur-letter {
   display: inline-block;
   will-change: transform, filter, opacity;
-  animation: blurTextIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
-  animation-delay: calc(var(--i, 0) * 55ms);
+  animation: blurTextIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--i, 0) * 75ms);
 }
 
 .blur-text-wrap.replaying .blur-letter {

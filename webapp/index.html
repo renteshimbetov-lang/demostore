@@ -19,7 +19,7 @@
   </noscript>
   
   <link rel="stylesheet" href="/static/mini_app_buttons.css?v=50.0" />
-  <link rel="stylesheet" href="/static/app.css?v=65.0" />
+  <link rel="stylesheet" href="/static/app.css?v=66.0" />
 </head>
 <body>
   <!-- To'liq ekranli Parda (Curtain Reveal) Kirish Animatsiyasi -->
@@ -99,7 +99,7 @@
         splashEl.style.pointerEvents = 'none';
         setTimeout(function () {
           splashEl.style.display = 'none';
-        }, 850);
+        }, 1100);
       }
 
       window.dismissIntroCurtains = openCurtain;
@@ -112,8 +112,8 @@
       }
       splashEl.addEventListener('click', openCurtain);
 
-      // 1.2 soniya logo to'liq ko'rsatilgach pardalar avtomatik ikki tarafga ochiladi
-      setTimeout(openCurtain, 1200);
+      // 2.4 soniya davomida 3D logo va BlurText animatsiyasi to'liq ko'rinib, pardalar silliq ochiladi
+      setTimeout(openCurtain, 2400);
     })();
   </script>
 
@@ -789,6 +789,6 @@
   </div>
 
   <script src="/static/mini_app_core.js?v=60.0"></script>
-  <script src="/static/app.js?v=66.0"></script>
+  <script src="/static/app.js?v=67.0"></script>
 </body>
 </html>
