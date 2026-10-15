@@ -3375,6 +3375,12 @@
   logoBtnEl?.addEventListener('click', (e) => {
     e.preventDefault();
     triggerHaptic('light');
+    const wrap = logoBtnEl.querySelector('.blur-text-wrap');
+    if (wrap) {
+      wrap.classList.add('replaying');
+      void wrap.offsetWidth;
+      wrap.classList.remove('replaying');
+    }
     switchTab('home');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });

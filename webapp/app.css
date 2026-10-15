@@ -4086,5 +4086,55 @@ html:not(.light) .deal-cart-btn:not(.is-success):hover {
   flex-shrink: 0;
 }
 
+/* ==========================================================================
+   React Bits: BlurText Animation (DEMO so'zi va logolar uchun)
+   ========================================================================== */
+
+@keyframes blurTextIn {
+  0% {
+    filter: blur(12px);
+    opacity: 0;
+    transform: translateY(-26px);
+  }
+  60% {
+    filter: blur(4px);
+    opacity: 0.6;
+    transform: translateY(4px);
+  }
+  100% {
+    filter: blur(0px);
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.blur-text-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+}
+
+.blur-word {
+  display: inline-flex;
+  align-items: center;
+}
+
+.blur-word-demo {
+  color: inherit;
+}
+
+.blur-letter {
+  display: inline-block;
+  will-change: transform, filter, opacity;
+  animation: blurTextIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--i, 0) * 55ms);
+}
+
+.blur-text-wrap.replaying .blur-letter {
+  animation: none !important;
+}
+
+
 
 

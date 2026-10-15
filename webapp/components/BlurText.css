@@ -1,0 +1,68 @@
+/* ==========================================================================
+   BlurText Animation (from React Bits)
+   ========================================================================== */
+
+@keyframes blurTextFromTop {
+  0% {
+    filter: blur(12px);
+    opacity: 0;
+    transform: translateY(-40px);
+  }
+  60% {
+    filter: blur(4px);
+    opacity: 0.6;
+    transform: translateY(4px);
+  }
+  100% {
+    filter: blur(0px);
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes blurTextFromBottom {
+  0% {
+    filter: blur(12px);
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  60% {
+    filter: blur(4px);
+    opacity: 0.6;
+    transform: translateY(-4px);
+  }
+  100% {
+    filter: blur(0px);
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.blur-text-wrap {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+}
+
+.blur-word {
+  display: inline-flex;
+  white-space: nowrap;
+}
+
+.blur-letter {
+  display: inline-block;
+  will-change: transform, filter, opacity;
+  animation: blurTextFromTop 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--i, 0) * 55ms);
+}
+
+.blur-letter.from-bottom {
+  animation-name: blurTextFromBottom;
+}
+
+/* Replay trigger */
+.blur-text-wrap.animate-trigger .blur-letter {
+  animation: none;
+}
