@@ -4075,5 +4075,141 @@ html:not(.light) .deal-cart-btn:not(.is-success):hover {
   }
 }
 
+/* ==========================================================================
+   KATALOG: NARX BO'YICHA QIDIRUV (SO'M DAN — SO'M GACHA)
+   ========================================================================== */
+.catalog-price-filter-card {
+  margin: 8px 16px 14px;
+  padding: 14px 14px 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+}
+
+.cpf-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.cpf-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-main);
+  letter-spacing: -0.2px;
+}
+
+.cpf-reset-btn {
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: #ef4444;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 2px 6px;
+}
+
+.cpf-inputs-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.cpf-input-group {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: var(--bg-main);
+  border: 1.5px solid var(--border-color);
+  border-radius: 11px;
+  padding: 0 10px;
+  height: 38px;
+  transition: border-color 0.15s ease;
+}
+
+.cpf-input-group:focus-within {
+  border-color: var(--text-main);
+}
+
+.cpf-input-prefix {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-right: 6px;
+  flex-shrink: 0;
+}
+
+.cpf-input {
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--text-main);
+  padding: 0;
+}
+
+.cpf-input::placeholder {
+  color: var(--text-muted);
+  font-weight: 400;
+  font-size: 0.76rem;
+}
+
+.cpf-input-suffix {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-sub);
+  margin-left: 4px;
+  flex-shrink: 0;
+}
+
+.cpf-divider {
+  color: var(--text-muted);
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.cpf-quick-chips {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.cpf-quick-chips::-webkit-scrollbar {
+  display: none;
+}
+
+.cpf-chip {
+  flex-shrink: 0;
+  padding: 5px 11px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  border-radius: 9999px;
+  background: var(--bg-main);
+  color: var(--text-sub);
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  transition: all 0.14s ease;
+  user-select: none;
+}
+
+.cpf-chip.active {
+  background: var(--text-main);
+  color: var(--bg-main);
+  border-color: var(--text-main);
+}
+
+.cpf-chip:active {
+  transform: scale(0.95);
+}
+
 
 

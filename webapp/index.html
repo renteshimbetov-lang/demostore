@@ -19,7 +19,7 @@
   </noscript>
   
   <link rel="stylesheet" href="/static/mini_app_buttons.css?v=50.0" />
-  <link rel="stylesheet" href="/static/app.css?v=60.0" />
+  <link rel="stylesheet" href="/static/app.css?v=61.0" />
 </head>
 <body>
   <!-- To'liq ekranli Parda (Curtain Reveal) Kirish Animatsiyasi -->
@@ -182,13 +182,13 @@
       <!-- Qidiruv valyutasi & Tezkor filtr bar (USD / SO'M) -->
       <div class="search-currency-bar" id="searchCurrencyBar">
         <button type="button" class="search-curr-pill active" data-curr="ALL">
-          <span>🔍 Barchasi</span>
+          <span>Barchasi</span>
         </button>
         <button type="button" class="search-curr-pill" data-curr="USD">
-          <span>💵 Narx ($)</span>
+          <span>USD ($)</span>
         </button>
         <button type="button" class="search-curr-pill" data-curr="UZS">
-          <span>🇺🇿 Narx (Soʻm)</span>
+          <span>SOʻM</span>
         </button>
       </div>
     </header>
@@ -235,20 +235,6 @@
               <h2 class="section-title" id="sectionTitle" data-i18n="popular_products">Ommabop tovarlar</h2>
               <span class="results-count-badge" id="resultsCount">Yuklanmoqda...</span>
             </div>
-            <button class="filter-trigger-btn" id="btnOpenFilter" aria-label="Filtr va Saralash">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
-              </svg>
-              <span data-i18n="filter">Filtr</span>
-            </button>
-          </div>
-
-          <div class="active-filter-bar hidden" id="activeFilterBar">
-            <div class="active-filter-chip">
-              <span class="active-filter-icon">💵</span>
-              <span id="activeFilterText">Narx: $0 — $0</span>
-              <button type="button" class="btn-clear-active-filter" id="btnRemoveActiveFilter" aria-label="Filtrni tozalash">✕</button>
-            </div>
           </div>
 
           <div class="products-grid" id="productsGrid">
@@ -290,12 +276,12 @@
             <div class="empty-suggestions">
               <span class="empty-suggestions-title">Tavsiya etilgan qidiruvlar:</span>
               <div class="empty-suggestions-chips" id="emptySuggestionsChips">
-                <button type="button" class="suggestion-chip" data-search="MacBook">💻 MacBook</button>
-                <button type="button" class="suggestion-chip" data-search="iPhone">📱 iPhone</button>
-                <button type="button" class="suggestion-chip" data-search="Watch">⌚ Apple Watch</button>
-                <button type="button" class="suggestion-chip" data-search="AirPods">🎧 AirPods</button>
-                <button type="button" class="suggestion-chip" data-search="500$">💵 $500 gacha</button>
-                <button type="button" class="suggestion-chip" data-search="6 mln">🇺🇿 6 mln soʻm</button>
+                <button type="button" class="suggestion-chip" data-search="MacBook">MacBook</button>
+                <button type="button" class="suggestion-chip" data-search="iPhone">iPhone</button>
+                <button type="button" class="suggestion-chip" data-search="Watch">Apple Watch</button>
+                <button type="button" class="suggestion-chip" data-search="AirPods">AirPods</button>
+                <button type="button" class="suggestion-chip" data-search="500$">$500 gacha</button>
+                <button type="button" class="suggestion-chip" data-search="6 mln">6 mln soʻm gacha</button>
               </div>
             </div>
           </div>
@@ -321,19 +307,41 @@
           <button class="category-pill" data-category="5" data-i18n="cat_accessories">Aksessuarlar</button>
         </div>
 
+        <!-- Katalogda narx bo'yicha qidirish (So'm dan - So'm gacha) -->
+        <div class="catalog-price-filter-card" id="catalogPriceFilterCard">
+          <div class="cpf-header">
+            <span class="cpf-title">Narx boʻyicha qidirish (soʻmda)</span>
+            <button type="button" class="cpf-reset-btn hidden" id="btnCatalogResetPrice">Tozalash</button>
+          </div>
+          <div class="cpf-inputs-row">
+            <div class="cpf-input-group">
+              <span class="cpf-input-prefix">Dan</span>
+              <input type="number" id="catalogPriceMin" class="cpf-input" placeholder="0" inputmode="numeric" />
+              <span class="cpf-input-suffix">soʻm</span>
+            </div>
+            <span class="cpf-divider">—</span>
+            <div class="cpf-input-group">
+              <span class="cpf-input-prefix">Gacha</span>
+              <input type="number" id="catalogPriceMax" class="cpf-input" placeholder="Masalan: 15 000 000" inputmode="numeric" />
+              <span class="cpf-input-suffix">soʻm</span>
+            </div>
+          </div>
+          <!-- Tezkor so'm oraliq chiplari -->
+          <div class="cpf-quick-chips" id="catalogQuickChips">
+            <button type="button" class="cpf-chip active" data-min="" data-max="">Barchasi</button>
+            <button type="button" class="cpf-chip" data-min="" data-max="6000000">&lt; 6 mln</button>
+            <button type="button" class="cpf-chip" data-min="6000000" data-max="12000000">6 — 12 mln</button>
+            <button type="button" class="cpf-chip" data-min="12000000" data-max="20000000">12 — 20 mln</button>
+            <button type="button" class="cpf-chip" data-min="20000000" data-max="">&gt; 20 mln</button>
+          </div>
+        </div>
+
         <!-- Tanlangan toifadagi mahsulotlar -->
         <div class="catalog-products-wrap">
-          <div class="section-top" style="margin-top: 20px;">
+          <div class="section-top" style="margin-top: 10px;">
             <div class="section-title-wrap">
               <h2 class="section-title" id="catalogSectionTitle">Barcha mahsulotlar</h2>
               <span class="results-count-badge" id="catalogResultsCount">...</span>
-            </div>
-          </div>
-          <div class="active-filter-bar hidden" id="catalogActiveFilterBar">
-            <div class="active-filter-chip">
-              <span class="active-filter-icon">💵</span>
-              <span id="catalogActiveFilterText">Narx: $0 — $0</span>
-              <button type="button" class="btn-clear-active-filter" id="btnRemoveCatalogActiveFilter" aria-label="Filtrni tozalash">✕</button>
             </div>
           </div>
           <div class="products-grid" id="catalogProductsGrid"></div>
@@ -807,6 +815,6 @@
   </div>
 
   <script src="/static/mini_app_core.js?v=60.0"></script>
-  <script src="/static/app.js?v=60.0"></script>
+  <script src="/static/app.js?v=61.0"></script>
 </body>
 </html>

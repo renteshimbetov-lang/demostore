@@ -837,6 +837,10 @@
       min: null,
       max: null
     },
+    catalogPriceFilter: {
+      min: null,
+      max: null
+    },
     products: cachedInitialProducts,
     isLoading: false,
     selectedProduct: null,
@@ -2087,17 +2091,63 @@
     });
   });
 
+  // Toifalarni aralash holda chiroyli taqsimlash (Smart Interleaving)
+  function getMixedCatalogProducts(list) {
+    if (!list || list.length <= 1) return list;
+    const buckets = {
+      1: [], // Smartfonlar (iPhone)
+      2: [], // Noutbuklar (MacBook)
+      4: [], // Aqlli soatlar (Apple Watch)
+      3: [], // Quloqchinlar va Audio (AirPods)
+      5: [], // Aksessuarlar
+      other: []
+    };
+    list.forEach(p => {
+      const c = p.category_id;
+      if (buckets[c]) {
+        buckets[c].push(p);
+      } else {
+        buckets.other.push(p);
+      }
+    });
+
+    const result = [];
+    const keys = [1, 2, 4, 3, 5, 'other'];
+    let idx = 0;
+    let hasMore = true;
+    while (hasMore) {
+      hasMore = false;
+      for (const k of keys) {
+        if (idx < buckets[k].length) {
+          result.push(buckets[k][idx]);
+          hasMore = true;
+        }
+      }
+      idx++;
+    }
+    return result;
+  }
+
   function renderCatalog() {
     if (!catalogProductsGridEl) return;
     let prods = state.products || [];
     if (state.selectedCategory > 0) {
       prods = prods.filter(p => isProductInCategory(p, state.selectedCategory));
+    } else {
+      // "Barchasi" toifasida oxirida yuklanganlar bir joyda qolib ketmasligi uchun toifalar aralash chiqariladi
+      prods = getMixedCatalogProducts(prods);
     }
-    const { minUsd, maxUsd } = getActivePriceFilterUsd();
-    if (minUsd !== null) {
+
+    // Katalogdagi maxsus so'm filtri (Dan - Gacha)
+    const rate = state.currentUsdRate || 12850;
+    const cpfMin = state.catalogPriceFilter?.min;
+    const cpfMax = state.catalogPriceFilter?.max;
+    if (cpfMin && cpfMin > 0) {
+      const minUsd = Math.round(cpfMin / rate);
       prods = prods.filter(p => p.price >= minUsd);
     }
-    if (maxUsd !== null) {
+    if (cpfMax && cpfMax > 0) {
+      const maxUsd = Math.round(cpfMax / rate);
       prods = prods.filter(p => p.price <= maxUsd);
     }
 
@@ -3791,6 +3841,65 @@
     });
   }
 
+  // Katalogda narx bo'yicha qidirish (So'mdan - So'mgacha)
+  function setupCatalogPriceFilter() {
+    const minInput = document.getElementById('catalogPriceMin');
+    const maxInput = document.getElementById('catalogPriceMax');
+    const resetBtn = document.getElementById('btnCatalogResetPrice');
+    const chipsWrap = document.getElementById('catalogQuickChips');
+
+    function onPriceChange() {
+      const minVal = minInput?.value ? parseFloat(minInput.value) : null;
+      const maxVal = maxInput?.value ? parseFloat(maxInput.value) : null;
+      state.catalogPriceFilter = {
+        min: minVal && minVal > 0 ? minVal : null,
+        max: maxVal && maxVal > 0 ? maxVal : null
+      };
+      const hasVal = Boolean(state.catalogPriceFilter.min || state.catalogPriceFilter.max);
+      resetBtn?.classList.toggle('hidden', !hasVal);
+
+      chipsWrap?.querySelectorAll('.cpf-chip').forEach(c => {
+        const cMin = c.dataset.min ? parseFloat(c.dataset.min) : null;
+        const cMax = c.dataset.max ? parseFloat(c.dataset.max) : null;
+        const isActive = (cMin === state.catalogPriceFilter.min && cMax === state.catalogPriceFilter.max);
+        c.classList.toggle('active', isActive);
+      });
+
+      renderCatalog();
+    }
+
+    minInput?.addEventListener('input', onPriceChange);
+    maxInput?.addEventListener('input', onPriceChange);
+
+    chipsWrap?.querySelectorAll('.cpf-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        triggerHaptic('light');
+        const cMin = chip.dataset.min ? parseFloat(chip.dataset.min) : null;
+        const cMax = chip.dataset.max ? parseFloat(chip.dataset.max) : null;
+        if (minInput) minInput.value = cMin ? cMin : '';
+        if (maxInput) maxInput.value = cMax ? cMax : '';
+        state.catalogPriceFilter = { min: cMin, max: cMax };
+        const hasVal = Boolean(cMin || cMax);
+        resetBtn?.classList.toggle('hidden', !hasVal);
+
+        chipsWrap.querySelectorAll('.cpf-chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+
+        renderCatalog();
+      });
+    });
+
+    resetBtn?.addEventListener('click', () => {
+      triggerHaptic('light');
+      if (minInput) minInput.value = '';
+      if (maxInput) maxInput.value = '';
+      state.catalogPriceFilter = { min: null, max: null };
+      resetBtn.classList.add('hidden');
+      chipsWrap?.querySelectorAll('.cpf-chip').forEach((c, idx) => c.classList.toggle('active', idx === 0));
+      renderCatalog();
+    });
+  }
+
   // ==========================================================================
   // INITSIALIZATSIYA
   // ==========================================================================
@@ -3803,6 +3912,7 @@
     updateCartBadges();
     setupSearchCurrencyBar();
     setupEmptySuggestions();
+    setupCatalogPriceFilter();
     updateFilterCurrencyUI('USD', false);
     updateActiveFilterBadges();
 
