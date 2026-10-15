@@ -1235,11 +1235,13 @@
 
     // 1. FAQAT va FAQAT admin tomonidan 'Hafta chegirmalari'ga biriktirilgan (is_discount === 1) tovarlar chiqadi!
     // Oddiy 'Ha, joylansin' bilan tasdiqlangan tovarlar hech qachon bu yerga kirmaydi!
-    const discountItems = state.products.filter(p => Number(p.is_discount) === 1);
+    let discountItems = state.products.filter(p => Number(p.is_discount) === 1);
     if (discountItems.length === 0) {
       if (discountsSliderSectionEl) discountsSliderSectionEl.classList.add('hidden');
       return;
     }
+    // Hafta chegirmalari ham toifalar bo'yicha aralash (interleaved) tartibda ko'rsatiladi
+    discountItems = getMixedCatalogProducts(discountItems);
     const discountRates = [15, 20, 12, 18, 25, 16, 22, 10];
 
     let html = '';

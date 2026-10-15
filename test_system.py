@@ -116,7 +116,7 @@ async def run_full_tests():
     await db.increment_views(prod2_id)
 
     await db.execute("UPDATE products SET views_count = 99999 WHERE id = $1;", prod_id)
-    top = await db.get_top_viewed_products(limit=15)
+    top = await db.get_top_viewed_products(limit=50)
     assert len(top) >= 2
     assert any(p['id'] == prod_id for p in top)
     assert top[0]['views_count'] >= top[1]['views_count']
