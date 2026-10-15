@@ -3039,6 +3039,10 @@
     if (maxUsd !== null) {
       products = products.filter(p => p.price <= maxUsd);
     }
+    if (!isSearching && (!state.selectedSort || state.selectedSort === 'default')) {
+      // Bosh sahifada ham oxirida yuklanganlar bir joyda qolib ketmasligi uchun toifalar aralash holda ko'rsatiladi
+      products = getMixedCatalogProducts(products);
+    }
 
     if (!products || products.length === 0) {
       lastRenderedSignature = 'empty_home_' + (hasPriceFilter ? 'f' : '');
