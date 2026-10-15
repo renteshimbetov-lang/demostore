@@ -19,7 +19,7 @@
   </noscript>
   
   <link rel="stylesheet" href="/static/mini_app_buttons.css?v=50.0" />
-  <link rel="stylesheet" href="/static/app.css?v=57.0" />
+  <link rel="stylesheet" href="/static/app.css?v=59.0" />
 </head>
 <body>
   <!-- To'liq ekranli Parda (Curtain Reveal) Kirish Animatsiyasi -->
@@ -230,6 +230,14 @@
             </button>
           </div>
 
+          <div class="active-filter-bar hidden" id="activeFilterBar">
+            <div class="active-filter-chip">
+              <span class="active-filter-icon">💵</span>
+              <span id="activeFilterText">Narx: $0 — $0</span>
+              <button type="button" class="btn-clear-active-filter" id="btnRemoveActiveFilter" aria-label="Filtrni tozalash">✕</button>
+            </div>
+          </div>
+
           <div class="products-grid" id="productsGrid">
             <!-- Skeleton yuklanish kartalari -->
             <div class="skeleton-card">
@@ -326,6 +334,13 @@
             <div class="section-title-wrap">
               <h2 class="section-title" id="catalogSectionTitle">Barcha mahsulotlar</h2>
               <span class="results-count-badge" id="catalogResultsCount">...</span>
+            </div>
+          </div>
+          <div class="active-filter-bar hidden" id="catalogActiveFilterBar">
+            <div class="active-filter-chip">
+              <span class="active-filter-icon">💵</span>
+              <span id="catalogActiveFilterText">Narx: $0 — $0</span>
+              <button type="button" class="btn-clear-active-filter" id="btnRemoveCatalogActiveFilter" aria-label="Filtrni tozalash">✕</button>
             </div>
           </div>
           <div class="products-grid" id="catalogProductsGrid"></div>
@@ -577,7 +592,7 @@
           </div>
           <button class="pd-add-btn btn-bounce" id="pdAddToCartBtn" data-haptic="medium">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-            <span id="pdBtnText">Sotib olish</span>
+            <span id="pdBtnText" data-i18n="add_to_cart">Savatga</span>
           </button>
         </div>
       </section>
@@ -707,33 +722,72 @@
     <div class="drawer drawer-bottom" id="bottomFilterDrawer" aria-label="Saralash & Filtr">
       <div class="drawer-drag-pill"></div>
       <div class="drawer-head">
-        <span class="drawer-title">Saralash & Filtr</span>
+        <span class="drawer-title" data-i18n="filter_title">Saralash & Filtr</span>
         <button class="icon-btn close-btn" id="btnCloseFilter" aria-label="Yopish">✕</button>
       </div>
       <div class="drawer-body">
-        <div class="filter-opt">
-          <label class="filter-radio-row">
-            <input type="radio" name="sort" value="default" checked />
-            <span class="radio-label">Odatiy (Kanal tartibi)</span>
-          </label>
-          <label class="filter-radio-row">
-            <input type="radio" name="sort" value="popular" />
-            <span class="radio-label">Eng ommabop mahsulotlar</span>
-          </label>
-          <label class="filter-radio-row">
-            <input type="radio" name="sort" value="price_asc" />
-            <span class="radio-label">Arzonroqdan qimmatroqqa ($)</span>
-          </label>
-          <label class="filter-radio-row">
-            <input type="radio" name="sort" value="price_desc" />
-            <span class="radio-label">Qimmatroqdan arzonroqqa ($)</span>
-          </label>
-          <label class="filter-radio-row">
-            <input type="radio" name="sort" value="newest" />
-            <span class="radio-label">Eng yangi qoʻshilganlar</span>
-          </label>
+        
+        <!-- 1. Summa / Narx bo'yicha qidiruv & filtr -->
+        <div class="filter-section">
+          <div class="filter-section-head">
+            <span class="filter-section-label" data-i18n="filter_price_title">Narx boʻyicha qidirish</span>
+            <div class="filter-curr-toggle" id="filterCurrencySwitcher">
+              <button type="button" class="curr-pill active" data-currency="USD">USD ($)</button>
+              <button type="button" class="curr-pill" data-currency="UZS">SOʻM</button>
+            </div>
+          </div>
+
+          <div class="filter-price-inputs">
+            <div class="filter-price-field">
+              <span class="price-field-prefix" id="pricePrefixMin">$</span>
+              <input type="number" id="filterPriceMin" class="filter-price-input" placeholder="Dan" inputmode="numeric" />
+            </div>
+            <span class="filter-price-sep">—</span>
+            <div class="filter-price-field">
+              <span class="price-field-prefix" id="pricePrefixMax">$</span>
+              <input type="number" id="filterPriceMax" class="filter-price-input" placeholder="Gacha" inputmode="numeric" />
+            </div>
+          </div>
+
+          <div class="filter-price-hint hidden" id="filterPriceHint"></div>
+
+          <!-- Tezkor narx oralig'i chiplari -->
+          <div class="filter-quick-chips" id="filterQuickChips"></div>
         </div>
-        <button class="btn-buy" style="margin-top: 20px; width: 100%;" id="btnApplyFilter">Qoʻllash</button>
+
+        <div class="filter-divider"></div>
+
+        <!-- 2. Saralash tartibi (Sort) -->
+        <div class="filter-section">
+          <span class="filter-section-label" data-i18n="sort_title" style="margin-bottom: 12px; display: block;">Saralash tartibi</span>
+          <div class="filter-opt">
+            <label class="filter-radio-row">
+              <input type="radio" name="sort" value="default" checked />
+              <span class="radio-label" data-i18n="sort_default">Odatiy (Kanal tartibi)</span>
+            </label>
+            <label class="filter-radio-row">
+              <input type="radio" name="sort" value="popular" />
+              <span class="radio-label" data-i18n="sort_popular">Eng ommabop mahsulotlar</span>
+            </label>
+            <label class="filter-radio-row">
+              <input type="radio" name="sort" value="price_asc" />
+              <span class="radio-label" data-i18n="sort_price_asc">Arzonroqdan qimmatroqqa ($)</span>
+            </label>
+            <label class="filter-radio-row">
+              <input type="radio" name="sort" value="price_desc" />
+              <span class="radio-label" data-i18n="sort_price_desc">Qimmatroqdan arzonroqqa ($)</span>
+            </label>
+            <label class="filter-radio-row">
+              <input type="radio" name="sort" value="newest" />
+              <span class="radio-label" data-i18n="sort_newest">Eng yangi qoʻshilganlar</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="filter-actions-row">
+          <button class="btn-filter-reset" id="btnResetFilter" type="button" data-i18n="clear">Tozalash</button>
+          <button class="btn-buy btn-filter-apply" id="btnApplyFilter" type="button" data-i18n="apply">Qoʻllash</button>
+        </div>
       </div>
     </div>
 
@@ -760,6 +814,6 @@
   </div>
 
   <script src="/static/mini_app_core.js?v=56.0"></script>
-  <script src="/static/app.js?v=58.0"></script>
+  <script src="/static/app.js?v=59.0"></script>
 </body>
 </html>

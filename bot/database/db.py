@@ -330,9 +330,11 @@ class Database:
         self,
         category_id: Optional[int] = None,
         sort_by: str = "default",
-        search: Optional[str] = None
+        search: Optional[str] = None,
+        min_price: Optional[int] = None,
+        max_price: Optional[int] = None
     ) -> List[Dict[str, Any]]:
-        """Web App va katalog uchun saralangan, faol mahsulotlarni olish"""
+        """Web App va katalog uchun saralangan, faol mahsulotlarni olish (narx va toifa bo'yicha filter)"""
         query = """
             SELECT p.*, c.name as category_name 
             FROM products p 
@@ -345,10 +347,25 @@ class Database:
             params.append(category_id)
             query += f" AND p.category_id = ${len(params)}"
 
+        if min_price is not None and min_price > 0:
+            params.append(min_price)
+            query += f" AND p.price >= ${len(params)}"
+
+        if max_price is not None and max_price > 0:
+            params.append(max_price)
+            query += f" AND p.price <= ${len(params)}"
+
         if search and search.strip():
-            params.append(f"%{search.strip()}%")
+            raw_search = search.strip()
+            params.append(f"%{raw_search}%")
             p_idx = len(params)
-            query += f" AND (p.name ILIKE ${p_idx} OR p.description ILIKE ${p_idx})"
+            clean_digits = ''.join(c for c in raw_search if c.isdigit())
+            if clean_digits and len(clean_digits) <= 6 and not any(c.isalpha() for c in raw_search):
+                p_val = int(clean_digits)
+                params.append(p_val)
+                query += f" AND (p.name ILIKE ${p_idx} OR p.description ILIKE ${p_idx} OR p.price = ${len(params)})"
+            else:
+                query += f" AND (p.name ILIKE ${p_idx} OR p.description ILIKE ${p_idx})"
 
         if sort_by == "price_asc":
             query += " ORDER BY p.price ASC"

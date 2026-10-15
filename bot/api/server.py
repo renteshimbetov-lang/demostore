@@ -209,12 +209,19 @@ def create_web_app(db: Database, webapp_dir: str) -> web.Application:
         category_id_param = request.query.get("category_id")
         sort_param = request.query.get("sort", "default")
         search_param = request.query.get("search", "")
+        min_price_param = request.query.get("min_price")
+        max_price_param = request.query.get("max_price")
 
         category_id = int(category_id_param) if category_id_param and category_id_param.isdigit() else None
+        min_price = int(min_price_param) if min_price_param and min_price_param.isdigit() else None
+        max_price = int(max_price_param) if max_price_param and max_price_param.isdigit() else None
+
         products = await db.get_active_products(
             category_id=category_id,
             sort_by=sort_param,
-            search=search_param
+            search=search_param,
+            min_price=min_price,
+            max_price=max_price
         )
         current_rate = await get_cbu_usd_rate()
 

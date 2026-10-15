@@ -1214,6 +1214,253 @@ html.light .nav-link-row:active, html.light .nav-link-row:hover {
 }
 
 /* ==========================================================================
+   NARX FILTRI VA VALYUTA TANLASH (Price & Currency Filter)
+   ========================================================================== */
+.filter-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.filter-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.filter-section-label {
+  font-family: var(--font-heading);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.filter-curr-toggle {
+  display: inline-flex;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  padding: 3px;
+  gap: 3px;
+}
+
+.filter-curr-toggle .curr-pill {
+  border: none;
+  background: transparent;
+  color: var(--text-sub);
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.filter-curr-toggle .curr-pill.active {
+  background: var(--text-main);
+  color: var(--bg-main);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.filter-price-inputs {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.filter-price-field {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 0 12px;
+  height: 44px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.filter-price-field:focus-within {
+  border-color: var(--accent-yellow);
+  box-shadow: 0 0 0 3px rgba(255, 214, 10, 0.15);
+}
+
+.price-field-prefix {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-sub);
+  margin-right: 6px;
+  user-select: none;
+}
+
+.filter-price-input {
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: var(--text-main);
+  font-size: 0.95rem;
+  font-weight: 600;
+  outline: none;
+}
+
+.filter-price-input::placeholder {
+  color: var(--text-sub);
+  font-weight: 400;
+  opacity: 0.6;
+}
+
+.filter-price-sep {
+  color: var(--text-sub);
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.filter-price-hint {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #34c759;
+  background: rgba(52, 199, 89, 0.1);
+  padding: 5px 10px;
+  border-radius: 8px;
+  display: inline-block;
+  align-self: flex-start;
+}
+
+.filter-quick-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.filter-quick-chip {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-sub);
+  padding: 6px 12px;
+  border-radius: 18px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.filter-quick-chip:active {
+  transform: scale(0.96);
+}
+
+.filter-quick-chip.active {
+  background: rgba(255, 214, 10, 0.15);
+  color: var(--accent-yellow);
+  border-color: var(--accent-yellow);
+}
+
+.filter-divider {
+  height: 1px;
+  background: var(--border-color);
+  margin: 16px 0;
+}
+
+.filter-actions-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.btn-filter-reset {
+  flex: 1;
+  height: 48px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  color: var(--text-sub);
+  font-size: 0.95rem;
+  font-weight: 600;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-filter-reset:active {
+  transform: scale(0.97);
+  background: rgba(255, 59, 48, 0.1);
+  color: #ff3b30;
+  border-color: #ff3b30;
+}
+
+.btn-filter-apply {
+  flex: 2;
+  height: 48px;
+  margin-top: 0 !important;
+}
+
+/* Faol filtr ko'rinishi (Active Filter Bar) */
+.active-filter-bar {
+  margin: 10px 0 16px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.active-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 214, 10, 0.12);
+  border: 1px solid rgba(255, 214, 10, 0.4);
+  color: var(--text-main);
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  animation: fadeInPill 0.25s ease-out;
+}
+
+.btn-clear-active-filter {
+  border: none;
+  background: rgba(255, 255, 255, 0.15);
+  color: var(--text-main);
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin-left: 4px;
+  transition: background 0.2s ease;
+}
+
+.btn-clear-active-filter:active {
+  background: rgba(255, 59, 48, 0.8);
+  color: #ffffff;
+}
+
+.filter-trigger-btn.has-filter {
+  background: rgba(255, 214, 10, 0.15);
+  border-color: var(--accent-yellow);
+  color: var(--accent-yellow);
+}
+
+.filter-trigger-btn.has-filter::after {
+  content: '';
+  width: 7px;
+  height: 7px;
+  background: var(--accent-yellow);
+  border-radius: 50%;
+  margin-left: 4px;
+  box-shadow: 0 0 8px var(--accent-yellow);
+}
+
+@keyframes fadeInPill {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ==========================================================================
    6. SAVAT DARCHASI (Cart Items & Summary)
    ========================================================================== */
 .cart-items-list {

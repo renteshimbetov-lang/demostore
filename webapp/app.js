@@ -602,9 +602,14 @@
       sort_price_desc: "Qimmatroqdan arzonroqqa ($)",
       sort_newest: "Eng yangi qoʻshilganlar",
       apply: "Qoʻllash",
-      add_to_cart: "Sotib olish",
-      buy_now: "Sotib olish",
+      add_to_cart: "Savatga",
+      buy_now: "Savatga",
       go_to_order: "Buyurtmaga",
+      filter_price_title: "Narx boʻyicha qidirish",
+      sort_title: "Saralash tartibi",
+      price_dan: "Dan",
+      price_gacha: "Gacha",
+      price_range_all: "Barchasi",
       view_in_channel: "Kanaldan koʻrish",
       adding: "Qo'shilmoqda...",
       added: "Qo'shildi!",
@@ -674,9 +679,14 @@
       sort_price_desc: "Сначала дороже ($)",
       sort_newest: "Сначала новинки",
       apply: "Применить",
-      add_to_cart: "Купить",
-      buy_now: "Купить",
+      add_to_cart: "В корзину",
+      buy_now: "В корзину",
       go_to_order: "К заказу",
+      filter_price_title: "Поиск по цене",
+      sort_title: "Порядок сортировки",
+      price_dan: "От",
+      price_gacha: "До",
+      price_range_all: "Все цены",
       view_in_channel: "В канале",
       adding: "Добавление...",
       added: "Добавлено!",
@@ -746,9 +756,14 @@
       sort_price_desc: "Price: High to Low ($)",
       sort_newest: "Newest Arrivals",
       apply: "Apply",
-      add_to_cart: "Buy Now",
-      buy_now: "Buy Now",
+      add_to_cart: "To Cart",
+      buy_now: "To Cart",
       go_to_order: "To Order",
+      filter_price_title: "Filter by Price",
+      sort_title: "Sort Order",
+      price_dan: "From",
+      price_gacha: "To",
+      price_range_all: "All prices",
       view_in_channel: "In Channel",
       adding: "Adding...",
       added: "Added!",
@@ -816,6 +831,11 @@
     selectedCategory: 0,
     selectedSort: 'default',
     searchQuery: '',
+    priceFilter: {
+      currency: 'USD', // 'USD' yoki 'UZS'
+      min: null,
+      max: null
+    },
     products: cachedInitialProducts,
     isLoading: false,
     selectedProduct: null,
@@ -867,6 +887,20 @@
   const btnOpenFilterEl = document.getElementById('btnOpenFilter');
   const btnCloseFilterEl = document.getElementById('btnCloseFilter');
   const btnApplyFilterEl = document.getElementById('btnApplyFilter');
+  const btnResetFilterEl = document.getElementById('btnResetFilter');
+  const filterCurrencySwitcherEl = document.getElementById('filterCurrencySwitcher');
+  const filterPriceMinEl = document.getElementById('filterPriceMin');
+  const filterPriceMaxEl = document.getElementById('filterPriceMax');
+  const filterPriceHintEl = document.getElementById('filterPriceHint');
+  const filterQuickChipsEl = document.getElementById('filterQuickChips');
+  const pricePrefixMinEl = document.getElementById('pricePrefixMin');
+  const pricePrefixMaxEl = document.getElementById('pricePrefixMax');
+  const activeFilterBarEl = document.getElementById('activeFilterBar');
+  const activeFilterTextEl = document.getElementById('activeFilterText');
+  const btnRemoveActiveFilterEl = document.getElementById('btnRemoveActiveFilter');
+  const catalogActiveFilterBarEl = document.getElementById('catalogActiveFilterBar');
+  const catalogActiveFilterTextEl = document.getElementById('catalogActiveFilterText');
+  const btnRemoveCatalogActiveFilterEl = document.getElementById('btnRemoveCatalogActiveFilter');
   const btnToggleThemeEl = document.getElementById('btnToggleTheme');
   const btnHeaderCartEl = document.getElementById('btnHeaderCart');
   const headerCartBadgeEl = document.getElementById('headerCartBadge');
@@ -2054,9 +2088,16 @@
 
   function renderCatalog() {
     if (!catalogProductsGridEl) return;
-    let prods = state.products;
+    let prods = state.products || [];
     if (state.selectedCategory > 0) {
       prods = prods.filter(p => isProductInCategory(p, state.selectedCategory));
+    }
+    const { minUsd, maxUsd } = getActivePriceFilterUsd();
+    if (minUsd !== null) {
+      prods = prods.filter(p => p.price >= minUsd);
+    }
+    if (maxUsd !== null) {
+      prods = prods.filter(p => p.price <= maxUsd);
     }
 
     const catKeys = {
@@ -2858,6 +2899,13 @@
       if (state.searchQuery.trim()) {
         params.append('search', state.searchQuery.trim());
       }
+      const { minUsd, maxUsd } = getActivePriceFilterUsd();
+      if (minUsd !== null && minUsd > 0) {
+        params.append('min_price', minUsd);
+      }
+      if (maxUsd !== null && maxUsd > 0) {
+        params.append('max_price', maxUsd);
+      }
 
       const res = await fetch(`/api/products?${params.toString()}`);
       if (!res.ok) throw new Error('Mahsulotlar yuklanmadi');
@@ -2880,8 +2928,8 @@
         }
       }
 
-      // Keshga saqlash (Keyingi ochilishda 0ms da yuklash uchun)
-      if (!state.searchQuery.trim() && state.selectedCategory === 0 && (!state.selectedSort || state.selectedSort === 'default')) {
+      // Keshga saqlash (Keyingi ochilishda 0ms da yuklash uchun, faqat to'liq ro'yxat)
+      if (!state.searchQuery.trim() && state.selectedCategory === 0 && (!state.selectedSort || state.selectedSort === 'default') && minUsd === null && maxUsd === null) {
         try {
           localStorage.setItem('demostore_cached_products', JSON.stringify(state.products));
           localStorage.setItem('demostore_cached_usd_rate', String(state.currentUsdRate));
@@ -2918,17 +2966,31 @@
   let lastRenderedSignature = '';
   function renderProducts(force = false) {
     if (!productsGridEl) return;
+    const { minUsd, maxUsd } = getActivePriceFilterUsd();
+    const hasPriceFilter = minUsd !== null || maxUsd !== null;
     const isSearching = Boolean(state.searchQuery && state.searchQuery.trim().length > 0);
     if (discountsSliderSectionEl) {
-      discountsSliderSectionEl.classList.toggle('hidden', isSearching);
+      discountsSliderSectionEl.classList.toggle('hidden', isSearching || hasPriceFilter);
     }
     if (sectionTitleEl) {
-      sectionTitleEl.textContent = isSearching ? t('search_results') : t('popular_products');
+      if (isSearching) {
+        sectionTitleEl.textContent = t('search_results');
+      } else if (hasPriceFilter) {
+        sectionTitleEl.textContent = t('filter_price_title');
+      } else {
+        sectionTitleEl.textContent = t('popular_products');
+      }
     }
-    const products = state.products;
+    let products = state.products || [];
+    if (minUsd !== null) {
+      products = products.filter(p => p.price >= minUsd);
+    }
+    if (maxUsd !== null) {
+      products = products.filter(p => p.price <= maxUsd);
+    }
 
     if (!products || products.length === 0) {
-      lastRenderedSignature = 'empty_home';
+      lastRenderedSignature = 'empty_home_' + (hasPriceFilter ? 'f' : '');
       productsGridEl.innerHTML = '';
       emptyStateEl?.classList.remove('hidden');
       if (resultsCountEl) resultsCountEl.textContent = `0 ${t('items_suffix')}`;
@@ -2938,7 +3000,7 @@
     emptyStateEl?.classList.add('hidden');
     if (resultsCountEl) resultsCountEl.textContent = `${products.length} ${t('items_suffix')}`;
 
-    const signature = 'home_' + products.map(p => `${p.id}:${p.price}:${state.wishlist.has(p.id)}`).join(',');
+    const signature = 'home_' + (hasPriceFilter ? 'f_' : '') + products.map(p => `${p.id}:${p.price}:${state.wishlist.has(p.id)}`).join(',');
     if (!force && signature === lastRenderedSignature) {
       return;
     }
@@ -3070,6 +3132,199 @@
     }
   }
 
+  // ==========================================================================
+  // NARX VA VALYUTA BO'YICHA QIDIRUV VA FILTR (USD & SO'M)
+  // ==========================================================================
+  function formatNumberSpace(n) {
+    if (n === null || n === undefined || isNaN(n)) return '0';
+    return Math.round(Number(n)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  }
+
+  function getActivePriceFilterUsd() {
+    const { currency, min, max } = state.priceFilter || {};
+    const hasMin = min !== null && min !== undefined && min !== '' && !isNaN(min);
+    const hasMax = max !== null && max !== undefined && max !== '' && !isNaN(max);
+    if (!hasMin && !hasMax) {
+      return { minUsd: null, maxUsd: null };
+    }
+    const rate = state.currentUsdRate || 12850;
+    const numMin = hasMin ? Number(min) : null;
+    const numMax = hasMax ? Number(max) : null;
+    if (currency === 'UZS') {
+      return {
+        minUsd: numMin !== null ? Math.max(1, Math.round(numMin / rate)) : null,
+        maxUsd: numMax !== null ? Math.max(1, Math.round(numMax / rate)) : null
+      };
+    }
+    return {
+      minUsd: numMin,
+      maxUsd: numMax
+    };
+  }
+
+  function renderFilterQuickChips() {
+    if (!filterQuickChipsEl) return;
+    const curr = state.priceFilter.currency || 'USD';
+    const chipsUsd = [
+      { label: '< $500', min: null, max: 500 },
+      { label: '$500 - $1 000', min: 500, max: 1000 },
+      { label: '$1 000 - $1 500', min: 1000, max: 1500 },
+      { label: '> $1 500', min: 1500, max: null },
+      { label: t('price_range_all') || 'Barchasi', min: null, max: null }
+    ];
+    const chipsUzs = [
+      { label: '< 6 mln', min: null, max: 6000000 },
+      { label: '6 - 12 mln', min: 6000000, max: 12000000 },
+      { label: '12 - 20 mln', min: 12000000, max: 20000000 },
+      { label: '> 20 mln', min: 20000000, max: null },
+      { label: t('price_range_all') || 'Barchasi', min: null, max: null }
+    ];
+    const list = curr === 'UZS' ? chipsUzs : chipsUsd;
+
+    const curMin = filterPriceMinEl?.value ? Number(filterPriceMinEl.value) : null;
+    const curMax = filterPriceMaxEl?.value ? Number(filterPriceMaxEl.value) : null;
+
+    let html = '';
+    list.forEach(c => {
+      const isExactMatch = (c.min === curMin && c.max === curMax);
+      const isAllMatch = (c.min === null && c.max === null && curMin === null && curMax === null);
+      const isActive = isExactMatch || isAllMatch;
+      html += `
+        <button type="button" class="filter-quick-chip ${isActive ? 'active' : ''}" 
+                data-min="${c.min !== null ? c.min : ''}" 
+                data-max="${c.max !== null ? c.max : ''}">
+          ${c.label}
+        </button>
+      `;
+    });
+    filterQuickChipsEl.innerHTML = html;
+
+    filterQuickChipsEl.querySelectorAll('.filter-quick-chip').forEach(btn => {
+      btn.addEventListener('click', () => {
+        triggerHaptic('light');
+        const minAttr = btn.dataset.min;
+        const maxAttr = btn.dataset.max;
+        if (filterPriceMinEl) filterPriceMinEl.value = minAttr !== '' ? minAttr : '';
+        if (filterPriceMaxEl) filterPriceMaxEl.value = maxAttr !== '' ? maxAttr : '';
+        filterQuickChipsEl.querySelectorAll('.filter-quick-chip').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        updateFilterPriceHint();
+      });
+    });
+  }
+
+  function updateFilterCurrencyUI(newCurr, convertValues = false) {
+    const oldCurr = state.priceFilter.currency || 'USD';
+    state.priceFilter.currency = newCurr;
+
+    if (filterCurrencySwitcherEl) {
+      filterCurrencySwitcherEl.querySelectorAll('.curr-pill').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.currency === newCurr);
+      });
+    }
+
+    const rate = state.currentUsdRate || 12850;
+    if (pricePrefixMinEl) pricePrefixMinEl.textContent = newCurr === 'USD' ? '$' : 'soʻm';
+    if (pricePrefixMaxEl) pricePrefixMaxEl.textContent = newCurr === 'USD' ? '$' : 'soʻm';
+
+    if (filterPriceMinEl) {
+      filterPriceMinEl.placeholder = newCurr === 'USD' ? '500' : '6 000 000';
+    }
+    if (filterPriceMaxEl) {
+      filterPriceMaxEl.placeholder = newCurr === 'USD' ? '1 500' : '15 000 000';
+    }
+
+    if (convertValues && oldCurr !== newCurr) {
+      const curMin = filterPriceMinEl?.value ? Number(filterPriceMinEl.value) : null;
+      const curMax = filterPriceMaxEl?.value ? Number(filterPriceMaxEl.value) : null;
+      if (newCurr === 'UZS') {
+        if (curMin && filterPriceMinEl) filterPriceMinEl.value = Math.round(curMin * rate);
+        if (curMax && filterPriceMaxEl) filterPriceMaxEl.value = Math.round(curMax * rate);
+      } else {
+        if (curMin && filterPriceMinEl) filterPriceMinEl.value = Math.round(curMin / rate);
+        if (curMax && filterPriceMaxEl) filterPriceMaxEl.value = Math.round(curMax / rate);
+      }
+    }
+
+    renderFilterQuickChips();
+    updateFilterPriceHint();
+  }
+
+  function updateFilterPriceHint() {
+    if (!filterPriceHintEl) return;
+    const curr = state.priceFilter.currency || 'USD';
+    const rate = state.currentUsdRate || 12850;
+    const minVal = filterPriceMinEl?.value ? Number(filterPriceMinEl.value) : null;
+    const maxVal = filterPriceMaxEl?.value ? Number(filterPriceMaxEl.value) : null;
+
+    if (!minVal && !maxVal) {
+      filterPriceHintEl.classList.add('hidden');
+      filterPriceHintEl.innerHTML = '';
+      return;
+    }
+
+    filterPriceHintEl.classList.remove('hidden');
+    if (curr === 'USD') {
+      const minUzs = minVal ? `${formatNumberSpace(minVal * rate)} soʻm` : '0';
+      const maxUzs = maxVal ? `${formatNumberSpace(maxVal * rate)} soʻm` : '∞';
+      filterPriceHintEl.innerHTML = `
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        <span>≈ <strong>${minUzs} — ${maxUzs}</strong> (MB kursi: 1$ = ${formatNumberSpace(rate)} soʻm)</span>
+      `;
+    } else {
+      const minUsd = minVal ? `$${formatNumberSpace(minVal / rate)}` : '$0';
+      const maxUsd = maxVal ? `$${formatNumberSpace(maxVal / rate)}` : '∞';
+      filterPriceHintEl.innerHTML = `
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        <span>≈ <strong>${minUsd} — ${maxUsd}</strong> (MB kursi: 1$ = ${formatNumberSpace(rate)} soʻm)</span>
+      `;
+    }
+  }
+
+  function updateActiveFilterBadges() {
+    const { minUsd, maxUsd } = getActivePriceFilterUsd();
+    const isFilterActive = minUsd !== null || maxUsd !== null;
+
+    btnOpenFilterEl?.classList.toggle('has-filter', isFilterActive);
+
+    if (!isFilterActive) {
+      activeFilterBarEl?.classList.add('hidden');
+      catalogActiveFilterBarEl?.classList.add('hidden');
+      return;
+    }
+
+    const { currency, min, max } = state.priceFilter;
+    let label = '';
+    if (currency === 'UZS') {
+      const sMin = min ? formatNumberSpace(min) : '0';
+      const sMax = max ? formatNumberSpace(max) : '∞';
+      label = `${sMin} — ${sMax} soʻm`;
+    } else {
+      const sMin = min ? `$${formatNumberSpace(min)}` : '$0';
+      const sMax = max ? `$${formatNumberSpace(max)}` : '∞';
+      label = `${sMin} — ${sMax}`;
+    }
+
+    if (activeFilterTextEl) activeFilterTextEl.textContent = label;
+    if (catalogActiveFilterTextEl) catalogActiveFilterTextEl.textContent = label;
+    activeFilterBarEl?.classList.remove('hidden');
+    catalogActiveFilterBarEl?.classList.remove('hidden');
+  }
+
+  function clearPriceFilter() {
+    triggerHaptic('light');
+    state.priceFilter = {
+      currency: 'USD',
+      min: null,
+      max: null
+    };
+    if (filterPriceMinEl) filterPriceMinEl.value = '';
+    if (filterPriceMaxEl) filterPriceMaxEl.value = '';
+    updateFilterCurrencyUI('USD', false);
+    updateActiveFilterBadges();
+    loadProducts();
+  }
+
   // Drawers (Menyu & Filtr)
   function openLeftMenu() {
     triggerHaptic('light');
@@ -3081,6 +3336,12 @@
   function openFilter() {
     triggerHaptic('light');
     closeAllDrawers();
+    updateFilterCurrencyUI(state.priceFilter.currency || 'USD', false);
+    if (filterPriceMinEl) filterPriceMinEl.value = state.priceFilter.min !== null && state.priceFilter.min !== undefined ? state.priceFilter.min : '';
+    if (filterPriceMaxEl) filterPriceMaxEl.value = state.priceFilter.max !== null && state.priceFilter.max !== undefined ? state.priceFilter.max : '';
+    updateFilterPriceHint();
+    const sortRadio = bottomFilterEl?.querySelector(`input[name="sort"][value="${state.selectedSort}"]`);
+    if (sortRadio) sortRadio.checked = true;
     bottomFilterEl?.classList.add('active');
     backdropEl?.classList.add('active');
   }
@@ -3274,6 +3535,10 @@
     state.selectedCategory = 0;
     state.selectedSort = 'default';
     state.searchQuery = '';
+    state.priceFilter = { currency: 'USD', min: null, max: null };
+    if (filterPriceMinEl) filterPriceMinEl.value = '';
+    if (filterPriceMaxEl) filterPriceMaxEl.value = '';
+    updateActiveFilterBadges();
     if (searchInputEl) searchInputEl.value = '';
     clearSearchBtnEl?.classList.add('hidden');
     if (discountsSliderSectionEl) {
@@ -3288,16 +3553,51 @@
     loadProducts();
   });
 
-  // Saralash (Sort)
+  // Saralash va Narx bo'yicha filtr (Apply / Reset)
   btnApplyFilterEl?.addEventListener('click', () => {
     triggerHaptic('medium');
     const checked = bottomFilterEl?.querySelector('input[name="sort"]:checked');
     if (checked) {
       state.selectedSort = checked.value;
     }
+    const minVal = filterPriceMinEl?.value ? parseFloat(filterPriceMinEl.value) : null;
+    const maxVal = filterPriceMaxEl?.value ? parseFloat(filterPriceMaxEl.value) : null;
+    state.priceFilter.min = minVal && minVal > 0 ? minVal : null;
+    state.priceFilter.max = maxVal && maxVal > 0 ? maxVal : null;
+
+    updateActiveFilterBadges();
     closeAllDrawers();
     loadProducts();
   });
+
+  btnResetFilterEl?.addEventListener('click', () => {
+    triggerHaptic('medium');
+    state.selectedSort = 'default';
+    const defRadio = bottomFilterEl?.querySelector('input[name="sort"][value="default"]');
+    if (defRadio) defRadio.checked = true;
+    clearPriceFilter();
+    closeAllDrawers();
+  });
+
+  btnRemoveActiveFilterEl?.addEventListener('click', () => {
+    clearPriceFilter();
+  });
+
+  btnRemoveCatalogActiveFilterEl?.addEventListener('click', () => {
+    clearPriceFilter();
+  });
+
+  filterCurrencySwitcherEl?.querySelectorAll('.curr-pill').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const targetCurr = btn.dataset.currency;
+      if (!targetCurr || targetCurr === state.priceFilter.currency) return;
+      triggerHaptic('light');
+      updateFilterCurrencyUI(targetCurr, true);
+    });
+  });
+
+  filterPriceMinEl?.addEventListener('input', updateFilterPriceHint);
+  filterPriceMaxEl?.addEventListener('input', updateFilterPriceHint);
 
   // Chap Yon Menyu (Sidebar) linklari
   leftDrawerEl?.querySelectorAll('.nav-link-row').forEach(link => {
@@ -3460,6 +3760,8 @@
     updateWishlistBadge();
     updateCartBadges();
     setupInteractiveButtonsDemo();
+    updateFilterCurrencyUI('USD', false);
+    updateActiveFilterBadges();
 
     // 1. Agar keshda mahsulotlar bo'lsa — darhol 0ms da chizish!
     const hasCache = Boolean(state.products && state.products.length > 0);
