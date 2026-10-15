@@ -149,6 +149,8 @@ const MiniApp = {
   }
 };
 
+window.MiniApp = MiniApp;
+
 // Sahifa yuklanishi bilan avtomatik ishga tushirish
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => MiniApp.init());

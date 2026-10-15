@@ -831,6 +831,7 @@
     selectedCategory: 0,
     selectedSort: 'default',
     searchQuery: '',
+    searchCurrencyMode: 'ALL', // 'ALL', 'USD', 'UZS'
     priceFilter: {
       currency: 'USD', // 'USD' yoki 'UZS'
       min: null,
@@ -3535,11 +3536,19 @@
     state.selectedCategory = 0;
     state.selectedSort = 'default';
     state.searchQuery = '';
+    state.searchCurrencyMode = 'ALL';
     state.priceFilter = { currency: 'USD', min: null, max: null };
     if (filterPriceMinEl) filterPriceMinEl.value = '';
     if (filterPriceMaxEl) filterPriceMaxEl.value = '';
     updateActiveFilterBadges();
-    if (searchInputEl) searchInputEl.value = '';
+    if (searchInputEl) {
+      searchInputEl.value = '';
+      searchInputEl.placeholder = 'Mahsulot yoki narx ($ / soʻm)...';
+    }
+    const bar = document.getElementById('searchCurrencyBar');
+    if (bar) {
+      bar.querySelectorAll('.search-curr-pill').forEach(p => p.classList.toggle('active', p.dataset.curr === 'ALL'));
+    }
     clearSearchBtnEl?.classList.add('hidden');
     if (discountsSliderSectionEl) {
       discountsSliderSectionEl.classList.remove('hidden');
@@ -3713,39 +3722,72 @@
     setTimeout(openCurtains, 1200);
   }
 
-  // Interaktiv tugmalar (Liquid Glass, Bounce, Ripple, 3D, Loading) hodisalari
-  function setupInteractiveButtonsDemo() {
-    const btnLiquid = document.getElementById('btnLiquidDemo');
-    const btnBounce = document.getElementById('btnBounceDemo');
-    const btnRipple = document.getElementById('btnRippleDemo');
-    const btn3d = document.getElementById('btn3dDemo');
-    const btnLoading = document.getElementById('mySubmitBtn');
+  // Qidiruv valyutasi & Rejim bar (Barchasi, USD, SO'M)
+  function setupSearchCurrencyBar() {
+    const bar = document.getElementById('searchCurrencyBar');
+    if (!bar) return;
 
-    btnLiquid?.addEventListener('click', () => {
-      showToast('💎 Liquid Glass: Shaffof shisha va oquvchi nur effekti!');
+    bar.querySelectorAll('.search-curr-pill').forEach(pill => {
+      pill.addEventListener('click', () => {
+        triggerHaptic('light');
+        const curr = pill.dataset.curr || 'ALL';
+        state.searchCurrencyMode = curr;
+
+        bar.querySelectorAll('.search-curr-pill').forEach(p => p.classList.remove('active'));
+        pill.classList.add('active');
+
+        if (searchInputEl) {
+          if (curr === 'USD') {
+            searchInputEl.placeholder = 'Narx boʻyicha: Masalan 500 yoki 1000 ($)';
+            state.priceFilter.currency = 'USD';
+            updateFilterCurrencyUI('USD', false);
+          } else if (curr === 'UZS') {
+            searchInputEl.placeholder = 'Narx boʻyicha: Masalan 6 mln yoki 12 000 000 (soʻm)';
+            state.priceFilter.currency = 'UZS';
+            updateFilterCurrencyUI('UZS', false);
+          } else {
+            searchInputEl.placeholder = 'Mahsulot yoki narx ($ / soʻm)...';
+          }
+          if (searchInputEl.value.trim()) {
+            loadProducts();
+          } else {
+            searchInputEl.focus();
+          }
+        }
+      });
     });
+  }
 
-    btnBounce?.addEventListener('click', () => {
-      showToast('⚡ Spring Bounce: Yumshoq elastik sakrash!');
-    });
+  // Bo'sh holatdagi tavsiyalar (Empty Suggestions Chips)
+  function setupEmptySuggestions() {
+    const chipsContainer = document.getElementById('emptySuggestionsChips');
+    if (!chipsContainer) return;
 
-    btnRipple?.addEventListener('click', () => {
-      showToast('🌊 Ripple Wave: Suv to‘lqini effekti!');
-    });
+    chipsContainer.querySelectorAll('.suggestion-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        triggerHaptic('medium');
+        const val = chip.dataset.search;
+        if (!val) return;
 
-    btn3d?.addEventListener('click', () => {
-      showToast('🎮 3D Tactile: Duolingo chuqur bosilish effekti!');
-    });
+        if (searchInputEl) {
+          searchInputEl.value = val;
+          state.searchQuery = val;
+          clearSearchBtnEl?.classList.remove('hidden');
+        }
 
-    btnLoading?.addEventListener('click', () => {
-      if (window.MiniApp && typeof window.MiniApp.showLoading === 'function') {
-        window.MiniApp.showLoading(btnLoading);
-        setTimeout(() => {
-          window.MiniApp.hideLoading(btnLoading);
-          window.MiniApp.haptic('success');
-          showToast('✅ Yuklanish muvaffaqiyatli yakunlandi!');
-        }, 1400);
-      }
+        const bar = document.getElementById('searchCurrencyBar');
+        if (bar) {
+          if (val.includes('$')) {
+            state.searchCurrencyMode = 'USD';
+            bar.querySelectorAll('.search-curr-pill').forEach(p => p.classList.toggle('active', p.dataset.curr === 'USD'));
+          } else if (val.includes('mln') || val.includes('soʻm')) {
+            state.searchCurrencyMode = 'UZS';
+            bar.querySelectorAll('.search-curr-pill').forEach(p => p.classList.toggle('active', p.dataset.curr === 'UZS'));
+          }
+        }
+
+        loadProducts();
+      });
     });
   }
 
@@ -3759,7 +3801,8 @@
     applyLanguage(state.lang);
     updateWishlistBadge();
     updateCartBadges();
-    setupInteractiveButtonsDemo();
+    setupSearchCurrencyBar();
+    setupEmptySuggestions();
     updateFilterCurrencyUI('USD', false);
     updateActiveFilterBadges();
 

@@ -216,14 +216,15 @@ def create_web_app(db: Database, webapp_dir: str) -> web.Application:
         min_price = int(min_price_param) if min_price_param and min_price_param.isdigit() else None
         max_price = int(max_price_param) if max_price_param and max_price_param.isdigit() else None
 
+        current_rate = await get_cbu_usd_rate()
         products = await db.get_active_products(
             category_id=category_id,
             sort_by=sort_param,
             search=search_param,
             min_price=min_price,
-            max_price=max_price
+            max_price=max_price,
+            usd_rate=current_rate
         )
-        current_rate = await get_cbu_usd_rate()
 
         for p in products:
             img = (p.get("image_url") or "").strip()

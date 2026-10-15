@@ -332,7 +332,8 @@ class Database:
         sort_by: str = "default",
         search: Optional[str] = None,
         min_price: Optional[int] = None,
-        max_price: Optional[int] = None
+        max_price: Optional[int] = None,
+        usd_rate: float = 12850.0
     ) -> List[Dict[str, Any]]:
         """Web App va katalog uchun saralangan, faol mahsulotlarni olish (narx va toifa bo'yicha filter)"""
         query = """
@@ -359,11 +360,36 @@ class Database:
             raw_search = search.strip()
             params.append(f"%{raw_search}%")
             p_idx = len(params)
+            
             clean_digits = ''.join(c for c in raw_search if c.isdigit())
-            if clean_digits and len(clean_digits) <= 6 and not any(c.isalpha() for c in raw_search):
-                p_val = int(clean_digits)
-                params.append(p_val)
-                query += f" AND (p.name ILIKE ${p_idx} OR p.description ILIKE ${p_idx} OR p.price = ${len(params)})"
+            has_letters = any(c.isalpha() for c in raw_search)
+            is_mln = 'mln' in raw_search.lower()
+            
+            if clean_digits and (not has_letters or is_mln or '$' in raw_search):
+                val = int(clean_digits)
+                if is_mln and val < 1000:
+                    val = val * 1_000_000
+                
+                if val > 50000:  # UZS (So'm orqali kiritilgan summa)
+                    rate = float(usd_rate or 12850.0)
+                    usd = max(1, round(val / rate))
+                    low = max(1, int(usd * 0.82))
+                    high = int(usd * 1.18)
+                    params.append(low)
+                    l_idx = len(params)
+                    params.append(high)
+                    h_idx = len(params)
+                    query += f" AND (p.name ILIKE ${p_idx} OR p.description ILIKE ${p_idx} OR p.price BETWEEN ${l_idx} AND ${h_idx})"
+                else:  # USD ($ orqali kiritilgan summa)
+                    low = max(1, int(val * 0.85))
+                    high = int(val * 1.15)
+                    params.append(low)
+                    l_idx = len(params)
+                    params.append(high)
+                    h_idx = len(params)
+                    params.append(val)
+                    v_idx = len(params)
+                    query += f" AND (p.name ILIKE ${p_idx} OR p.description ILIKE ${p_idx} OR p.price = ${v_idx} OR p.price BETWEEN ${l_idx} AND ${h_idx})"
             else:
                 query += f" AND (p.name ILIKE ${p_idx} OR p.description ILIKE ${p_idx})"
 

@@ -531,6 +531,94 @@ html.dark .live-usd-badge {
   cursor: pointer;
 }
 
+/* Qidiruv Valyutasi & Rejim Barlari (USD / SO'M) */
+.search-currency-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.search-currency-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.search-curr-pill {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 12px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  border-radius: 9999px;
+  background: var(--bg-card);
+  color: var(--text-sub);
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  transition: all 0.16s ease;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.search-curr-pill.active {
+  background: var(--text-main);
+  color: var(--bg-main);
+  border-color: var(--text-main);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.search-curr-pill:active {
+  transform: scale(0.95);
+}
+
+/* Bo'sh holatdagi tavsiyalar (Empty Suggestions) */
+.empty-suggestions {
+  margin-top: 24px;
+  width: 100%;
+  max-width: 380px;
+  text-align: center;
+}
+
+.empty-suggestions-title {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.empty-suggestions-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.suggestion-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 13px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  border-radius: 12px;
+  background: var(--bg-card);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.suggestion-chip:active {
+  transform: scale(0.95);
+  background: var(--border-color);
+}
+
 /* ==========================================================================
    2. GORIZONTAL TOIFALAR (Category Pills)
    ========================================================================== */
