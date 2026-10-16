@@ -9,11 +9,11 @@ from aiohttp import web
 from bot.config import config
 from bot.database.db import Database
 from bot.api.telegram_auth import extract_and_validate_telegram_user
+from bot.utils.cache import cache_manager
 
 logger = logging.getLogger("APIServer")
 
-# Telegram rasm proksi uchun server xotirasi keshi (kamida 12 soat)
-_photo_cache: Dict[str, Tuple[bytes, str, float]] = {}  # file_id -> (bytes, content_type, expires_at)
+# Rasmlar bo'yicha bir vaqtda ortiqcha so'rov yuborilmasligini nazorat qiluvchi qulf
 _photo_locks: Dict[str, asyncio.Lock] = {}
 _cache_lock = asyncio.Lock()
 
@@ -151,17 +151,15 @@ def create_web_app(db: Database, webapp_dir: str) -> web.Application:
                 headers={"Cache-Control": "public, max-age=86400, immutable"}
             )
 
-        now = time.time()
-        # 1. Tezkor xotira keshi tekshiruvi
-        cached = _photo_cache.get(file_id)
+        # 1. Tezkor kesh tekshiruvi (L1 RAM + L2 Redis)
+        cached = await cache_manager.get_photo(file_id)
         if cached:
-            c_bytes, c_type, expires_at = cached
-            if now < expires_at:
-                return web.Response(
-                    body=c_bytes,
-                    content_type=c_type,
-                    headers={"Cache-Control": "public, max-age=86400, immutable"}
-                )
+            c_bytes, c_type = cached
+            return web.Response(
+                body=c_bytes,
+                content_type=c_type,
+                headers={"Cache-Control": "public, max-age=604800, immutable"}
+            )
 
         # 2. Concurrency lock: bir xil rasm uchun Telegramga bittadan ortiq so'rov bormaydi
         async with _cache_lock:
@@ -171,37 +169,25 @@ def create_web_app(db: Database, webapp_dir: str) -> web.Application:
 
         async with item_lock:
             # Lock ichida qayta tekshirish
-            cached = _photo_cache.get(file_id)
+            cached = await cache_manager.get_photo(file_id)
             if cached:
-                c_bytes, c_type, expires_at = cached
-                if time.time() < expires_at:
-                    return web.Response(
-                        body=c_bytes,
-                        content_type=c_type,
-                        headers={"Cache-Control": "public, max-age=86400, immutable"}
-                    )
+                c_bytes, c_type = cached
+                return web.Response(
+                    body=c_bytes,
+                    content_type=c_type,
+                    headers={"Cache-Control": "public, max-age=604800, immutable"}
+                )
 
             # Telegramdan yuklab olish
             res = await _fetch_telegram_photo(file_id, config.bot_token)
             if res:
                 img_bytes, ctype = res
-                # Kesh hajmini cheklash (maksimal 500 ta rasm)
-                if len(_photo_cache) > 500:
-                    curr_time = time.time()
-                    expired_keys = [k for k, v in _photo_cache.items() if v[2] <= curr_time]
-                    for k in expired_keys:
-                        _photo_cache.pop(k, None)
-                    if len(_photo_cache) > 500:
-                        oldest = sorted(_photo_cache.keys(), key=lambda k: _photo_cache[k][2])
-                        for k in oldest[:100]:
-                            _photo_cache.pop(k, None)
-
-                # 12 soatga keshlaymiz (43200 soniya)
-                _photo_cache[file_id] = (img_bytes, ctype, time.time() + 43200)
+                # 7 kunga keshlaymiz (L1 RAM + L2 Redis)
+                await cache_manager.set_photo(file_id, img_bytes, ctype, ttl_seconds=604800)
                 return web.Response(
                     body=img_bytes,
                     content_type=ctype,
-                    headers={"Cache-Control": "public, max-age=86400, immutable"}
+                    headers={"Cache-Control": "public, max-age=604800, immutable"}
                 )
             else:
                 # Telegram xatosi yoki yaroqsiz file_id bo'lsa 500 bermasdan zaxira rasm qaytaramiz
@@ -373,5 +359,10 @@ def create_web_app(db: Database, webapp_dir: str) -> web.Application:
         app.router.add_get("/taplink", serve_taplink)
         app.router.add_get("/links", serve_taplink)
         app.router.add_get("/linktree", serve_taplink)
+
+    async def _on_cleanup_app(app_instance: web.Application):
+        await cache_manager.close()
+
+    app.on_cleanup.append(_on_cleanup_app)
 
     return app

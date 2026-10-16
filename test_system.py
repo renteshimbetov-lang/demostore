@@ -188,7 +188,57 @@ async def run_full_tests():
     await db.execute("DELETE FROM products WHERE channel_id = $1;", test_channel_id)
     await db.close()
 
-    print("\n✅ Barcha sinovlar va xavfsizlik tekshiruvlari muvaffaqiyatli yakunlandi!")
+    print("\n--- 5. Redis Kesh va Frontend Asset Minifikatsiyasi testlari ---")
+    import fakeredis.aioredis
+    from bot.utils.cache import CacheManager
+
+    # 5.1 Redis Kesh menejeri testi (L1 RAM + L2 Redis)
+    fake_redis = fakeredis.aioredis.FakeRedis()
+    test_cm = CacheManager(redis_client=fake_redis)
+    assert test_cm.is_redis_active() is True
+
+    # Rasm keshga yozish
+    dummy_img = b"\x89PNG\r\n\x1a\n\x00TEST_IMAGE_DATA"
+    await test_cm.set_photo("test_file_id_999", dummy_img, "image/png", ttl_seconds=3600)
+
+    # 1-o'qish: L1 xotiradan olish
+    p1 = await test_cm.get_photo("test_file_id_999")
+    assert p1 is not None and p1[0] == dummy_img and p1[1] == "image/png"
+    print("  [OK] L1 RAM xotirasidan rasm muvaffaqiyatli o'qildi.")
+
+    # Server qayta yuklanganda (L1 RAM bo'shab qolganda) L2 Redis-dan tiklanish
+    test_cm._memory_cache.clear()
+    p2 = await test_cm.get_photo("test_file_id_999")
+    assert p2 is not None and p2[0] == dummy_img and p2[1] == "image/png"
+    print("  [OK] Server qayta yonganda L2 Redis keshidan rasm muvaffaqiyatli tiklandi (Persistent Cache).")
+
+    # JSON ma'lumotlar (valyuta/kurs) keshini tekshirish
+    await test_cm.set_json("test_rate", {"rate": 12850}, ttl_seconds=60)
+    test_cm._json_cache.clear()
+    r = await test_cm.get_json("test_rate")
+    assert r is not None and r["rate"] == 12850
+    print("  [OK] JSON / Valyuta kursi Redis keshida muvaffaqiyatli saqlandi va tiklandi.")
+    await test_cm.close()
+
+    # 5.2 Frontend Asset Minifikatsiyasi tekshiruvi
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    webapp_dir = os.path.join(base_dir, "webapp")
+    min_files = [
+        ("app.js", "app.min.js"),
+        ("app.css", "app.min.css"),
+        ("mini_app_core.js", "mini_app_core.min.js"),
+        ("mini_app_buttons.css", "mini_app_buttons.min.css")
+    ]
+    for orig, mini in min_files:
+        orig_p = os.path.join(webapp_dir, orig)
+        mini_p = os.path.join(webapp_dir, mini)
+        assert os.path.exists(mini_p), f"Minifikatsiya qilingan fayl topilmadi: {mini}"
+        orig_sz = os.path.getsize(orig_p)
+        mini_sz = os.path.getsize(mini_p)
+        assert mini_sz < orig_sz, f"{mini} hajmi {orig} dan kichik bo'lishi kerak!"
+        print(f"  [OK] {mini} mavjud va siqilgan ({orig_sz // 1024}KB -> {mini_sz // 1024}KB).")
+
+    print("\n✅ Barcha sinovlar, xavfsizlik va kesh/minifikatsiya tekshiruvlari muvaffaqiyatli yakunlandi!")
 
 if __name__ == "__main__":
     asyncio.run(run_full_tests())

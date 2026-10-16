@@ -119,6 +119,20 @@ async def get_cbu_usd_rate(force_refresh: bool = False) -> float:
         if not force_refresh and _cached_rate is not None and (now - _last_updated_time) < CACHE_TTL_SECONDS:
             return _cached_rate
 
+        # Redis / Kesh menejeridan tekshirish (server qayta yonganda zudlik bilan tiklash)
+        if not force_refresh and _cached_rate is None:
+            try:
+                from bot.utils.cache import cache_manager
+                stored_rate = await cache_manager.get_json("cbu_usd_rate")
+                if stored_rate and isinstance(stored_rate, (int, float)) and stored_rate > 1000:
+                    _cached_rate = float(stored_rate)
+                    _last_successful_rate = float(stored_rate)
+                    _last_updated_time = now
+                    logger.info(f"Keshdan (Redis/L1) USD kursi tiklandi: 1$ = {_cached_rate:,.2f} so'm")
+                    return _cached_rate
+            except Exception:
+                pass
+
         api_url = get_cbu_api_url()
         from bot.utils.ssl_context import get_ssl_context
         connector = aiohttp.TCPConnector(ssl=get_ssl_context())
@@ -155,6 +169,11 @@ async def get_cbu_usd_rate(force_refresh: bool = False) -> float:
                             _last_successful_rate = extracted_rate
                             _last_updated_time = now
                             _save_disk_cache(extracted_rate)
+                            try:
+                                from bot.utils.cache import cache_manager
+                                await cache_manager.set_json("cbu_usd_rate", extracted_rate, ttl_seconds=CACHE_TTL_SECONDS)
+                            except Exception:
+                                pass
                             logger.info(f"Markaziy Bankdan (CBU) jonli USD kursi yangilandi: 1$ = {_cached_rate:,.2f} so'm")
                             return _cached_rate
                         else:

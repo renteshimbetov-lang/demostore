@@ -21,6 +21,7 @@ class Config:
     channel_id: str
     channel_username: str
     channel_url: str
+    redis_url: str = ""
 
 def load_config() -> Config:
     bot_token = os.getenv("BOT_TOKEN", "").strip()
@@ -53,6 +54,8 @@ def load_config() -> Config:
     if not channel_id and not os.getenv("IGNORE_CONFIG_VALIDATION"):
         raise ValueError("CHANNEL_ID .env da ko'rsatilishi shart!")
 
+    redis_url = os.getenv("REDIS_URL", "").strip()
+
     return Config(
         bot_token=bot_token,
         admin_ids=admin_ids,
@@ -67,7 +70,8 @@ def load_config() -> Config:
         cbu_api_url=cbu_api_url,
         channel_id=channel_id,
         channel_username=channel_username,
-        channel_url=channel_url
+        channel_url=channel_url,
+        redis_url=redis_url
     )
 
 config = load_config()
