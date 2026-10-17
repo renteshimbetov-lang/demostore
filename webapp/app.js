@@ -4039,6 +4039,24 @@
   }
 
   // ==========================================================================
+  // ADMIN HUQUQINI TEKSHIRISH
+  // ==========================================================================
+  async function checkAdminAccess() {
+    try {
+      const res = await apiFetch('/api/admin/check');
+      if (res && res.ok) {
+        const data = await res.json();
+        if (data && data.is_admin) {
+          document.getElementById('btnHeaderAdmin')?.classList.remove('hidden');
+          document.getElementById('navLinkAdmin')?.classList.remove('hidden');
+        }
+      }
+    } catch (e) {
+      // Admin emas yoki aloqa xatosi
+    }
+  }
+
+  // ==========================================================================
   // INITSIALIZATSIYA
   // ==========================================================================
   function boot() {
@@ -4051,6 +4069,7 @@
     setupCatalogPriceFilter();
     updateFilterCurrencyUI('USD', false);
     updateActiveFilterBadges();
+    checkAdminAccess();
 
     // 1. Agar keshda mahsulotlar bo'lsa — darhol 0ms da chizish!
     const hasCache = Boolean(state.products && state.products.length > 0);

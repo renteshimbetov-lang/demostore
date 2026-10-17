@@ -91,7 +91,7 @@ async def main():
 
     # Mini App va REST API serverini ishga tushirish
     webapp_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "webapp")
-    web_app = create_web_app(db, webapp_dir)
+    web_app = create_web_app(db, webapp_dir, bot=bot)
     runner = web.AppRunner(web_app)
     await runner.setup()
     

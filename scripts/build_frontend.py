@@ -34,6 +34,16 @@ ASSETS = [
         "src": os.path.join(WEBAPP_DIR, "mini_app_buttons.css"),
         "dest": os.path.join(WEBAPP_DIR, "mini_app_buttons.min.css"),
         "type": "css"
+    },
+    {
+        "src": os.path.join(WEBAPP_DIR, "admin.js"),
+        "dest": os.path.join(WEBAPP_DIR, "admin.min.js"),
+        "type": "js"
+    },
+    {
+        "src": os.path.join(WEBAPP_DIR, "admin.css"),
+        "dest": os.path.join(WEBAPP_DIR, "admin.min.css"),
+        "type": "css"
     }
 ]
 

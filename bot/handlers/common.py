@@ -38,7 +38,11 @@ def setup_common_router(db: Database) -> Router:
             buttons.append([InlineKeyboardButton(text="🛍 Do'konni ochish (Mini App)", web_app=WebAppInfo(url=config.webapp_url))])
         
         if is_admin_user:
-            buttons.append([InlineKeyboardButton(text="⚙️ Admin Boshqaruv Paneli", callback_data="admin_main")])
+            admin_url = f"{config.webapp_url.rstrip('/')}/admin" if config.webapp_url else ""
+            if admin_url.startswith("https://"):
+                buttons.append([InlineKeyboardButton(text="⚙️ Admin Mini App", web_app=WebAppInfo(url=admin_url))])
+            else:
+                buttons.append([InlineKeyboardButton(text="⚙️ Admin Boshqaruv Paneli", callback_data="admin_main")])
 
         inline_kb = InlineKeyboardMarkup(inline_keyboard=buttons) if buttons else None
         

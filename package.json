@@ -4,7 +4,7 @@
   "private": true,
   "description": "DemoStore Telegram Mini App with Redis caching & minified assets",
   "scripts": {
-    "build": "npx esbuild webapp/app.js --minify --outfile=webapp/app.min.js && npx esbuild webapp/app.css --minify --outfile=webapp/app.min.css && npx esbuild webapp/mini_app_core.js --minify --outfile=webapp/mini_app_core.min.js && npx esbuild webapp/mini_app_buttons.css --minify --outfile=webapp/mini_app_buttons.min.css",
+    "build": "npx esbuild webapp/app.js --minify --outfile=webapp/app.min.js && npx esbuild webapp/app.css --minify --outfile=webapp/app.min.css && npx esbuild webapp/mini_app_core.js --minify --outfile=webapp/mini_app_core.min.js && npx esbuild webapp/mini_app_buttons.css --minify --outfile=webapp/mini_app_buttons.min.css && npx esbuild webapp/admin.js --minify --outfile=webapp/admin.min.js && npx esbuild webapp/admin.css --minify --outfile=webapp/admin.min.css",
     "build:py": "python3 scripts/build_frontend.py",
     "watch": "npx esbuild webapp/app.js --minify --outfile=webapp/app.min.js --watch"
   },

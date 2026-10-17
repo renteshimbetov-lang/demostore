@@ -5,9 +5,15 @@ def get_main_menu(is_admin: bool = False, cart_count: int = 0):
     """Adminlar uchun qulay boshqaruv tugmasi, oddiy mijozlar uchun esa toza ekran"""
     if is_admin:
         kb = []
+        admin_url = f"{config.webapp_url.rstrip('/')}/admin" if config.webapp_url else ""
+        top_row = []
         if config.webapp_url and config.webapp_url.startswith("https://"):
-            kb.append([KeyboardButton(text="🛍 Do'konni ochish", web_app=WebAppInfo(url=config.webapp_url))])
-        kb.append([KeyboardButton(text="⚙️ Admin Panel")])
+            top_row.append(KeyboardButton(text="🛍 Do'kon", web_app=WebAppInfo(url=config.webapp_url)))
+        if admin_url and admin_url.startswith("https://"):
+            top_row.append(KeyboardButton(text="⚙️ Admin Mini App", web_app=WebAppInfo(url=admin_url)))
+        else:
+            top_row.append(KeyboardButton(text="⚙️ Admin Panel"))
+        kb.append(top_row)
         return ReplyKeyboardMarkup(keyboard=kb, resize_keyboard=True)
     return ReplyKeyboardRemove()
 

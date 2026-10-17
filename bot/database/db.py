@@ -812,8 +812,16 @@ class Database:
         order['items'] = items_rows
         return order
 
-    async def get_all_orders(self, limit: int = 15) -> List[Dict[str, Any]]:
-        orders = await self.fetch("SELECT * FROM orders ORDER BY id DESC LIMIT $1;", limit)
+    async def get_all_orders(self, limit: int = 50, status: Optional[str] = None) -> List[Dict[str, Any]]:
+        params: List[Any] = []
+        query = "SELECT * FROM orders WHERE 1=1"
+        if status and status != "all":
+            params.append(status)
+            query += f" AND status = ${len(params)}"
+        params.append(limit)
+        query += f" ORDER BY id DESC LIMIT ${len(params)};"
+
+        orders = await self.fetch(query, *params)
         for order in orders:
             items_rows = await self.fetch("SELECT * FROM order_items WHERE order_id = $1;", order['id'])
             order['items'] = items_rows
@@ -822,17 +830,145 @@ class Database:
     async def update_order_status(self, order_id: int, status: str):
         await self.execute("UPDATE orders SET status = $1 WHERE id = $2;", status, order_id)
 
+    async def get_all_products_admin(
+        self,
+        search: str = "",
+        category_id: Optional[int] = None,
+        status: str = "all",
+        limit: int = 150
+    ) -> List[Dict[str, Any]]:
+        """Admin mini ilovasi uchun barcha mahsulotlar (faol, nofaol, chegirmalar)"""
+        query = """
+            SELECT p.*, c.name as category_name
+            FROM products p
+            LEFT JOIN categories c ON p.category_id = c.id
+            WHERE 1=1
+        """
+        params: List[Any] = []
+        if category_id and category_id > 0:
+            params.append(category_id)
+            query += f" AND p.category_id = ${len(params)}"
+        if status == "active":
+            query += " AND p.is_active = 1"
+        elif status == "inactive":
+            query += " AND p.is_active = 0"
+        elif status == "discount":
+            query += " AND p.is_discount = 1"
+
+        if search and search.strip():
+            params.append(f"%{search.strip()}%")
+            idx = len(params)
+            query += f" AND (p.name ILIKE ${idx} OR p.description ILIKE ${idx})"
+
+        params.append(limit)
+        query += f" ORDER BY p.id DESC LIMIT ${len(params)};"
+        return await self.fetch(query, *params)
+
+    async def create_product_admin(
+        self,
+        name: str,
+        price: int,
+        description: str = "",
+        category_id: Optional[int] = None,
+        image_url: str = "",
+        currency: str = "USD",
+        price_uzs: Optional[int] = None,
+        is_discount: int = 0,
+        is_active: int = 1
+    ) -> int:
+        """Admin mini ilovadan yangi mahsulot yaratish"""
+        prod_id = await self.fetchval("""
+            INSERT INTO products (
+                name, price, description, category_id, image_url,
+                currency, price_uzs, is_discount, is_active, is_available
+            )
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 1)
+            RETURNING id;
+        """, name, price, description, category_id, image_url, currency, price_uzs, is_discount, is_active)
+        return prod_id
+
+    async def update_product_admin(
+        self,
+        product_id: int,
+        name: str,
+        price: int,
+        description: str,
+        category_id: Optional[int] = None,
+        currency: str = "USD",
+        price_uzs: Optional[int] = None,
+        is_discount: int = 0,
+        is_active: int = 1,
+        image_url: Optional[str] = None
+    ) -> bool:
+        """Admin orqali mahsulot ma'lumotlarini to'liq tahrirlash"""
+        if image_url:
+            await self.execute("""
+                UPDATE products 
+                SET name = $1, price = $2, description = $3, category_id = $4,
+                    currency = $5, price_uzs = $6, is_discount = $7, is_active = $8,
+                    image_url = $9
+                WHERE id = $10;
+            """, name, price, description, category_id, currency, price_uzs, is_discount, is_active, image_url, product_id)
+        else:
+            await self.execute("""
+                UPDATE products 
+                SET name = $1, price = $2, description = $3, category_id = $4,
+                    currency = $5, price_uzs = $6, is_discount = $7, is_active = $8
+                WHERE id = $9;
+            """, name, price, description, category_id, currency, price_uzs, is_discount, is_active, product_id)
+        return True
+
+    async def toggle_product_active(self, product_id: int) -> int:
+        """Mahsulotning is_active holatini 1 <-> 0 almashtirish"""
+        new_val = await self.fetchval("""
+            UPDATE products
+            SET is_active = CASE WHEN is_active = 1 THEN 0 ELSE 1 END
+            WHERE id = $1
+            RETURNING is_active;
+        """, product_id)
+        return new_val or 0
+
+    async def toggle_product_discount(self, product_id: int) -> int:
+        """Mahsulotning is_discount holatini 1 <-> 0 almashtirish"""
+        new_val = await self.fetchval("""
+            UPDATE products
+            SET is_discount = CASE WHEN is_discount = 1 THEN 0 ELSE 1 END
+            WHERE id = $1
+            RETURNING is_discount;
+        """, product_id)
+        return new_val or 0
+
+    async def delete_product(self, product_id: int) -> bool:
+        """Mahsulotni bazadan butunlay o'chirish"""
+        await self.execute("DELETE FROM products WHERE id = $1;", product_id)
+        return True
+
     async def get_stats(self) -> Dict[str, Any]:
-        """Admin panel uchun umumiy statistika"""
+        """Admin panel uchun kengaytirilgan statistika"""
         users_count = await self.fetchval("SELECT COUNT(*) FROM users;") or 0
         row_orders = await self.fetchrow("SELECT COUNT(*), COALESCE(SUM(total_amount), 0) FROM orders;")
         orders_count = row_orders["count"] if row_orders else 0
         total_revenue = row_orders["coalesce"] if row_orders else 0
         products_count = await self.fetchval("SELECT COUNT(*) FROM products WHERE is_active = 1;") or 0
+        total_products_count = await self.fetchval("SELECT COUNT(*) FROM products;") or 0
+        discount_count = await self.fetchval("SELECT COUNT(*) FROM products WHERE is_discount = 1 AND is_active = 1;") or 0
+
+        # Bugungi statistika
+        today_row = await self.fetchrow("""
+            SELECT COUNT(*), COALESCE(SUM(total_amount), 0) 
+            FROM orders 
+            WHERE created_at >= CURRENT_DATE;
+        """)
+        today_orders = today_row["count"] if today_row else 0
+        today_revenue = today_row["coalesce"] if today_row else 0
 
         return {
             "users_count": users_count,
             "orders_count": orders_count,
             "total_revenue": total_revenue,
-            "products_count": products_count
+            "products_count": products_count,
+            "total_products_count": total_products_count,
+            "discount_count": discount_count,
+            "today_orders": today_orders,
+            "today_revenue": today_revenue
         }

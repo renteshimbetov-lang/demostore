@@ -19,23 +19,27 @@ def setup_admin_router(db: Database, bot: Bot) -> Router:
         return user_id in config.admin_ids
 
     def get_admin_menu_inline() -> InlineKeyboardMarkup:
-        return InlineKeyboardMarkup(
-            inline_keyboard=[
-                [InlineKeyboardButton(text="📢 Kanalga yangi post tayyorlash & joylash", callback_data="admin_create_post")],
-                [
-                    InlineKeyboardButton(text="🔥 Hafta chegirmalari", callback_data="admin_discounts"),
-                    InlineKeyboardButton(text="📊 Statistika", callback_data="admin_stats")
-                ],
-                [
-                    InlineKeyboardButton(text="📦 Buyurtmalar", callback_data="admin_orders"),
-                    InlineKeyboardButton(text="➕ Yangi mahsulot", callback_data="admin_add_product")
-                ],
-                [
-                    InlineKeyboardButton(text="✉️ Xabar tarqatish (Broadcast)", callback_data="admin_broadcast"),
-                    InlineKeyboardButton(text="🔄 Kanal postlarini sinxronlash", callback_data="admin_sync_channel")
-                ]
+        from aiogram.types import WebAppInfo
+        admin_url = f"{config.webapp_url.rstrip('/')}/admin" if config.webapp_url else ""
+        rows = []
+        if admin_url and admin_url.startswith("https://"):
+            rows.append([InlineKeyboardButton(text="🚀 Admin Mini App (To'liq interfeys)", web_app=WebAppInfo(url=admin_url))])
+        rows.extend([
+            [InlineKeyboardButton(text="📢 Kanalga yangi post tayyorlash & joylash", callback_data="admin_create_post")],
+            [
+                InlineKeyboardButton(text="🔥 Hafta chegirmalari", callback_data="admin_discounts"),
+                InlineKeyboardButton(text="📊 Statistika", callback_data="admin_stats")
+            ],
+            [
+                InlineKeyboardButton(text="📦 Buyurtmalar", callback_data="admin_orders"),
+                InlineKeyboardButton(text="➕ Yangi mahsulot", callback_data="admin_add_product")
+            ],
+            [
+                InlineKeyboardButton(text="✉️ Xabar tarqatish (Broadcast)", callback_data="admin_broadcast"),
+                InlineKeyboardButton(text="🔄 Kanal postlarini sinxronlash", callback_data="admin_sync_channel")
             ]
-        )
+        ])
+        return InlineKeyboardMarkup(inline_keyboard=rows)
 
     def get_order_status_keyboard(order_id: int) -> InlineKeyboardMarkup:
         return InlineKeyboardMarkup(
