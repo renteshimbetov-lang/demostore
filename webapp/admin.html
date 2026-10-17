@@ -38,7 +38,7 @@
         </div>
       </div>
       <div class="header-actions">
-        <a href="/" class="btn-store-link btn-bounce" title="Mijoz do'koniga o'tish">
+        <a href="/" target="_blank" id="btnStoreLink" class="btn-store-link btn-bounce" title="Mijoz do'koniga o'tish (Alohida oyna)">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/>
             <line x1="3" y1="6" x2="21" y2="6"/>
@@ -294,6 +294,22 @@
             <line x1="9" y1="9" x2="15" y2="15"/>
           </svg>
           <span>Nofaol</span>
+        </button>
+      </div>
+
+      <!-- Barcha nofaollarni faollashtirish paneli -->
+      <div id="adminInactiveActionBar" class="inactive-action-bar hidden">
+        <div class="inactive-bar-text">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/>
+          </svg>
+          <span id="inactiveCountLabel">Nofaol tovarlar mavjud</span>
+        </div>
+        <button class="btn-activate-all btn-bounce" id="btnActivateAllInactive" onclick="window.AdminApp.activateAllInactive()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          <span>Barchasini faol qilish</span>
         </button>
       </div>
 

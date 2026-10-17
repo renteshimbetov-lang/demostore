@@ -4047,8 +4047,35 @@
       if (res && res.ok) {
         const data = await res.json();
         if (data && data.is_admin) {
-          document.getElementById('btnHeaderAdmin')?.classList.remove('hidden');
-          document.getElementById('navLinkAdmin')?.classList.remove('hidden');
+          const btn = document.getElementById('btnHeaderAdmin');
+          const navAdmin = document.getElementById('navLinkAdmin');
+          btn?.classList.remove('hidden');
+          navAdmin?.classList.remove('hidden');
+
+          const token = data.admin_token || '';
+          const adminUrl = token ? `/admin?token=${encodeURIComponent(token)}` : '/admin';
+
+          if (btn) {
+            btn.href = adminUrl;
+            btn.addEventListener('click', (e) => {
+              if (tg && typeof tg.openLink === 'function' && token) {
+                const fullAdminUrl = window.location.origin + adminUrl;
+                tg.openLink(fullAdminUrl);
+                e.preventDefault();
+              }
+            });
+          }
+
+          if (navAdmin) {
+            navAdmin.href = adminUrl;
+            navAdmin.addEventListener('click', (e) => {
+              if (tg && typeof tg.openLink === 'function' && token) {
+                const fullAdminUrl = window.location.origin + adminUrl;
+                tg.openLink(fullAdminUrl);
+                e.preventDefault();
+              }
+            });
+          }
         }
       }
     } catch (e) {

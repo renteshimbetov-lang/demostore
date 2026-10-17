@@ -148,3 +148,62 @@ def generate_telegram_init_data(
 
     data["hash"] = calculated_hash
     return urlencode(data)
+
+
+def generate_admin_session_token(
+    admin_id: int,
+    bot_token: Optional[str] = None,
+    created_at: Optional[int] = None
+) -> str:
+    """
+    Brauzerda (Safari, Chrome va boshqa tashqi oynalarda) Telegram WebApp-siz
+    Admin panelga xavfsiz kirish uchun imzolangan sessiya tokeni hosil qiladi.
+    Format: {admin_id}.{timestamp}.{signature}
+    """
+    token = bot_token or config.bot_token
+    ts = int(created_at or time.time())
+    data = f"admin_session:{admin_id}:{ts}"
+    sig = hmac.new(token.encode("utf-8"), data.encode("utf-8"), hashlib.sha256).hexdigest()[:32]
+    return f"{admin_id}.{ts}.{sig}"
+
+
+def verify_admin_token(
+    token_str: str,
+    bot_token: Optional[str] = None,
+    admin_ids: Optional[list] = None,
+    max_age_seconds: int = 30 * 86400  # 30 kunlik qulay sessiya
+) -> Optional[Dict[str, Any]]:
+    """
+    Tashqi brauzerlar (Safari/Chrome) uchun admin tokenini tekshiradi.
+    """
+    if not token_str or "." not in token_str:
+        return None
+    token = bot_token or config.bot_token
+    allowed_admins = admin_ids if admin_ids is not None else config.admin_ids
+    try:
+        parts = token_str.strip().split(".")
+        if len(parts) != 3:
+            return None
+        admin_id_str, ts_str, received_sig = parts
+        admin_id = int(admin_id_str)
+        ts = int(ts_str)
+
+        if allowed_admins and admin_id not in allowed_admins:
+            return None
+
+        now = time.time()
+        if max_age_seconds > 0 and (now - ts > max_age_seconds or ts > now + 300):
+            return None
+
+        data = f"admin_session:{admin_id}:{ts}"
+        expected_sig = hmac.new(token.encode("utf-8"), data.encode("utf-8"), hashlib.sha256).hexdigest()[:32]
+        if hmac.compare_digest(expected_sig.lower(), received_sig.lower()):
+            return {
+                "id": admin_id,
+                "first_name": "Admin",
+                "is_admin": True,
+                "auth_type": "token"
+            }
+    except Exception as e:
+        logger.warning(f"Admin token tekshirishda xatolik: {e}")
+    return None

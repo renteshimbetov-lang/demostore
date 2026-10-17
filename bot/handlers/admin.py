@@ -18,12 +18,21 @@ def setup_admin_router(db: Database, bot: Bot) -> Router:
     def is_admin(user_id: int) -> bool:
         return user_id in config.admin_ids
 
-    def get_admin_menu_inline() -> InlineKeyboardMarkup:
+    def get_admin_menu_inline(user_id: Optional[int] = None) -> InlineKeyboardMarkup:
         from aiogram.types import WebAppInfo
+        from bot.api.telegram_auth import generate_admin_session_token
         admin_url = f"{config.webapp_url.rstrip('/')}/admin" if config.webapp_url else ""
         rows = []
         if admin_url and admin_url.startswith("https://"):
-            rows.append([InlineKeyboardButton(text="🚀 Admin Mini App (To'liq interfeys)", web_app=WebAppInfo(url=admin_url))])
+            app_btn = InlineKeyboardButton(text="🚀 Telegramda ochish", web_app=WebAppInfo(url=admin_url))
+            if user_id:
+                token = generate_admin_session_token(user_id, config.bot_token)
+                browser_url = f"{admin_url}?token={token}"
+                browser_btn = InlineKeyboardButton(text="🌐 Brauzerda ochish (Alohida oyna)", url=browser_url)
+                rows.append([app_btn])
+                rows.append([browser_btn])
+            else:
+                rows.append([app_btn])
         rows.extend([
             [InlineKeyboardButton(text="📢 Kanalga yangi post tayyorlash & joylash", callback_data="admin_create_post")],
             [
@@ -77,7 +86,7 @@ def setup_admin_router(db: Database, bot: Bot) -> Router:
             f"━━━━━━━━━━━━━━━━━━━━━━\n"
             f"⚡️ <i>Kerakli bo'limni tanlang:</i>"
         )
-        await message.answer(text, reply_markup=get_admin_menu_inline(), parse_mode="HTML")
+        await message.answer(text, reply_markup=get_admin_menu_inline(message.from_user.id), parse_mode="HTML")
 
     @router.callback_query(F.data == "admin_stats")
     async def show_stats_callback(callback: CallbackQuery):
@@ -130,9 +139,9 @@ def setup_admin_router(db: Database, bot: Bot) -> Router:
         if callback.message:
             if callback.message.photo:
                 await callback.message.delete()
-                await callback.message.answer(text, reply_markup=get_admin_menu_inline(), parse_mode="HTML")
+                await callback.message.answer(text, reply_markup=get_admin_menu_inline(callback.from_user.id), parse_mode="HTML")
             else:
-                await callback.message.edit_text(text, reply_markup=get_admin_menu_inline(), parse_mode="HTML")
+                await callback.message.edit_text(text, reply_markup=get_admin_menu_inline(callback.from_user.id), parse_mode="HTML")
         await callback.answer()
 
     @router.callback_query(F.data == "admin_discounts")

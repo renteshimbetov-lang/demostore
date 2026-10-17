@@ -82,13 +82,26 @@
     } catch (e) {}
   }
 
-  // 2. API So'rov Yordamchisi (InitData bilan)
+  // 2. API So'rov Yordamchisi (InitData va Brauzer Admin Token bilan)
+  let adminToken = '';
+  try {
+    const urlParams = new URLSearchParams(window.location.search);
+    adminToken = urlParams.get('token') || urlParams.get('admin_token') || localStorage.getItem('admin_token') || '';
+    if (adminToken) {
+      localStorage.setItem('admin_token', adminToken);
+    }
+  } catch (e) {}
+
   async function apiFetch(url, options = {}) {
     const opts = { ...options };
     const headers = { ...(opts.headers || {}) };
     const initData = tg?.initData || '';
     if (initData) {
       headers['X-Telegram-Init-Data'] = initData;
+    }
+    const token = adminToken || localStorage.getItem('admin_token') || '';
+    if (token) {
+      headers['X-Admin-Token'] = token;
     }
     opts.headers = headers;
     return fetch(url, opts);
@@ -187,6 +200,12 @@
       }
       const data = await res.json();
       currentAdminUser = data.user;
+      if (data.admin_token) {
+        adminToken = data.admin_token;
+        try {
+          localStorage.setItem('admin_token', data.admin_token);
+        } catch (e) {}
+      }
       
       const adminNameEl = document.getElementById('adminGreeting');
       if (adminNameEl && currentAdminUser) {
@@ -369,6 +388,21 @@
     const container = document.getElementById('adminProductsContainer');
     if (!container) return;
 
+    // Nofaollar soni va Barchasini faollashtirish panelini boshqarish
+    const inactiveCount = (allProducts || []).filter(p => Number(p.is_active) === 0).length;
+    const inactiveBar = document.getElementById('adminInactiveActionBar');
+    const inactiveCountLabel = document.getElementById('inactiveCountLabel');
+    if (inactiveBar) {
+      if (inactiveCount > 0 && (activeStatusFilter === 'inactive' || activeStatusFilter === 'all')) {
+        inactiveBar.classList.remove('hidden');
+        if (inactiveCountLabel) {
+          inactiveCountLabel.textContent = `${inactiveCount} ta nofaol tovar mavjud`;
+        }
+      } else {
+        inactiveBar.classList.add('hidden');
+      }
+    }
+
     if (!products || products.length === 0) {
       container.innerHTML = '<div class="loading-spinner">Mos keluvchi mahsulotlar topilmadi.</div>';
       return;
@@ -382,7 +416,7 @@
       const subPrice = isUzs ? '' : formatPrice(p.price_uzs || (p.price * currentUsdRate));
 
       return `
-        <div class="admin-prod-card" data-id="${p.id}">
+        <div class="admin-prod-card" data-id="${p.id}" onclick="window.AdminApp.toggleCardActions(this, event)">
           <div class="admin-prod-top">
             <img class="admin-prod-img" src="${p.image_url}" alt="${p.name}" loading="lazy" onerror="this.src='/static/apple_3d_logo.png'" />
             <div class="admin-prod-info">
@@ -412,13 +446,18 @@
                 ${p.category_name ? `<span class="badge-mini">${p.category_name}</span>` : ''}
               </div>
             </div>
+            <div class="admin-prod-expand-btn" title="Amallar menyusini ochish">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </div>
           </div>
-          <div class="admin-prod-actions">
-            <button class="btn-action btn-bounce ${isDiscount ? 'active-discount' : ''}" onclick="window.AdminApp.toggleDiscount(${p.id})">
+          <div class="admin-prod-actions" onclick="event.stopPropagation()">
+            <button class="btn-action btn-bounce ${isDiscount ? 'active-discount' : ''}" onclick="event.stopPropagation(); window.AdminApp.toggleDiscount(${p.id})">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
               <span>${isDiscount ? 'Aksiyada' : 'Aksiya'}</span>
             </button>
-            <button class="btn-action btn-bounce ${isActive ? 'active-status' : ''}" onclick="window.AdminApp.toggleActive(${p.id})">
+            <button class="btn-action btn-bounce ${isActive ? 'active-status' : ''}" onclick="event.stopPropagation(); window.AdminApp.toggleActive(${p.id})">
               ${isActive ? `
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" y1="2" x2="22" y2="22"/></svg>
                 <span>Yashirish</span>
@@ -427,11 +466,11 @@
                 <span>Faol</span>
               `}
             </button>
-            <button class="btn-action btn-bounce" onclick="window.AdminApp.editProduct(${p.id})">
+            <button class="btn-action btn-bounce" onclick="event.stopPropagation(); window.AdminApp.editProduct(${p.id})">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
               <span>Tahrir</span>
             </button>
-            <button class="btn-action btn-bounce btn-del" onclick="window.AdminApp.deleteProduct(${p.id})">
+            <button class="btn-action btn-bounce btn-del" onclick="event.stopPropagation(); window.AdminApp.deleteProduct(${p.id})">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
               <span>O'chirish</span>
             </button>
@@ -606,6 +645,13 @@
         setTimeout(() => icon?.classList.remove('spinning'), 500);
       });
       showToast('Ma\'lumotlar yangilandi', true);
+    });
+
+    document.getElementById('btnStoreLink')?.addEventListener('click', (e) => {
+      if (tg && typeof tg.openLink === 'function') {
+        tg.openLink(window.location.origin + '/');
+        e.preventDefault();
+      }
     });
 
     document.getElementById('btnRefreshCurrency')?.addEventListener('click', async () => {
@@ -820,6 +866,49 @@
         }
       } catch (e) {
         showToast('Statusni o\'zgartirib bo\'lmadi', false);
+      }
+    },
+
+    toggleCardActions(cardEl, event) {
+      if (event) {
+        if (event.target.closest('button') || event.target.closest('input') || event.target.closest('.admin-prod-actions')) {
+          return;
+        }
+      }
+      const wasOpen = cardEl.classList.contains('actions-open');
+      document.querySelectorAll('.admin-prod-card.actions-open').forEach(c => {
+        if (c !== cardEl) c.classList.remove('actions-open');
+      });
+      if (wasOpen) {
+        cardEl.classList.remove('actions-open');
+      } else {
+        cardEl.classList.add('actions-open');
+        triggerHaptic('light');
+      }
+    },
+
+    async activateAllInactive() {
+      triggerHaptic('medium');
+      const inactiveCount = (allProducts || []).filter(p => Number(p.is_active) === 0).length;
+      if (inactiveCount === 0) {
+        showToast("Nofaol tovarlar mavjud emas", false);
+        return;
+      }
+      if (!confirm(`Haqiqatan ham barcha ${inactiveCount} ta nofaol tovarlarni bittada faollashtirmoqchimisiz?`)) {
+        return;
+      }
+      try {
+        const res = await apiFetch('/api/admin/products/activate-all', { method: 'POST' });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          showToast(data.message || `${data.count} ta tovar faollashtirildi!`, true);
+          await loadAdminProducts();
+          await loadDashboardData();
+        } else {
+          showToast(data.error || "Xatolik yuz berdi", false);
+        }
+      } catch (e) {
+        showToast("Server bilan aloqa uzildi", false);
       }
     }
   };

@@ -321,22 +321,44 @@ def create_web_app(db: Database, webapp_dir: str, bot=None) -> web.Application:
     # ADMIN MINI ILOVA API ENDPOINTLARI
     # =========================================================================
     def _verify_admin(request: web.Request) -> Tuple[Optional[Dict[str, Any]], Optional[web.Response]]:
+        # 1. Avval Admin Session Token tekshiriladi (Tashqi Safari/Chrome brauzerlarida Telegram-siz kirish uchun)
+        token = (
+            request.headers.get("X-Admin-Token")
+            or request.query.get("token")
+            or request.query.get("admin_token")
+        )
+        if not token:
+            auth_h = request.headers.get("Authorization", "")
+            if auth_h.lower().startswith("bearer "):
+                token = auth_h[7:].strip()
+
+        if token:
+            from bot.api.telegram_auth import verify_admin_token
+            verified = verify_admin_token(token, config.bot_token, config.admin_ids)
+            if verified:
+                return verified, None
+
+        # 2. Telegram WebApp initData tekshiriladi
         user = extract_and_validate_telegram_user(request)
         if not user:
-            return None, web.json_response({"error": "Unauthorized: Telegram sessiyasi topilmadi"}, status=401)
+            return None, web.json_response({"error": "Unauthorized: Telegram sessiyasi yoki Admin tokeni topilmadi"}, status=401)
         user_id = int(user.get("id") or 0)
         if not config.admin_ids or user_id not in config.admin_ids:
             return None, web.json_response({"error": "Forbidden: Faqat tizim adminlari uchun"}, status=403)
         return user, None
 
     async def admin_check(request: web.Request) -> web.Response:
-        """Admin ruxsatini va Telegram foydalanuvchisini tasdiqlash"""
+        """Admin ruxsatini va Telegram foydalanuvchisini tasdiqlash hamda brauzer tokenini qaytarish"""
         user, err = _verify_admin(request)
         if err:
             return err
+        user_id = int(user.get("id") or 0)
+        from bot.api.telegram_auth import generate_admin_session_token
+        admin_token = generate_admin_session_token(user_id, config.bot_token)
         return web.json_response({
             "ok": True,
             "is_admin": True,
+            "admin_token": admin_token,
             "user": user,
             "store_name": config.store_name
         })
@@ -467,6 +489,18 @@ def create_web_app(db: Database, webapp_dir: str, bot=None) -> web.Application:
         product_id = int(request.match_info["id"])
         new_state = await db.toggle_product_active(product_id)
         return web.json_response({"success": True, "product_id": product_id, "is_active": new_state})
+
+    async def admin_activate_all_products(request: web.Request) -> web.Response:
+        """Barcha nofaol mahsulotlarni bir vaqtda faollashtirish"""
+        user, err = _verify_admin(request)
+        if err:
+            return err
+        count = await db.activate_all_inactive_products()
+        return web.json_response({
+            "success": True,
+            "count": count,
+            "message": f"Barcha nofaol mahsulotlar ({count} ta) muvaffaqiyatli faollashtirildi!"
+        })
 
     async def admin_toggle_discount(request: web.Request) -> web.Response:
         """Mahsulotning chegirma holatini almashtirish"""
@@ -617,6 +651,7 @@ def create_web_app(db: Database, webapp_dir: str, bot=None) -> web.Application:
     app.router.add_post("/api/admin/products", admin_create_product)
     app.router.add_put("/api/admin/products/{id}", admin_update_product)
     app.router.add_post("/api/admin/products/{id}/toggle-active", admin_toggle_active)
+    app.router.add_post("/api/admin/products/activate-all", admin_activate_all_products)
     app.router.add_post("/api/admin/products/{id}/toggle-discount", admin_toggle_discount)
     app.router.add_delete("/api/admin/products/{id}", admin_delete_product)
     app.router.add_get("/api/admin/orders", admin_get_orders)

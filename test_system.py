@@ -349,6 +349,29 @@ async def run_full_tests():
     assert "stats" in dash_json and "top_products" in dash_json
     print("  [OK] Admin Dashboard API to'liq ma'lumotlar bilan javob berdi.")
 
+    # E) Tashqi brauzer (Safari/Chrome) uchun Admin Session Token tekshiruvi
+    from bot.api.telegram_auth import generate_admin_session_token, verify_admin_token
+    admin_session_token = generate_admin_session_token(admin_id, token)
+    verified = verify_admin_token(admin_session_token, token, config.admin_ids)
+    assert verified is not None and verified["id"] == admin_id
+    # API ga Telegram sessiyasiz faqat token bilan so'rov yuborish (Brauzer orqali)
+    r_token_auth = await client.get("/api/admin/check", headers={"X-Admin-Token": admin_session_token})
+    assert r_token_auth.status == 200
+    token_json = await r_token_auth.json()
+    assert token_json.get("is_admin") is True
+    print("  [OK] Tashqi brauzer (Safari/Chrome) uchun Admin Session Token muvaffaqiyatli ishlayapti.")
+
+    # F) Barcha nofaollarni bittada faollashtirish (activate-all) testi
+    # Avval tovarimizni nofaol qilamiz
+    await db.execute("UPDATE products SET is_active = 0 WHERE id = $1;", admin_prod_id)
+    r_act = await client.post("/api/admin/products/activate-all", headers={"X-Admin-Token": admin_session_token})
+    assert r_act.status == 200
+    act_data = await r_act.json()
+    assert act_data.get("success") is True
+    prod_now = await db.get_product(admin_prod_id)
+    assert prod_now["is_active"] == 1
+    print("  [OK] Barcha nofaol tovarlarni bittada faollashtirish (activate-all) muvaffaqiyatli ishladi.")
+
     # Tozalash
     await client.close()
     await db.delete_product(admin_prod_id)

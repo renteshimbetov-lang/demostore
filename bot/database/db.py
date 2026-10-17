@@ -928,6 +928,17 @@ class Database:
         """, product_id)
         return new_val or 0
 
+    async def activate_all_inactive_products(self) -> int:
+        """Barcha nofaol (is_active = 0) mahsulotlarni bir vaqtda faollashtiradi (is_active = 1)"""
+        async with self.pool.acquire() as conn:
+            res = await conn.execute("UPDATE products SET is_active = 1 WHERE is_active = 0;")
+            try:
+                count = int(res.split(" ")[-1])
+            except Exception:
+                count = 0
+            logger.info(f"Barcha nofaol mahsulotlar faollashtirildi: {count} ta.")
+            return count
+
     async def toggle_product_discount(self, product_id: int) -> int:
         """Mahsulotning is_discount holatini 1 <-> 0 almashtirish"""
         new_val = await self.fetchval("""
