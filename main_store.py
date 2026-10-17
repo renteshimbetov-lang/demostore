@@ -35,11 +35,12 @@ async def set_bot_commands(bot: Bot):
         await bot.set_my_commands([
             BotCommand(command="start", description="Do'konni ochish (Mini App)")
         ])
-        if config.webapp_url and config.webapp_url.startswith("https://"):
+        base_url = config.webapp_url.rstrip('/') if config.webapp_url else ""
+        if base_url and base_url.startswith("https://"):
             await bot.set_chat_menu_button(
                 menu_button=MenuButtonWebApp(
                     text="Do'kon",
-                    web_app=WebAppInfo(url=config.webapp_url)
+                    web_app=WebAppInfo(url=f"{base_url}/?app=store")
                 )
             )
         logger.info("/start komandasi va Do'kon menyu tugmasi muvaffaqiyatli sozlandi!")
@@ -79,11 +80,12 @@ async def main():
 
     await set_bot_commands(bot)
 
-    if config.webapp_url and config.webapp_url.startswith("https://"):
+    base_url = config.webapp_url.rstrip('/') if config.webapp_url else ""
+    if base_url and base_url.startswith("https://"):
         try:
             from aiogram.types import MenuButtonWebApp, WebAppInfo
             await bot.set_chat_menu_button(
-                menu_button=MenuButtonWebApp(text="Do'kon", web_app=WebAppInfo(url=config.webapp_url))
+                menu_button=MenuButtonWebApp(text="Do'kon", web_app=WebAppInfo(url=f"{base_url}/?app=store"))
             )
             logger.info("Chat MenuButton muvaffaqiyatli 'Do'kon' WebApp ga sozlandi!")
         except Exception as e:

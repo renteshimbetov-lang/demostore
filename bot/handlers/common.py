@@ -34,8 +34,9 @@ def setup_common_router(db: Database) -> Router:
         )
         
         buttons = []
-        if config.webapp_url and config.webapp_url.startswith("https://"):
-            buttons.append([InlineKeyboardButton(text="🛍 Do'konni ochish (Mini App)", web_app=WebAppInfo(url=config.webapp_url))])
+        base_url = config.webapp_url.rstrip('/') if config.webapp_url else ""
+        if base_url and base_url.startswith("https://"):
+            buttons.append([InlineKeyboardButton(text="🛍 Do'konni ochish (Mini App)", web_app=WebAppInfo(url=f"{base_url}/?app=store"))])
         
         if is_admin_user:
             admin_url = f"{config.webapp_url.rstrip('/')}/admin" if config.webapp_url else ""

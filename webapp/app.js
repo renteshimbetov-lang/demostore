@@ -4058,22 +4058,16 @@
           if (btn) {
             btn.href = adminUrl;
             btn.addEventListener('click', (e) => {
-              if (tg && typeof tg.openLink === 'function' && token) {
-                const fullAdminUrl = window.location.origin + adminUrl;
-                tg.openLink(fullAdminUrl);
-                e.preventDefault();
-              }
+              e.preventDefault();
+              window.location.href = adminUrl;
             });
           }
 
           if (navAdmin) {
             navAdmin.href = adminUrl;
             navAdmin.addEventListener('click', (e) => {
-              if (tg && typeof tg.openLink === 'function' && token) {
-                const fullAdminUrl = window.location.origin + adminUrl;
-                tg.openLink(fullAdminUrl);
-                e.preventDefault();
-              }
+              e.preventDefault();
+              window.location.href = adminUrl;
             });
           }
         }

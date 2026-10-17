@@ -5,10 +5,12 @@ def get_main_menu(is_admin: bool = False, cart_count: int = 0):
     """Adminlar uchun qulay boshqaruv tugmasi, oddiy mijozlar uchun esa toza ekran"""
     if is_admin:
         kb = []
-        admin_url = f"{config.webapp_url.rstrip('/')}/admin" if config.webapp_url else ""
+        base_url = config.webapp_url.rstrip('/') if config.webapp_url else ""
+        store_url = f"{base_url}/?app=store" if base_url else ""
+        admin_url = f"{base_url}/admin" if base_url else ""
         top_row = []
-        if config.webapp_url and config.webapp_url.startswith("https://"):
-            top_row.append(KeyboardButton(text="🛍 Do'kon", web_app=WebAppInfo(url=config.webapp_url)))
+        if store_url and store_url.startswith("https://"):
+            top_row.append(KeyboardButton(text="🛍 Do'kon", web_app=WebAppInfo(url=store_url)))
         if admin_url and admin_url.startswith("https://"):
             top_row.append(KeyboardButton(text="⚙️ Admin Mini App", web_app=WebAppInfo(url=admin_url)))
         else:

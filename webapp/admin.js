@@ -664,10 +664,9 @@
     });
 
     document.getElementById('btnStoreLink')?.addEventListener('click', (e) => {
-      if (tg && typeof tg.openLink === 'function') {
-        tg.openLink(window.location.origin + '/');
-        e.preventDefault();
-      }
+      e.preventDefault();
+      triggerHaptic('light');
+      window.location.href = '/?app=store';
     });
 
     document.getElementById('btnRefreshCurrency')?.addEventListener('click', async () => {
