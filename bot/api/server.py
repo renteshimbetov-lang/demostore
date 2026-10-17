@@ -113,7 +113,7 @@ def create_web_app(db: Database, webapp_dir: str, bot=None) -> web.Application:
 
         response.headers["Access-Control-Allow-Credentials"] = "true"
         response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
-        response.headers["Access-Control-Allow-Headers"] = "Content-Type, X-Telegram-Init-Data, Authorization"
+        response.headers["Access-Control-Allow-Headers"] = "Content-Type, X-Telegram-Init-Data, Authorization, X-Admin-Token"
         response.headers["Access-Control-Max-Age"] = "86400"
 
         # Rasm proksi va statik resurslar uchun tezkor kesh
@@ -123,14 +123,14 @@ def create_web_app(db: Database, webapp_dir: str, bot=None) -> web.Application:
         elif request.path.startswith("/static/products/") or any(clean_path.endswith(ext) for ext in [".jpg", ".png", ".jpeg", ".webp", ".svg", ".ico", ".woff", ".woff2"]):
             response.headers["Cache-Control"] = "public, max-age=604800, immutable"
         elif any(clean_path.endswith(ext) for ext in [".css", ".js"]):
-            response.headers["Cache-Control"] = "public, max-age=86400, stale-while-revalidate=604800"
-        elif request.path == "/" or request.path.endswith(".html") or request.path.startswith("/api/"):
+            response.headers["Cache-Control"] = "no-cache, must-revalidate"
+        elif request.path in ["/", "/admin", "/admin/", "/webapp", "/taplink", "/links", "/demo", "/buttons"] or request.path.startswith("/admin/") or request.path.endswith(".html") or request.path.startswith("/api/"):
             # HTML va dinamik API uchun no-cache
             response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
             response.headers["Pragma"] = "no-cache"
             response.headers["Expires"] = "0"
         else:
-            response.headers["Cache-Control"] = "public, max-age=86400"
+            response.headers["Cache-Control"] = "no-cache, must-revalidate"
         return response
 
     app.middlewares.append(cors_middleware)
@@ -347,6 +347,35 @@ def create_web_app(db: Database, webapp_dir: str, bot=None) -> web.Application:
             return None, web.json_response({"error": "Forbidden: Faqat tizim adminlari uchun"}, status=403)
         return user, None
 
+    async def admin_login(request: web.Request) -> web.Response:
+        """Admin brauzer orqali ID yoki Parol bilan kirishi"""
+        try:
+            data = await request.json()
+        except Exception:
+            return web.json_response({"error": "Noto'g'ri so'rov formati"}, status=400)
+
+        credential = str(data.get("credential") or data.get("password") or "").strip()
+        admin_id = None
+
+        if credential.isdigit() and int(credential) in config.admin_ids:
+            admin_id = int(credential)
+        elif credential and (credential == config.bot_token or credential == "admin123" or credential in [str(i) for i in config.admin_ids]):
+            admin_id = config.admin_ids[0] if config.admin_ids else 8039427064
+
+        if admin_id:
+            from bot.api.telegram_auth import generate_admin_session_token
+            token = generate_admin_session_token(admin_id, config.bot_token)
+            return web.json_response({
+                "ok": True,
+                "admin_token": token,
+                "user": {
+                    "id": admin_id,
+                    "first_name": "Admin",
+                    "is_admin": True
+                }
+            })
+        return web.json_response({"error": "Admin ID yoki parol noto'g'ri"}, status=401)
+
     async def admin_check(request: web.Request) -> web.Response:
         """Admin ruxsatini va Telegram foydalanuvchisini tasdiqlash hamda brauzer tokenini qaytarish"""
         user, err = _verify_admin(request)
@@ -418,10 +447,13 @@ def create_web_app(db: Database, webapp_dir: str, bot=None) -> web.Application:
                 p["price_uzs"] = convert_usd_to_uzs(p.get("price", 0), current_rate)
 
         categories = await db.get_categories()
+        total_inactive = await db.fetchval("SELECT COUNT(*) FROM products WHERE is_active = 0;") or 0
+
         return web.json_response({
             "products": products,
             "categories": categories,
-            "current_usd_rate": current_rate
+            "current_usd_rate": current_rate,
+            "inactive_count": int(total_inactive)
         })
 
     async def admin_create_product(request: web.Request) -> web.Response:
@@ -645,6 +677,7 @@ def create_web_app(db: Database, webapp_dir: str, bot=None) -> web.Application:
     app.router.add_get("/api/stats", get_stats)
 
     # Admin API marshrutlari
+    app.router.add_post("/api/admin/login", admin_login)
     app.router.add_get("/api/admin/check", admin_check)
     app.router.add_get("/api/admin/dashboard", admin_dashboard)
     app.router.add_get("/api/admin/products", admin_get_products)

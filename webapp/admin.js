@@ -193,11 +193,15 @@
     try {
       const res = await apiFetch('/api/admin/check');
       if (!res.ok) {
-        document.getElementById('unauthorizedScreen').classList.remove('hidden');
-        document.getElementById('adminContent').classList.add('hidden');
-        document.getElementById('adminBottomNav').classList.add('hidden');
+        document.getElementById('unauthorizedScreen')?.classList.remove('hidden');
+        document.getElementById('adminContent')?.classList.add('hidden');
+        document.getElementById('adminBottomNav')?.classList.add('hidden');
         return false;
       }
+      document.getElementById('unauthorizedScreen')?.classList.add('hidden');
+      document.getElementById('adminContent')?.classList.remove('hidden');
+      document.getElementById('adminBottomNav')?.classList.remove('hidden');
+
       const data = await res.json();
       currentAdminUser = data.user;
       if (data.admin_token) {
@@ -214,6 +218,9 @@
       return true;
     } catch (e) {
       console.error('Admin tekshiruvida xatolik:', e);
+      document.getElementById('unauthorizedScreen')?.classList.remove('hidden');
+      document.getElementById('adminContent')?.classList.add('hidden');
+      document.getElementById('adminBottomNav')?.classList.add('hidden');
       return false;
     }
   }
@@ -319,9 +326,19 @@
       allProducts = data.products || [];
       allCategories = data.categories || [];
       currentUsdRate = data.current_usd_rate || currentUsdRate;
+      const totalInactive = data.inactive_count !== undefined ? data.inactive_count : (allProducts || []).filter(p => Number(p.is_active) === 0).length;
+
+      // Nofaol pill tagini dinamik ko'rsatish
+      const inactivePill = document.querySelector('.filter-pill[data-status="inactive"]');
+      if (inactivePill) {
+        inactivePill.innerHTML = `
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+          <span>Nofaol ${totalInactive > 0 ? `(${totalInactive})` : ''}</span>
+        `;
+      }
 
       renderCategoryPills(allCategories);
-      renderAdminProducts(allProducts);
+      renderAdminProducts(allProducts, totalInactive);
       populateCategorySelect(allCategories);
     } catch (e) {
       container.innerHTML = `<div class="loading-spinner" style="color:var(--admin-danger);">Xatolik yuz berdi: ${e.message}</div>`;
@@ -384,12 +401,11 @@
     });
   }
 
-  function renderAdminProducts(products) {
+  function renderAdminProducts(products, inactiveCount = 0) {
     const container = document.getElementById('adminProductsContainer');
     if (!container) return;
 
     // Nofaollar soni va Barchasini faollashtirish panelini boshqarish
-    const inactiveCount = (allProducts || []).filter(p => Number(p.is_active) === 0).length;
     const inactiveBar = document.getElementById('adminInactiveActionBar');
     const inactiveCountLabel = document.getElementById('inactiveCountLabel');
     if (inactiveBar) {
@@ -887,28 +903,89 @@
       }
     },
 
-    async activateAllInactive() {
+    async handleLogin(event) {
+      if (event) event.preventDefault();
+      const input = document.getElementById('adminLoginInput');
+      const errorEl = document.getElementById('loginErrorMsg');
+      const val = input ? input.value.trim() : '';
+      if (!val) return;
+      if (errorEl) errorEl.style.display = 'none';
+
+      try {
+        const res = await fetch('/api/admin/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ credential: val })
+        });
+        const data = await res.json();
+        if (res.ok && data.ok && data.admin_token) {
+          adminToken = data.admin_token;
+          try {
+            localStorage.setItem('admin_token', data.admin_token);
+          } catch (e) {}
+          document.getElementById('unauthorizedScreen')?.classList.add('hidden');
+          document.getElementById('adminContent')?.classList.remove('hidden');
+          document.getElementById('adminBottomNav')?.classList.remove('hidden');
+          currentAdminUser = data.user;
+          const adminNameEl = document.getElementById('adminGreeting');
+          if (adminNameEl && currentAdminUser) {
+            adminNameEl.textContent = currentAdminUser.first_name || 'Admin';
+          }
+          showToast('Xush kelibsiz, Admin!', true);
+          loadDashboardData();
+        } else {
+          if (errorEl) {
+            errorEl.textContent = data.error || 'Admin ID yoki parol noto\'g\'ri';
+            errorEl.style.display = 'block';
+          }
+        }
+      } catch (err) {
+        if (errorEl) {
+          errorEl.textContent = 'Server bilan aloqa uzildi';
+          errorEl.style.display = 'block';
+        }
+      }
+    },
+
+    activateAllInactive() {
       triggerHaptic('medium');
       const inactiveCount = (allProducts || []).filter(p => Number(p.is_active) === 0).length;
-      if (inactiveCount === 0) {
-        showToast("Nofaol tovarlar mavjud emas", false);
-        return;
+      const count = inactiveCount > 0 ? inactiveCount : 'barcha';
+      const label = document.getElementById('confirmActivateAllText');
+      if (label) {
+        label.textContent = `Haqiqatan ham ${count} ta nofaol tovarlarni bittada faol (do'konda ko'rinadigan) qilmoqchimisiz?`;
       }
-      if (!confirm(`Haqiqatan ham barcha ${inactiveCount} ta nofaol tovarlarni bittada faollashtirmoqchimisiz?`)) {
-        return;
+      document.getElementById('modalConfirmActivateAll')?.classList.remove('hidden');
+    },
+
+    closeActivateAllModal() {
+      document.getElementById('modalConfirmActivateAll')?.classList.add('hidden');
+    },
+
+    async executeActivateAll() {
+      const btn = document.getElementById('btnConfirmActivateAllSubmit');
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Faollashtirilmoqda...';
       }
       try {
         const res = await apiFetch('/api/admin/products/activate-all', { method: 'POST' });
         const data = await res.json();
         if (res.ok && data.success) {
-          showToast(data.message || `${data.count} ta tovar faollashtirildi!`, true);
+          showToast(data.message || 'Barcha nofaol tovarlar muvaffaqiyatli faollashtirildi!', true);
+          window.AdminApp.closeActivateAllModal();
           await loadAdminProducts();
           await loadDashboardData();
         } else {
-          showToast(data.error || "Xatolik yuz berdi", false);
+          showToast(data.error || 'Xatolik yuz berdi', false);
         }
       } catch (e) {
-        showToast("Server bilan aloqa uzildi", false);
+        showToast('Server bilan aloqa uzildi', false);
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = 'Ha, faollashtir';
+        }
       }
     }
   };

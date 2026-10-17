@@ -349,7 +349,7 @@ async def run_full_tests():
     assert "stats" in dash_json and "top_products" in dash_json
     print("  [OK] Admin Dashboard API to'liq ma'lumotlar bilan javob berdi.")
 
-    # E) Tashqi brauzer (Safari/Chrome) uchun Admin Session Token tekshiruvi
+    # E) Tashqi brauzer (Safari/Chrome) uchun Admin Session Token & Login tekshiruvi
     from bot.api.telegram_auth import generate_admin_session_token, verify_admin_token
     admin_session_token = generate_admin_session_token(admin_id, token)
     verified = verify_admin_token(admin_session_token, token, config.admin_ids)
@@ -359,7 +359,13 @@ async def run_full_tests():
     assert r_token_auth.status == 200
     token_json = await r_token_auth.json()
     assert token_json.get("is_admin") is True
-    print("  [OK] Tashqi brauzer (Safari/Chrome) uchun Admin Session Token muvaffaqiyatli ishlayapti.")
+
+    # /api/admin/login testi (Brauzerda ID yoki parol bilan kirish)
+    r_login = await client.post("/api/admin/login", json={"credential": str(admin_id)})
+    assert r_login.status == 200
+    login_data = await r_login.json()
+    assert login_data.get("ok") is True and "admin_token" in login_data
+    print("  [OK] Tashqi brauzer (Safari/Chrome) uchun Admin Login va Session Token muvaffaqiyatli ishlayapti.")
 
     # F) Barcha nofaollarni bittada faollashtirish (activate-all) testi
     # Avval tovarimizni nofaol qilamiz

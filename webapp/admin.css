@@ -405,8 +405,8 @@ html, body {
 .btn-quick {
   background: var(--admin-surface-2);
   border: 1px solid var(--admin-border);
-  border-radius: 12px;
-  padding: 10px 8px;
+  border-radius: 20px;
+  padding: 12px 8px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -426,9 +426,9 @@ html, body {
 }
 
 .quick-btn-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 9px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
   background: #ffffff;
   border: 1px solid var(--admin-border);
   display: flex;
