@@ -974,6 +974,10 @@
         if (res.ok && data.success) {
           showToast(data.message || 'Barcha nofaol tovarlar muvaffaqiyatli faollashtirildi!', true);
           window.AdminApp.closeActivateAllModal();
+          // Barcha tovarlar faollashtirilgach, avtomatik "Barchasi" filtriga o'tkazamiz
+          activeStatusFilter = 'all';
+          document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+          document.querySelector('.filter-pill[data-status="all"]')?.classList.add('active');
           await loadAdminProducts();
           await loadDashboardData();
         } else {
