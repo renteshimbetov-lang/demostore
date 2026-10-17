@@ -337,7 +337,7 @@ class Database:
             SELECT p.*, c.name as category_name 
             FROM products p 
             LEFT JOIN categories c ON p.category_id = c.id 
-            WHERE p.category_id = $1 AND p.is_available = 1 AND p.is_active = 1 AND p.message_id IS NOT NULL
+            WHERE p.category_id = $1 AND p.is_active = 1
             ORDER BY p.id DESC;
         """, category_id)
 
@@ -355,7 +355,7 @@ class Database:
             SELECT p.*, c.name as category_name 
             FROM products p 
             LEFT JOIN categories c ON p.category_id = c.id 
-            WHERE p.is_active = 1 AND p.is_available = 1 AND p.message_id IS NOT NULL
+            WHERE p.is_active = 1
         """
         params: List[Any] = []
 
@@ -440,7 +440,7 @@ class Database:
             FROM products p 
             LEFT JOIN categories c ON p.category_id = c.id
             WHERE (p.name ILIKE $1 OR p.description ILIKE $1) 
-              AND p.is_available = 1 AND p.is_active = 1 AND p.message_id IS NOT NULL
+              AND p.is_active = 1
             LIMIT 25;
         """, pattern)
 
@@ -922,7 +922,8 @@ class Database:
         """Mahsulotning is_active holatini 1 <-> 0 almashtirish"""
         new_val = await self.fetchval("""
             UPDATE products
-            SET is_active = CASE WHEN is_active = 1 THEN 0 ELSE 1 END
+            SET is_active = CASE WHEN is_active = 1 THEN 0 ELSE 1 END,
+                is_available = CASE WHEN is_active = 1 THEN 0 ELSE 1 END
             WHERE id = $1
             RETURNING is_active;
         """, product_id)
@@ -931,7 +932,7 @@ class Database:
     async def activate_all_inactive_products(self) -> int:
         """Barcha nofaol (is_active = 0) mahsulotlarni bir vaqtda faollashtiradi (is_active = 1)"""
         async with self.pool.acquire() as conn:
-            res = await conn.execute("UPDATE products SET is_active = 1 WHERE is_active = 0;")
+            res = await conn.execute("UPDATE products SET is_active = 1, is_available = 1 WHERE is_active = 0 OR is_available = 0;")
             try:
                 count = int(res.split(" ")[-1])
             except Exception:
