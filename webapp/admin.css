@@ -1,5 +1,6 @@
-/* DemoStore Admin Mini App — Pure White Apple UI Style */
+/* DemoStore Admin Mini App — 100% Pure White Apple UI Style */
 :root {
+  color-scheme: light !important;
   --admin-bg: #f8fafc;
   --admin-surface: #ffffff;
   --admin-surface-2: #f1f5f9;
@@ -7,7 +8,7 @@
   --admin-border-subtle: #f1f5f9;
   --admin-text: #0f172a;
   --admin-text-sub: #64748b;
-  --admin-primary: #18181b;
+  --admin-primary: #0f172a;
   --admin-primary-blue: #2563eb;
   --admin-success: #10b981;
   --admin-warning: #f59e0b;
@@ -16,39 +17,28 @@
   --admin-font: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
   --admin-safe-top: 88px;
   --admin-safe-bottom: 24px;
-  --admin-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04);
-  --admin-shadow-md: 0 4px 16px rgba(0, 0, 0, 0.05);
+  --admin-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.02);
+  --admin-shadow-md: 0 4px 16px rgba(0, 0, 0, 0.06);
 }
 
-/* Standart qorong'i rejim ham toza, nozik kontrastda */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --admin-bg: #090d16;
-    --admin-surface: #111827;
-    --admin-surface-2: #1f2937;
-    --admin-border: #1f2937;
-    --admin-border-subtle: #182234;
-    --admin-text: #f8fafc;
-    --admin-text-sub: #94a3b8;
-    --admin-primary: #ffffff;
-  }
-}
-
-* {
+html, body {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+  color-scheme: light !important;
+  font-family: var(--admin-font);
   margin: 0;
   padding: 0;
   box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;
-  font-family: var(--admin-font);
-}
-
-body {
-  background-color: var(--admin-bg);
-  color: var(--admin-text);
   min-height: 100vh;
   padding-top: 0;
   padding-bottom: calc(75px + var(--admin-safe-bottom));
   -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+  font-family: inherit;
 }
 
 /* ==========================================================================
@@ -58,18 +48,13 @@ body {
   position: sticky;
   top: 0;
   z-index: 50;
-  background: rgba(255, 255, 255, 0.94);
+  background: rgba(255, 255, 255, 0.96) !important;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--admin-border);
+  border-bottom: 1px solid var(--admin-border) !important;
   padding-top: var(--admin-safe-top);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
   transition: padding-top 0.2s ease;
-}
-
-@media (prefers-color-scheme: dark) {
-  .admin-header {
-    background: rgba(17, 24, 39, 0.94);
-  }
 }
 
 .header-inner {
@@ -89,19 +74,12 @@ body {
   width: 38px;
   height: 38px;
   border-radius: 12px;
-  background: #0f172a;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
   color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
-}
-
-@media (prefers-color-scheme: dark) {
-  .admin-avatar {
-    background: #ffffff;
-    color: #0f172a;
-  }
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.28);
 }
 
 .admin-title-box {
@@ -112,7 +90,7 @@ body {
 .store-badge {
   font-size: 10px;
   font-weight: 700;
-  color: #64748b;
+  color: #2563eb;
   text-transform: uppercase;
   letter-spacing: 0.6px;
 }
@@ -136,32 +114,34 @@ body {
   gap: 6px;
   padding: 8px 14px;
   border-radius: 12px;
-  background: var(--admin-surface-2);
+  background: var(--admin-surface);
   border: 1px solid var(--admin-border);
   color: var(--admin-text);
   font-size: 13px;
   font-weight: 600;
   text-decoration: none;
   cursor: pointer;
+  box-shadow: var(--admin-shadow-sm);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .btn-store-link:active {
   transform: scale(0.96);
-  background: var(--admin-border);
+  background: var(--admin-surface-2);
 }
 
 .btn-icon-refresh {
   width: 38px;
   height: 38px;
   border-radius: 12px;
-  background: var(--admin-surface-2);
+  background: var(--admin-surface);
   border: 1px solid var(--admin-border);
   color: var(--admin-text);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  box-shadow: var(--admin-shadow-sm);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -184,7 +164,7 @@ body {
   position: fixed;
   inset: 0;
   z-index: 99;
-  background: var(--admin-bg);
+  background: #f8fafc;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -192,7 +172,7 @@ body {
 }
 
 .unauth-card {
-  background: var(--admin-surface);
+  background: #ffffff;
   border: 1px solid var(--admin-border);
   border-radius: 20px;
   padding: 32px 24px;
@@ -216,6 +196,7 @@ body {
   font-size: 18px;
   font-weight: 700;
   margin-bottom: 8px;
+  color: #0f172a;
 }
 
 .unauth-card p {
@@ -251,10 +232,10 @@ body {
    1. DASHBOARD BO'LIMI
    ========================================================================== */
 .rate-card {
-  background: var(--admin-surface);
-  border: 1px solid var(--admin-border);
+  background: #ffffff !important;
+  border: 1px solid var(--admin-border) !important;
   border-radius: var(--admin-radius);
-  padding: 12px 14px;
+  padding: 14px 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -265,13 +246,13 @@ body {
 .rate-left {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
 .rate-icon-badge {
-  width: 34px;
-  height: 34px;
-  border-radius: 10px;
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
   background: rgba(16, 185, 129, 0.12);
   color: var(--admin-success);
   display: flex;
@@ -291,28 +272,29 @@ body {
 }
 
 .rate-value {
-  font-size: 14px;
-  font-weight: 700;
+  font-size: 15px;
+  font-weight: 800;
   color: var(--admin-text);
 }
 
 .btn-rate-refresh {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 7px 12px;
-  border-radius: 10px;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 11px;
   background: var(--admin-surface-2);
   border: 1px solid var(--admin-border);
   color: var(--admin-text);
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .btn-rate-refresh:active {
   transform: scale(0.96);
+  background: #e2e8f0;
 }
 
 /* Katta statistika kartochkalari */
@@ -324,8 +306,8 @@ body {
 }
 
 .stat-card {
-  background: var(--admin-surface);
-  border: 1px solid var(--admin-border);
+  background: #ffffff !important;
+  border: 1px solid var(--admin-border) !important;
   border-radius: var(--admin-radius);
   padding: 14px;
   display: flex;
@@ -336,9 +318,9 @@ body {
 }
 
 .stat-icon-wrapper {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -385,15 +367,15 @@ body {
 
 .stat-sub {
   font-size: 10px;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--admin-text-sub);
-  margin-top: 2px;
+  margin-top: 3px;
 }
 
 /* Tezkor boshqaruv */
 .quick-actions-box {
-  background: var(--admin-surface);
-  border: 1px solid var(--admin-border);
+  background: #ffffff !important;
+  border: 1px solid var(--admin-border) !important;
   border-radius: var(--admin-radius);
   padding: 14px;
   margin-bottom: 14px;
@@ -410,7 +392,8 @@ body {
 
 .section-title {
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 800;
+  color: var(--admin-text);
 }
 
 .quick-buttons {
@@ -431,7 +414,7 @@ body {
   gap: 6px;
   color: var(--admin-text);
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
   text-align: center;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
@@ -446,18 +429,19 @@ body {
   width: 32px;
   height: 32px;
   border-radius: 9px;
-  background: var(--admin-surface);
+  background: #ffffff;
   border: 1px solid var(--admin-border);
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--admin-text);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
 /* Card Box (Top tovarlar & Buyurtmalar) */
 .card-box {
-  background: var(--admin-surface);
-  border: 1px solid var(--admin-border);
+  background: #ffffff !important;
+  border: 1px solid var(--admin-border) !important;
   border-radius: var(--admin-radius);
   padding: 14px;
   margin-bottom: 14px;
@@ -480,7 +464,7 @@ body {
 
 .badge-mini {
   font-size: 10px;
-  font-weight: 600;
+  font-weight: 700;
   background: var(--admin-surface-2);
   border: 1px solid var(--admin-border);
   color: var(--admin-text-sub);
@@ -517,10 +501,10 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 10px;
-  background: var(--admin-surface-2);
-  border: 1px solid var(--admin-border-subtle);
-  border-radius: 10px;
+  padding: 9px 12px;
+  background: #f8fafc;
+  border: 1px solid var(--admin-border);
+  border-radius: 11px;
   font-size: 13px;
 }
 
@@ -550,7 +534,7 @@ body {
 .rank-3 { background: #fed7aa; color: #c2410c; }
 
 .top-name {
-  font-weight: 600;
+  font-weight: 700;
   color: var(--admin-text);
   white-space: nowrap;
   overflow: hidden;
@@ -564,7 +548,7 @@ body {
   font-size: 11px;
   font-weight: 700;
   color: var(--admin-text-sub);
-  background: var(--admin-surface);
+  background: #ffffff;
   border: 1px solid var(--admin-border);
   padding: 2px 7px;
   border-radius: 6px;
@@ -599,17 +583,18 @@ body {
   width: 100%;
   padding: 10px 34px 10px 36px;
   border-radius: 12px;
-  background: var(--admin-surface);
+  background: #ffffff;
   border: 1px solid var(--admin-border);
   font-size: 13px;
   color: var(--admin-text);
   outline: none;
+  box-shadow: var(--admin-shadow-sm);
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .search-bar input:focus {
-  border-color: #0f172a;
-  box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.08);
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
 }
 
 .btn-clear {
@@ -627,7 +612,7 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: #0f172a;
+  background: #2563eb;
   color: #ffffff;
   border: none;
   padding: 10px 14px;
@@ -636,15 +621,8 @@ body {
   font-weight: 700;
   cursor: pointer;
   flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.18);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-@media (prefers-color-scheme: dark) {
-  .btn-add-circle {
-    background: #ffffff;
-    color: #0f172a;
-  }
 }
 
 .btn-add-circle:active {
@@ -672,12 +650,12 @@ body {
   align-items: center;
   gap: 6px;
   padding: 8px 14px;
-  background: var(--admin-surface);
+  background: #ffffff;
   border: 1px solid var(--admin-border);
   border-radius: 12px;
   font-size: 12px;
   font-weight: 700;
-  color: var(--admin-text-sub);
+  color: #475569;
   white-space: nowrap;
   cursor: pointer;
   flex-shrink: 0;
@@ -694,18 +672,10 @@ body {
 }
 
 .cat-pill.active {
-  background: #0f172a;
-  color: #ffffff;
-  border-color: #0f172a;
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.16);
-}
-
-@media (prefers-color-scheme: dark) {
-  .cat-pill.active {
-    background: #ffffff;
-    color: #0f172a;
-    border-color: #ffffff;
-  }
+  background: #2563eb !important;
+  color: #ffffff !important;
+  border-color: #2563eb !important;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.28) !important;
 }
 
 /* 2. STATUS FILTRLARI (Faol, Chegirmalar, Nofaol) */
@@ -730,7 +700,7 @@ body {
   gap: 5px;
   padding: 6px 12px;
   background: var(--admin-surface-2);
-  border: 1px solid var(--admin-border-subtle);
+  border: 1px solid var(--admin-border);
   border-radius: 10px;
   font-size: 11px;
   font-weight: 600;
@@ -746,17 +716,11 @@ body {
 }
 
 .filter-pill.active, .order-filter-pill.active {
-  background: var(--admin-surface);
-  border-color: #0f172a;
-  color: var(--admin-text);
-  font-weight: 700;
-  box-shadow: var(--admin-shadow-sm);
-}
-
-@media (prefers-color-scheme: dark) {
-  .filter-pill.active, .order-filter-pill.active {
-    border-color: #ffffff;
-  }
+  background: #ffffff !important;
+  border-color: #0f172a !important;
+  color: #0f172a !important;
+  font-weight: 800 !important;
+  box-shadow: var(--admin-shadow-sm) !important;
 }
 
 /* Mahsulotlar Ro'yxati */
@@ -767,8 +731,8 @@ body {
 }
 
 .admin-prod-card {
-  background: var(--admin-surface);
-  border: 1px solid var(--admin-border);
+  background: #ffffff !important;
+  border: 1px solid var(--admin-border) !important;
   border-radius: var(--admin-radius);
   padding: 12px;
   display: flex;
@@ -788,8 +752,8 @@ body {
   height: 68px;
   border-radius: 12px;
   object-fit: contain;
-  background: var(--admin-surface-2);
-  border: 1px solid var(--admin-border-subtle);
+  background: #f8fafc;
+  border: 1px solid var(--admin-border);
   padding: 4px;
   flex-shrink: 0;
 }
@@ -866,7 +830,7 @@ body {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr 1fr;
   gap: 6px;
-  border-top: 1px solid var(--admin-border-subtle);
+  border-top: 1px solid #f1f5f9;
   padding-top: 8px;
 }
 
@@ -875,12 +839,12 @@ body {
   align-items: center;
   justify-content: center;
   gap: 4px;
-  background: var(--admin-surface-2);
+  background: #f8fafc;
   border: 1px solid var(--admin-border);
   border-radius: 9px;
   padding: 7px 4px;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--admin-text);
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
@@ -921,8 +885,8 @@ body {
 }
 
 .admin-order-card {
-  background: var(--admin-surface);
-  border: 1px solid var(--admin-border);
+  background: #ffffff !important;
+  border: 1px solid var(--admin-border) !important;
   border-radius: var(--admin-radius);
   padding: 14px;
   display: flex;
@@ -935,7 +899,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid var(--admin-border-subtle);
+  border-bottom: 1px solid #f1f5f9;
   padding-bottom: 8px;
 }
 
@@ -954,7 +918,7 @@ body {
 .order-customer {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 5px;
   font-size: 12px;
   color: var(--admin-text);
 }
@@ -979,8 +943,8 @@ body {
 }
 
 .order-items-box {
-  background: var(--admin-surface-2);
-  border: 1px solid var(--admin-border-subtle);
+  background: #f8fafc;
+  border: 1px solid var(--admin-border);
   border-radius: 10px;
   padding: 8px 10px;
   display: flex;
@@ -1016,7 +980,7 @@ body {
 .order-status-selector select {
   padding: 8px 12px;
   border-radius: 10px;
-  background: var(--admin-surface-2);
+  background: #ffffff;
   border: 1px solid var(--admin-border);
   font-size: 12px;
   font-weight: 700;
@@ -1028,8 +992,8 @@ body {
    4. KANAL BO'LIMI
    ========================================================================== */
 .channel-card {
-  background: var(--admin-surface);
-  border: 1px solid var(--admin-border);
+  background: #ffffff !important;
+  border: 1px solid var(--admin-border) !important;
   border-radius: var(--admin-radius);
   padding: 14px;
   margin-bottom: 14px;
@@ -1121,7 +1085,7 @@ body {
 .form-group input, .form-group select, .form-group textarea {
   padding: 10px 12px;
   border-radius: 12px;
-  background: var(--admin-surface-2);
+  background: #f8fafc;
   border: 1px solid var(--admin-border);
   font-size: 13px;
   color: var(--admin-text);
@@ -1130,8 +1094,9 @@ body {
 }
 
 .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
-  background: var(--admin-surface);
-  border-color: #0f172a;
+  background: #ffffff;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
 .form-row {
@@ -1154,7 +1119,7 @@ body {
 .form-checkbox input[type="checkbox"] {
   width: 18px;
   height: 18px;
-  accent-color: #0f172a;
+  accent-color: #2563eb;
 }
 
 .result-box {
@@ -1163,12 +1128,12 @@ body {
   border-radius: 10px;
   font-size: 12px;
   font-weight: 600;
-  background: var(--admin-surface-2);
+  background: #f8fafc;
   border: 1px solid var(--admin-border);
 }
 
 /* ==========================================================================
-   BOTTOM NAVIGATION BAR
+   BOTTOM NAVIGATION BAR (Pure White)
    ========================================================================== */
 .admin-bottom-nav {
   position: fixed;
@@ -1176,22 +1141,17 @@ body {
   left: 0;
   right: 0;
   z-index: 45;
-  background: rgba(255, 255, 255, 0.94);
+  background: rgba(255, 255, 255, 0.96) !important;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-top: 1px solid var(--admin-border);
+  border-top: 1px solid var(--admin-border) !important;
   padding: 6px 12px calc(6px + var(--admin-safe-bottom));
   display: flex;
   justify-content: space-around;
   align-items: center;
   max-width: 560px;
   margin: 0 auto;
-}
-
-@media (prefers-color-scheme: dark) {
-  .admin-bottom-nav {
-    background: rgba(17, 24, 39, 0.94);
-  }
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.03);
 }
 
 .nav-item {
@@ -1225,13 +1185,11 @@ body {
 }
 
 .nav-item.active {
-  color: #0f172a;
+  color: #2563eb !important;
 }
 
-@media (prefers-color-scheme: dark) {
-  .nav-item.active {
-    color: #ffffff;
-  }
+.nav-item.active .nav-icon svg {
+  stroke: #2563eb !important;
 }
 
 .badge-dot {
@@ -1245,13 +1203,13 @@ body {
 }
 
 /* ==========================================================================
-   MODAL DIALOG
+   MODAL DIALOG (Pure White)
    ========================================================================== */
 .modal-overlay {
   position: fixed;
   inset: 0;
   z-index: 60;
-  background: rgba(0, 0, 0, 0.45);
+  background: rgba(15, 23, 42, 0.4);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
   display: flex;
@@ -1260,7 +1218,8 @@ body {
 }
 
 .modal-sheet {
-  background: var(--admin-surface);
+  background: #ffffff !important;
+  border-top: 1px solid var(--admin-border);
   border-top-left-radius: 20px;
   border-top-right-radius: 20px;
   width: 100%;
@@ -1289,6 +1248,7 @@ body {
 .modal-header h3 {
   font-size: 16px;
   font-weight: 800;
+  color: var(--admin-text);
 }
 
 .modal-close {
@@ -1314,15 +1274,9 @@ body {
 
 /* Universal Button Styles */
 .btn-primary {
-  background: #0f172a;
-  color: #ffffff;
-}
-
-@media (prefers-color-scheme: dark) {
-  .btn-primary {
-    background: #ffffff;
-    color: #0f172a;
-  }
+  background: #2563eb !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.28);
 }
 
 .btn-secondary {
@@ -1332,8 +1286,9 @@ body {
 }
 
 .btn-success {
-  background: #10b981;
-  color: #ffffff;
+  background: #10b981 !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.28);
 }
 
 /* Toast */

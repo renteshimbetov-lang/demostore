@@ -12,6 +12,8 @@
   let activeOrderFilter = 'all';
 
   // 1. Telegram WebApp Initsializatsiyasi & Safe Area O'lchovlari (Tepadagi ustma-ust tushishni to'liq yo'qotish)
+  document.documentElement.classList.add('light');
+  document.documentElement.style.colorScheme = 'light';
   if (tg) {
     try {
       tg.ready();
@@ -26,7 +28,10 @@
         tg.setHeaderColor('#ffffff');
       }
       if (typeof tg.setBackgroundColor === 'function') {
-        tg.setBackgroundColor('#f8fafc');
+        tg.setBackgroundColor('#ffffff');
+      }
+      if (typeof tg.setBottomBarColor === 'function') {
+        tg.setBottomBarColor('#ffffff');
       }
     } catch (e) {
       console.warn('Telegram init ogohlantirish:', e);
