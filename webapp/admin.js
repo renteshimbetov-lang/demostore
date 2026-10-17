@@ -1,4 +1,4 @@
-// DemoStore Admin Mini App Logic
+// DemoStore Admin Mini App — Pure White Apple Design & Zero Emojis
 (function () {
   'use strict';
 
@@ -8,9 +8,10 @@
   let allCategories = [];
   let currentUsdRate = 12850;
   let activeStatusFilter = 'all';
+  let activeCategoryFilter = 'all';
   let activeOrderFilter = 'all';
 
-  // 1. Telegram WebApp Initsializatsiyasi
+  // 1. Telegram WebApp Initsializatsiyasi & Safe Area O'lchovlari (Tepadagi ustma-ust tushishni to'liq yo'qotish)
   if (tg) {
     try {
       tg.ready();
@@ -31,6 +32,39 @@
       console.warn('Telegram init ogohlantirish:', e);
     }
   }
+
+  function updateSafeArea() {
+    try {
+      const isTg = Boolean(window.Telegram?.WebApp?.initData || window.Telegram?.WebApp?.platform);
+      const contentTop = Number(tg?.contentSafeAreaInset?.top) || 0;
+      const safeTop = Number(tg?.safeAreaInset?.top) || 0;
+      const isMobileDevice = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+      let finalTop = 16;
+      if (contentTop >= 60) {
+        finalTop = contentTop + 6;
+      } else if (safeTop > 0) {
+        finalTop = safeTop + 44;
+      } else if (isTg && isMobileDevice) {
+        finalTop = 90;
+      } else if (isTg) {
+        finalTop = 20;
+      }
+
+      document.documentElement.style.setProperty('--admin-safe-top', `${finalTop}px`);
+
+      const contentBottom = Number(tg?.contentSafeAreaInset?.bottom) || 0;
+      const safeBottom = Number(tg?.safeAreaInset?.bottom) || 0;
+      let finalBottom = Math.max(contentBottom, safeBottom, 18);
+      document.documentElement.style.setProperty('--admin-safe-bottom', `${finalBottom}px`);
+    } catch (e) {}
+  }
+  updateSafeArea();
+  tg?.onEvent?.('safeAreaChanged', updateSafeArea);
+  tg?.onEvent?.('contentSafeAreaChanged', updateSafeArea);
+  tg?.onEvent?.('fullscreenChanged', updateSafeArea);
+  tg?.onEvent?.('viewportChanged', updateSafeArea);
+  window.addEventListener('resize', updateSafeArea);
 
   function triggerHaptic(type = 'light') {
     try {
@@ -126,7 +160,6 @@
       activePane.classList.add('active');
       window.scrollTo({ top: 0, behavior: 'smooth' });
 
-      // Tabga qarab ma'lumotlarni yuklash
       if (tabId === 'tabProducts' && allProducts.length === 0) {
         loadAdminProducts();
       } else if (tabId === 'tabOrders') {
@@ -171,7 +204,6 @@
       currentUsdRate = data.current_usd_rate || 12850;
       document.getElementById('dashRateValue').textContent = `1$ = ${Number(currentUsdRate).toLocaleString('uz-UZ')} so'm`;
 
-      // Statistika kartochkalari
       const stats = data.stats || {};
       document.getElementById('statRevenue').textContent = formatPrice(stats.total_revenue);
       document.getElementById('statTodayRevenue').textContent = `Bugun: ${formatPrice(stats.today_revenue)}`;
@@ -184,7 +216,6 @@
 
       document.getElementById('statUsers').textContent = `${stats.users_count || 0} nafar`;
 
-      // Kanal ma'lumotlari
       if (data.channel) {
         document.getElementById('channelUsernameText').textContent = data.channel.username ? `@${data.channel.username}` : 'Noma\'lum';
         document.getElementById('channelIdText').textContent = data.channel.id || '-';
@@ -194,10 +225,7 @@
         }
       }
 
-      // Top tovarlar ro'yxati
       renderTopProducts(data.top_products || []);
-
-      // So'nggi buyurtmalar
       renderRecentOrders(data.recent_orders || []);
     } catch (e) {
       console.error('Dashboard yuklashda xatolik:', e);
@@ -220,7 +248,8 @@
           <span class="top-name">${p.name}</span>
         </div>
         <div class="top-views">
-          <span>👁 ${p.views_count || 0} ta</span>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+          <span>${p.views_count || 0}</span>
         </div>
       </div>
     `).join('');
@@ -257,6 +286,7 @@
       const params = new URLSearchParams();
       if (search) params.append('search', search);
       if (activeStatusFilter !== 'all') params.append('status', activeStatusFilter);
+      if (activeCategoryFilter !== 'all') params.append('category_id', activeCategoryFilter);
 
       const res = await apiFetch(`/api/admin/products?${params.toString()}`);
       if (!res.ok) throw new Error('Yuklab bo\'lmadi');
@@ -266,11 +296,68 @@
       allCategories = data.categories || [];
       currentUsdRate = data.current_usd_rate || currentUsdRate;
 
+      renderCategoryPills(allCategories);
       renderAdminProducts(allProducts);
       populateCategorySelect(allCategories);
     } catch (e) {
       container.innerHTML = `<div class="loading-spinner" style="color:var(--admin-danger);">Xatolik yuz berdi: ${e.message}</div>`;
     }
+  }
+
+  // Kategoriya SVG belgisi tanlash
+  function getCategorySvg(iconName, catName) {
+    const lower = (catName || '').toLowerCase();
+    if (iconName === 'smartphone' || lower.includes('smart') || lower.includes('phone') || lower.includes('telefon')) {
+      return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></svg>`;
+    }
+    if (iconName === 'laptop' || lower.includes('noutbuk') || lower.includes('mac') || lower.includes('laptop')) {
+      return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"><rect width="18" height="12" x="3" y="4" rx="2"/><path d="M2 20h20"/></svg>`;
+    }
+    if (iconName === 'headphones' || lower.includes('quloqchin') || lower.includes('audio') || lower.includes('airpod')) {
+      return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"><path d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3"/></svg>`;
+    }
+    if (iconName === 'watch' || lower.includes('soat') || lower.includes('watch')) {
+      return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"><circle cx="12" cy="12" r="7"/><polyline points="12 9 12 12 13.5 13.5"/><path d="M16.51 17.35l-.85 3.22a2 2 0 0 1-1.93 1.43H10.27a2 2 0 0 1-1.93-1.43l-.85-3.22"/><path d="M7.49 6.65l.85-3.22A2 2 0 0 1 10.27 2h3.46a2 2 0 0 1 1.93 1.43l.85 3.22"/></svg>`;
+    }
+    if (iconName === 'plug' || lower.includes('aksessuar') || lower.includes('quvvat') || lower.includes('kabel')) {
+      return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"><path d="M12 22v-5"/><path d="M9 8V2"/><path d="M15 8V2"/><path d="M18 8v5a6 6 0 0 1-12 0V8z"/></svg>`;
+    }
+    return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/></svg>`;
+  }
+
+  // Dinamik Kategoriya chiplari (Barchasi, Smartfonlar, Noutbuklar...)
+  function renderCategoryPills(categories) {
+    const bar = document.getElementById('adminCategoryPillsBar');
+    if (!bar) return;
+
+    let html = `
+      <button class="cat-pill btn-bounce ${activeCategoryFilter === 'all' ? 'active' : ''}" data-cat-id="all">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>
+        <span>Barchasi</span>
+      </button>
+    `;
+
+    categories.forEach(c => {
+      const isSel = String(activeCategoryFilter) === String(c.id);
+      const iconSvg = getCategorySvg(c.icon, c.name);
+      html += `
+        <button class="cat-pill btn-bounce ${isSel ? 'active' : ''}" data-cat-id="${c.id}">
+          ${iconSvg}
+          <span>${c.name}</span>
+        </button>
+      `;
+    });
+
+    bar.innerHTML = html;
+
+    bar.querySelectorAll('.cat-pill').forEach(btn => {
+      btn.addEventListener('click', () => {
+        triggerHaptic('light');
+        activeCategoryFilter = btn.getAttribute('data-cat-id');
+        bar.querySelectorAll('.cat-pill').forEach(b => b.classList.toggle('active', b === btn));
+        loadAdminProducts();
+      });
+    });
   }
 
   function renderAdminProducts(products) {
@@ -298,25 +385,50 @@
               <span class="admin-prod-price">${priceFormatted}</span>
               ${subPrice ? `<span class="admin-prod-uzs">≈ ${subPrice}</span>` : ''}
               <div class="admin-prod-badges">
-                <span class="status-badge ${isActive ? 'badge-active' : 'badge-inactive'}">${isActive ? '🟢 Faol' : '⚪️ Nofaol'}</span>
-                ${isDiscount ? '<span class="status-badge badge-discount">🔥 Chegirma</span>' : ''}
-                <span class="status-badge badge-views">👁 ${p.views_count || 0}</span>
+                <span class="status-badge ${isActive ? 'badge-active' : 'badge-inactive'}">
+                  ${isActive ? `
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    <span>Faol</span>
+                  ` : `
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    <span>Nofaol</span>
+                  `}
+                </span>
+                ${isDiscount ? `
+                  <span class="status-badge badge-discount">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+                    <span>Chegirma</span>
+                  </span>
+                ` : ''}
+                <span class="status-badge badge-views">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                  <span>${p.views_count || 0}</span>
+                </span>
                 ${p.category_name ? `<span class="badge-mini">${p.category_name}</span>` : ''}
               </div>
             </div>
           </div>
           <div class="admin-prod-actions">
-            <button class="btn-action ${isDiscount ? 'active-discount' : ''}" onclick="window.AdminApp.toggleDiscount(${p.id})">
-              ${isDiscount ? '🔥 Chegirmada' : '🏷 Aksiya qilish'}
+            <button class="btn-action btn-bounce ${isDiscount ? 'active-discount' : ''}" onclick="window.AdminApp.toggleDiscount(${p.id})">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+              <span>${isDiscount ? 'Aksiyada' : 'Aksiya'}</span>
             </button>
-            <button class="btn-action ${isActive ? 'active-status' : ''}" onclick="window.AdminApp.toggleActive(${p.id})">
-              ${isActive ? '👁 Yashirish' : '🟢 Faollashtirish'}
+            <button class="btn-action btn-bounce ${isActive ? 'active-status' : ''}" onclick="window.AdminApp.toggleActive(${p.id})">
+              ${isActive ? `
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" y1="2" x2="22" y2="22"/></svg>
+                <span>Yashirish</span>
+              ` : `
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                <span>Faol</span>
+              `}
             </button>
-            <button class="btn-action" onclick="window.AdminApp.editProduct(${p.id})">
-              ✏️ Tahrirlash
+            <button class="btn-action btn-bounce" onclick="window.AdminApp.editProduct(${p.id})">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+              <span>Tahrir</span>
             </button>
-            <button class="btn-action btn-del" onclick="window.AdminApp.deleteProduct(${p.id})">
-              🗑 O'chirish
+            <button class="btn-action btn-bounce btn-del" onclick="window.AdminApp.deleteProduct(${p.id})">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+              <span>O'chirish</span>
             </button>
           </div>
         </div>
@@ -415,10 +527,24 @@
           </div>
 
           <div class="order-customer">
-            <span class="customer-name">👤 ${o.full_name || 'Ismsiz'}</span>
-            ${cleanPhone ? `<a href="tel:${cleanPhone}" class="customer-phone">📞 ${o.phone}</a>` : ''}
-            <span class="customer-address">📍 Manzil: ${o.address || 'Kiritilmagan'}</span>
-            <span class="customer-address">💳 To'lov usuli: ${o.payment_method || 'Naqd'}</span>
+            <div class="customer-row">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <span class="customer-name">${o.full_name || 'Ismsiz'}</span>
+            </div>
+            ${cleanPhone ? `
+              <div class="customer-row">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                <a href="tel:${cleanPhone}" class="customer-phone">${o.phone}</a>
+              </div>
+            ` : ''}
+            <div class="customer-row">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+              <span class="customer-address">${o.address || 'Manzil ko\'rsatilmagan'}</span>
+            </div>
+            <div class="customer-row">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+              <span class="customer-address">${o.payment_method || 'Naqd to\'lov'}</span>
+            </div>
           </div>
 
           <div class="order-items-box">
@@ -450,129 +576,70 @@
     try {
       const res = await apiFetch('/api/admin/sync-channel', { method: 'POST' });
       const data = await res.json();
-      if (res.ok) {
-        const count = data.deleted_count || 0;
-        const msg = count > 0 
-          ? `Sinxronlash yakunlandi: ${count} ta o'chirilgan post do'kondan yashirildi.` 
-          : "Barcha kanal postlari faol, hech qanday o'chirilgan post topilmadi.";
-        showToast(msg, true);
-        if (resultBox) {
-          resultBox.textContent = `✅ ${msg}`;
-          resultBox.classList.remove('hidden');
-        }
-        loadDashboardData();
-        if (allProducts.length > 0) loadAdminProducts();
-      } else {
-        showToast('Sinxronlashda xatolik', false);
+      if (!res.ok) throw new Error(data.error || 'Xatolik');
+
+      showToast(`Sinxronlandi: ${data.deactivated_count || 0} ta post to'g'rilandi`, true);
+      if (resultBox) {
+        resultBox.textContent = `Natija: ${data.checked_posts_count} ta post tekshirildi, ${data.deactivated_count} ta o'chirilgan post do'kondan yashirildi.`;
+        resultBox.classList.remove('hidden');
       }
+      loadDashboardData();
     } catch (e) {
-      showToast('Aloqa xatosi: ' + e.message, false);
+      showToast('Sinxronlashda xatolik: ' + e.message, false);
     } finally {
       if (btn) btn.disabled = false;
     }
   }
 
-  // 9. Global Handlerlar (Window Object)
-  window.AdminApp = {
-    async toggleActive(id) {
-      triggerHaptic('light');
-      try {
-        const res = await apiFetch(`/api/admin/products/${id}/toggle-active`, { method: 'POST' });
-        if (res.ok) {
-          const data = await res.json();
-          showToast(data.is_active ? 'Mahsulot faollashtirildi' : 'Mahsulot yashirildi', true);
-          loadAdminProducts();
-        }
-      } catch (e) {
-        showToast('Xatolik: ' + e.message, false);
-      }
-    },
-
-    async toggleDiscount(id) {
-      triggerHaptic('light');
-      try {
-        const res = await apiFetch(`/api/admin/products/${id}/toggle-discount`, { method: 'POST' });
-        if (res.ok) {
-          const data = await res.json();
-          showToast(data.is_discount ? '🔥 Chegirmaga qo\'shildi' : 'Chegirmadan chiqarildi', true);
-          loadAdminProducts();
-        }
-      } catch (e) {
-        showToast('Xatolik: ' + e.message, false);
-      }
-    },
-
-    editProduct(id) {
-      const p = allProducts.find(item => item.id === id);
-      if (p) openProductModal(p);
-    },
-
-    async deleteProduct(id) {
-      if (!confirm(`Haqiqatan ham ushbu mahsulotni o'chirmoqchimisiz? (#${id})`)) return;
-      triggerHaptic('medium');
-      try {
-        const res = await apiFetch(`/api/admin/products/${id}`, { method: 'DELETE' });
-        if (res.ok) {
-          showToast('Mahsulot muvaffaqiyatli o\'chirildi', true);
-          loadAdminProducts();
-        }
-      } catch (e) {
-        showToast('O\'chirishda xatolik: ' + e.message, false);
-      }
-    },
-
-    async changeOrderStatus(orderId, newStatus) {
-      triggerHaptic('selection');
-      try {
-        const res = await apiFetch(`/api/admin/orders/${orderId}/status`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status: newStatus })
-        });
-        if (res.ok) {
-          showToast(`Buyurtma #${orderId} statusi "${newStatus}" ga o'zgartirildi`, true);
-          loadDashboardData();
-        } else {
-          showToast('Statusni o\'zgartirib bo\'lmadi', false);
-        }
-      } catch (e) {
-        showToast('Xatolik: ' + e.message, false);
-      }
-    }
-  };
-
-  // 10. DOM Hodisalari
-  document.addEventListener('DOMContentLoaded', async () => {
-    initTabs();
-
-    // Refresh barchasi
+  // 9. Hodisalar (Events)
+  function initEvents() {
     document.getElementById('btnRefreshAll')?.addEventListener('click', () => {
-      triggerHaptic('medium');
-      loadDashboardData();
-      if (document.getElementById('tabProducts').classList.contains('active')) loadAdminProducts();
-      if (document.getElementById('tabOrders').classList.contains('active')) loadAdminOrders();
+      triggerHaptic('light');
+      const icon = document.getElementById('btnRefreshAll');
+      icon?.classList.add('spinning');
+      loadDashboardData().finally(() => {
+        setTimeout(() => icon?.classList.remove('spinning'), 500);
+      });
       showToast('Ma\'lumotlar yangilandi', true);
     });
 
-    // Jonli kursni yangilash
     document.getElementById('btnRefreshCurrency')?.addEventListener('click', async () => {
       triggerHaptic('light');
-      showToast('Markaziy Bankdan kurs yangilanmoqda...', true);
+      const btn = document.getElementById('btnRefreshCurrency');
+      if (btn) btn.disabled = true;
       try {
-        const res = await apiFetch('/api/currency?force=1');
+        const res = await apiFetch('/api/currency');
         if (res.ok) {
           const data = await res.json();
-          currentUsdRate = data.rate;
-          document.getElementById('dashRateValue').textContent = `1$ = ${Number(data.rate).toLocaleString('uz-UZ')} so'm`;
-          showToast('Kurs yangilandi: 1$ = ' + data.formatted, true);
+          currentUsdRate = data.rate || currentUsdRate;
+          document.getElementById('dashRateValue').textContent = `1$ = ${Number(currentUsdRate).toLocaleString('uz-UZ')} so'm`;
+          showToast(`USD kursi yangilandi: 1$ = ${formatPrice(currentUsdRate)}`, true);
         }
-      } catch (e) {}
+      } finally {
+        if (btn) btn.disabled = false;
+      }
     });
 
-    // Mahsulot filter pills
+    const searchInput = document.getElementById('adminSearchInput');
+    const clearBtn = document.getElementById('adminSearchClear');
+    let searchTimer = null;
+    searchInput?.addEventListener('input', () => {
+      clearBtn?.classList.toggle('hidden', !searchInput.value);
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => {
+        loadAdminProducts();
+      }, 350);
+    });
+    clearBtn?.addEventListener('click', () => {
+      if (searchInput) searchInput.value = '';
+      clearBtn.classList.add('hidden');
+      loadAdminProducts();
+    });
+
+    // Status filtrlari
     document.querySelectorAll('.filter-pill').forEach(pill => {
       pill.addEventListener('click', () => {
-        triggerHaptic('selection');
+        triggerHaptic('light');
         document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
         pill.classList.add('active');
         activeStatusFilter = pill.getAttribute('data-status');
@@ -580,10 +647,10 @@
       });
     });
 
-    // Buyurtma filter pills
+    // Buyurtma filtrlari
     document.querySelectorAll('.order-filter-pill').forEach(pill => {
       pill.addEventListener('click', () => {
-        triggerHaptic('selection');
+        triggerHaptic('light');
         document.querySelectorAll('.order-filter-pill').forEach(p => p.classList.remove('active'));
         pill.classList.add('active');
         activeOrderFilter = pill.getAttribute('data-status');
@@ -591,38 +658,24 @@
       });
     });
 
-    // Qidiruv
-    const searchInput = document.getElementById('adminSearchInput');
-    const searchClear = document.getElementById('adminSearchClear');
-    let searchDebounce = null;
-    searchInput?.addEventListener('input', () => {
-      searchClear?.classList.toggle('hidden', !searchInput.value);
-      clearTimeout(searchDebounce);
-      searchDebounce = setTimeout(loadAdminProducts, 350);
+    // Mahsulot Modali
+    document.getElementById('btnAddProductModal')?.addEventListener('click', () => {
+      openProductModal();
     });
-    searchClear?.addEventListener('click', () => {
-      searchInput.value = '';
-      searchClear.classList.add('hidden');
-      loadAdminProducts();
-    });
-
-    // Modal hodisalari
-    document.getElementById('btnAddProductModal')?.addEventListener('click', () => openProductModal());
     document.getElementById('btnCloseProductModal')?.addEventListener('click', closeProductModal);
     document.getElementById('btnCancelProductModal')?.addEventListener('click', closeProductModal);
 
-    // Mahsulot formasi submit
+    // Mahsulot Saqlash Formasi
     document.getElementById('productForm')?.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const id = document.getElementById('formProductId').value;
-      const currency = document.getElementById('formProductCurrency').value;
-      const rawPrice = parseInt(document.getElementById('formProductPrice').value, 10);
-      
+      const saveBtn = document.getElementById('btnSaveProductModal');
+      if (saveBtn) saveBtn.disabled = true;
+
+      const pId = document.getElementById('formProductId').value;
       const payload = {
         name: document.getElementById('formProductName').value.trim(),
-        price: rawPrice,
-        currency: currency,
-        price_uzs: currency === 'UZS' ? rawPrice : Math.round(rawPrice * currentUsdRate),
+        price: parseInt(document.getElementById('formProductPrice').value, 10),
+        currency: document.getElementById('formProductCurrency').value,
         category_id: document.getElementById('formProductCategory').value || null,
         image_url: document.getElementById('formProductImage').value.trim(),
         description: document.getElementById('formProductDesc').value.trim(),
@@ -631,41 +684,35 @@
       };
 
       try {
-        let res;
-        if (id) {
-          res = await apiFetch(`/api/admin/products/${id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-          });
-        } else {
-          res = await apiFetch('/api/admin/products', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-          });
+        const url = pId ? `/api/admin/products/${pId}` : '/api/admin/products';
+        const method = pId ? 'PUT' : 'POST';
+        const res = await apiFetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+          const errData = await res.json();
+          throw new Error(errData.error || 'Saqlashda xatolik');
         }
 
-        if (res.ok) {
-          closeProductModal();
-          showToast(id ? 'Mahsulot muvaffaqiyatli saqlandi' : 'Yangi mahsulot yaratildi', true);
-          loadAdminProducts();
-          loadDashboardData();
-        } else {
-          const err = await res.json();
-          showToast('Xatolik: ' + (err.error || 'Saqlab bo\'lmadi'), false);
-        }
+        showToast(pId ? 'Mahsulot yangilandi' : 'Yangi mahsulot qo\'shildi', true);
+        closeProductModal();
+        loadAdminProducts();
+        loadDashboardData();
       } catch (err) {
-        showToast('Tarmoq xatosi: ' + err.message, false);
+        showToast('Xatolik: ' + err.message, false);
+      } finally {
+        if (saveBtn) saveBtn.disabled = false;
       }
     });
 
-    // Kanalga chiqarish formasi
+    // Kanalga Post Chiqarish Formasi
     document.getElementById('channelPostForm')?.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const btn = document.getElementById('btnSubmitChannelPost');
-      if (btn) btn.disabled = true;
-      showToast('Kanalga yuborilmoqda...', true);
+      const submitBtn = document.getElementById('btnSubmitChannelPost');
+      if (submitBtn) submitBtn.disabled = true;
 
       const payload = {
         name: document.getElementById('postName').value.trim(),
@@ -684,28 +731,108 @@
         });
 
         const data = await res.json();
-        if (res.ok) {
-          showToast('🚀 Post kanalga muvaffaqiyatli chiqarildi!', true);
-          document.getElementById('channelPostForm').reset();
-          loadDashboardData();
-        } else {
-          showToast('Xatolik: ' + (data.error || 'Kanalga chiqarib bo\'lmadi'), false);
-        }
+        if (!res.ok) throw new Error(data.error || 'Telegram xatosi');
+
+        showToast('Post kanalga muvaffaqiyatli chiqarildi!', true);
+        document.getElementById('channelPostForm').reset();
+        loadDashboardData();
       } catch (err) {
-        showToast('Xatolik: ' + err.message, false);
+        showToast('Post chiqarishda xatolik: ' + err.message, false);
       } finally {
-        if (btn) btn.disabled = false;
+        if (submitBtn) submitBtn.disabled = false;
       }
     });
 
-    // Kanal sinxronlash tugmasi
     document.getElementById('btnRunSyncChannel')?.addEventListener('click', runChannelSync);
+  }
 
-    // Admin autentifikatsiyasini tekshirib dasturni boshlash
-    const isOk = await checkAdminAuth();
-    if (isOk) {
+  // Window orqali chaqiriladigan global amallar
+  window.AdminApp = {
+    async toggleActive(productId) {
+      triggerHaptic('light');
+      try {
+        const res = await apiFetch(`/api/admin/products/${productId}/toggle-active`, { method: 'POST' });
+        if (res.ok) {
+          const data = await res.json();
+          showToast(data.is_active ? 'Mahsulot faollashtirildi' : 'Mahsulot yashirildi', true);
+          loadAdminProducts();
+          loadDashboardData();
+        }
+      } catch (e) {
+        showToast('Xatolik yuz berdi', false);
+      }
+    },
+
+    async toggleDiscount(productId) {
+      triggerHaptic('light');
+      try {
+        const res = await apiFetch(`/api/admin/products/${productId}/toggle-discount`, { method: 'POST' });
+        if (res.ok) {
+          const data = await res.json();
+          showToast(data.is_discount ? 'Hafta chegirmasiga qo\'shildi' : 'Chegirmadan olib tashlandi', true);
+          loadAdminProducts();
+          loadDashboardData();
+        }
+      } catch (e) {
+        showToast('Xatolik yuz berdi', false);
+      }
+    },
+
+    editProduct(productId) {
+      const prod = allProducts.find(p => p.id === productId);
+      if (prod) {
+        openProductModal(prod);
+      }
+    },
+
+    async deleteProduct(productId) {
+      triggerHaptic('warning');
+      if (!confirm('Haqiqatan ham ushbu mahsulotni o\'chirmoqchimisiz?')) return;
+
+      try {
+        const res = await apiFetch(`/api/admin/products/${productId}`, { method: 'DELETE' });
+        if (res.ok) {
+          showToast('Mahsulot o\'chirildi', true);
+          loadAdminProducts();
+          loadDashboardData();
+        }
+      } catch (e) {
+        showToast('O\'chirishda xatolik', false);
+      }
+    },
+
+    async changeOrderStatus(orderId, newStatus) {
+      triggerHaptic('selection');
+      try {
+        const res = await apiFetch(`/api/admin/orders/${orderId}/status`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: newStatus })
+        });
+        if (res.ok) {
+          showToast(`Buyurtma #${orderId} holati o'zgartirildi: ${newStatus}`, true);
+          loadDashboardData();
+        }
+      } catch (e) {
+        showToast('Statusni o\'zgartirib bo\'lmadi', false);
+      }
+    }
+  };
+
+  // Dasturni yuklash
+  async function init() {
+    initTabs();
+    initEvents();
+
+    const isAuthorized = await checkAdminAuth();
+    if (isAuthorized) {
       loadDashboardData();
     }
-  });
+  }
 
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
 })();

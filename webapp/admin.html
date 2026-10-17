@@ -11,40 +11,59 @@
   <!-- Google Fonts: Inter & Outfit -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
 
-  <!-- Admin Stylesheet -->
+  <!-- Store Mini App Tugmalar to'plami va Admin Stylesheet -->
+  <link rel="stylesheet" href="/static/mini_app_buttons.min.css?v=71.0" />
   <link rel="stylesheet" href="/static/admin.min.css?v=71.0" />
 </head>
-<body>
-  <!-- Header -->
+<body class="light-mode">
+  <!-- Header (Telegram Top Safe Area clearance bilan) -->
   <header class="admin-header" id="adminHeader">
-    <div class="header-left">
-      <div class="admin-avatar" id="adminAvatar">👑</div>
-      <div class="admin-title-box">
-        <div class="store-badge">DemoStore • Boshqaruv</div>
-        <h1 class="admin-name" id="adminGreeting">Admin Panel</h1>
+    <div class="header-inner">
+      <div class="header-left">
+        <div class="admin-avatar" id="adminAvatar">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2L3 7v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-9-5z"/>
+            <path d="M12 8v5"/>
+            <circle cx="12" cy="16" r="1"/>
+          </svg>
+        </div>
+        <div class="admin-title-box">
+          <div class="store-badge">DemoStore • Boshqaruv</div>
+          <h1 class="admin-name" id="adminGreeting">Admin Panel</h1>
+        </div>
       </div>
-    </div>
-    <div class="header-actions">
-      <a href="/" class="btn-store-link" title="Mijoz do'koniga o'tish">
-        <span>🛍 Do'kon</span>
-      </a>
-      <button class="btn-icon-refresh" id="btnRefreshAll" title="Ma'lumotlarni yangilash">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21.5 2v6h-6M21.34 15.57a9 9 0 1 1-.57-8.38l5.67-5.67"/>
-        </svg>
-      </button>
+      <div class="header-actions">
+        <a href="/" class="btn-store-link btn-bounce" title="Mijoz do'koniga o'tish">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/>
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <path d="M16 10a4 4 0 0 1-8 0"/>
+          </svg>
+          <span>Do'kon</span>
+        </a>
+        <button class="btn-icon-refresh btn-bounce" id="btnRefreshAll" title="Ma'lumotlarni yangilash" aria-label="Yangilash">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21.5 2v6h-6M21.34 15.57a9 9 0 1 1-.57-8.38l5.67-5.67"/>
+          </svg>
+        </button>
+      </div>
     </div>
   </header>
 
   <!-- Unauthorized Warning Screen (Faqat admin bo'lmaganlar uchun) -->
   <div id="unauthorizedScreen" class="unauthorized-screen hidden">
     <div class="unauth-card">
-      <div class="unauth-icon">⛔️</div>
+      <div class="unauth-icon-wrap">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+        </svg>
+      </div>
       <h2>Ruxsat berilmagan</h2>
       <p>Ushbu boshqaruv paneli faqat tizim administratorlari uchun mo'ljallangan.</p>
-      <a href="/" class="btn-primary" style="margin-top: 16px; display: inline-block;">Do'konga qaytish</a>
+      <a href="/" class="btn btn-bounce" style="margin-top: 16px; display: inline-flex;">Do'konga qaytish</a>
     </div>
   </div>
 
@@ -55,19 +74,35 @@
     <section id="tabDashboard" class="tab-pane active">
       <!-- Valyuta kursi banneri -->
       <div class="rate-card">
-        <div class="rate-info">
-          <span class="rate-label">🇺🇸 Markaziy Bank USD kursi:</span>
-          <span class="rate-value" id="dashRateValue">Yuklanmoqda...</span>
+        <div class="rate-left">
+          <div class="rate-icon-badge">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="2" x2="12" y2="22"/>
+              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            </svg>
+          </div>
+          <div class="rate-info">
+            <span class="rate-label">Markaziy Bank USD kursi:</span>
+            <span class="rate-value" id="dashRateValue">Yuklanmoqda...</span>
+          </div>
         </div>
-        <button class="btn-rate-refresh" id="btnRefreshCurrency" title="Kursni yangilash">
-          <span>🔄 Yangilash</span>
+        <button class="btn-rate-refresh btn-bounce" id="btnRefreshCurrency" title="Kursni yangilash">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21.5 2v6h-6M21.34 15.57a9 9 0 1 1-.57-8.38l5.67-5.67"/>
+          </svg>
+          <span>Yangilash</span>
         </button>
       </div>
 
       <!-- Katta Statistika Katakchalari -->
       <div class="stats-grid">
         <div class="stat-card revenue-card">
-          <div class="stat-icon-wrapper revenue-icon">💰</div>
+          <div class="stat-icon-wrapper revenue-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+              <rect width="20" height="14" x="2" y="5" rx="2"/>
+              <line x1="2" y1="10" x2="22" y2="10"/>
+            </svg>
+          </div>
           <div class="stat-meta">
             <span class="stat-title">Jami aylanma</span>
             <span class="stat-num" id="statRevenue">0 so'm</span>
@@ -76,7 +111,13 @@
         </div>
 
         <div class="stat-card orders-card">
-          <div class="stat-icon-wrapper orders-icon">🛍</div>
+          <div class="stat-icon-wrapper orders-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/>
+              <line x1="3" y1="6" x2="21" y2="6"/>
+              <path d="M16 10a4 4 0 0 1-8 0"/>
+            </svg>
+          </div>
           <div class="stat-meta">
             <span class="stat-title">Buyurtmalar</span>
             <span class="stat-num" id="statOrders">0 ta</span>
@@ -85,7 +126,14 @@
         </div>
 
         <div class="stat-card products-card">
-          <div class="stat-icon-wrapper products-icon">📦</div>
+          <div class="stat-icon-wrapper products-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m7.5 4.27 9 5.15"/>
+              <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/>
+              <path d="m3.3 7 8.7 5 8.7-5"/>
+              <path d="M12 22V12"/>
+            </svg>
+          </div>
           <div class="stat-meta">
             <span class="stat-title">Faol Mahsulotlar</span>
             <span class="stat-num" id="statProducts">0 ta</span>
@@ -94,7 +142,14 @@
         </div>
 
         <div class="stat-card users-card">
-          <div class="stat-icon-wrapper users-icon">👥</div>
+          <div class="stat-icon-wrapper users-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+          </div>
           <div class="stat-meta">
             <span class="stat-title">Mijozlar soni</span>
             <span class="stat-num" id="statUsers">0 nafar</span>
@@ -105,18 +160,38 @@
 
       <!-- Tezkor Amallar -->
       <div class="quick-actions-box">
-        <h3 class="section-title">⚡️ Tezkor boshqaruv</h3>
+        <div class="box-head">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+          </svg>
+          <h3 class="section-title">Tezkor boshqaruv</h3>
+        </div>
         <div class="quick-buttons">
-          <button class="btn-quick" id="btnQuickAddProduct">
-            <span class="icon">➕</span>
+          <button class="btn-quick btn-bounce" id="btnQuickAddProduct">
+            <div class="quick-btn-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="16"/>
+                <line x1="8" y1="12" x2="16" y2="12"/>
+              </svg>
+            </div>
             <span>Yangi mahsulot</span>
           </button>
-          <button class="btn-quick" id="btnQuickSyncChannel">
-            <span class="icon">🔄</span>
-            <span>Kanal postlarini tekshirish</span>
+          <button class="btn-quick btn-bounce" id="btnQuickSyncChannel">
+            <div class="quick-btn-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21.5 2v6h-6M21.34 15.57a9 9 0 1 1-.57-8.38l5.67-5.67"/>
+              </svg>
+            </div>
+            <span>Kanalni tekshirish</span>
           </button>
-          <button class="btn-quick" id="btnQuickChannelPost">
-            <span class="icon">📢</span>
+          <button class="btn-quick btn-bounce" id="btnQuickChannelPost">
+            <div class="quick-btn-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m22 2-7 20-4-9-9-4Z"/>
+                <path d="M22 2 11 13"/>
+              </svg>
+            </div>
             <span>Kanalga post joylash</span>
           </button>
         </div>
@@ -125,7 +200,12 @@
       <!-- Top Ko'rilgan Mahsulotlar (Views Count) -->
       <div class="card-box">
         <div class="card-box-header">
-          <h3 class="section-title">🔥 Eng ko'p ko'rilgan tovarlar (Top)</h3>
+          <div class="box-title-group">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+            </svg>
+            <h3 class="section-title">Eng ko'p ko'rilgan tovarlar</h3>
+          </div>
           <span class="badge-mini">Mini ilovadan kanalga</span>
         </div>
         <div class="top-products-list" id="topProductsList">
@@ -136,8 +216,17 @@
       <!-- So'nggi Buyurtmalar -->
       <div class="card-box">
         <div class="card-box-header">
-          <h3 class="section-title">🕒 So'nggi buyurtmalar</h3>
-          <button class="btn-text" id="btnViewAllOrders">Barchasi &rarr;</button>
+          <div class="box-title-group">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+            <h3 class="section-title">So'nggi buyurtmalar</h3>
+          </div>
+          <button class="btn-text btn-bounce" id="btnViewAllOrders">
+            <span>Barchasi</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
         </div>
         <div class="recent-orders-list" id="recentOrdersList">
           <div class="loading-spinner">Yuklanmoqda...</div>
@@ -149,20 +238,60 @@
     <section id="tabProducts" class="tab-pane">
       <div class="pane-header">
         <div class="search-bar">
-          <input type="text" id="adminSearchInput" placeholder="Mahsulot nomi yoki narxi bo'yicha qidirish..." />
-          <button id="adminSearchClear" class="btn-clear hidden">&times;</button>
+          <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input type="text" id="adminSearchInput" placeholder="Mahsulot nomi yoki narxi..." />
+          <button id="adminSearchClear" class="btn-clear hidden" aria-label="Tozalash">&times;</button>
         </div>
-        <button class="btn-add-circle" id="btnAddProductModal" title="Yangi mahsulot qo'shish">
-          <span>+ Yangi qo'shish</span>
+        <button class="btn-add-circle btn-bounce" id="btnAddProductModal" title="Yangi mahsulot qo'shish">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"/>
+            <line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          <span>Qo'shish</span>
         </button>
       </div>
 
-      <!-- Status Filtrlari (Pills) -->
+      <!-- 1. KATEGORIYALAR GORIZONTAL BAR (Smartfonlar, Noutbuklar, Audio, Aksessuarlar...) -->
+      <div class="category-pills-bar" id="adminCategoryPillsBar">
+        <button class="cat-pill active btn-bounce" data-cat-id="all">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="7" height="7" x="3" y="3" rx="1"/>
+            <rect width="7" height="7" x="14" y="3" rx="1"/>
+            <rect width="7" height="7" x="14" y="14" rx="1"/>
+            <rect width="7" height="7" x="3" y="14" rx="1"/>
+          </svg>
+          <span>Barchasi</span>
+        </button>
+        <!-- Kategoriyalar JS orqali dinamik chiziladi -->
+      </div>
+
+      <!-- 2. STATUS FILTRLARI (Faol, Chegirmalar, Nofaol) -->
       <div class="filter-pills-bar">
-        <button class="filter-pill active" data-status="all">Barchasi</button>
-        <button class="filter-pill" data-status="active">🟢 Faol</button>
-        <button class="filter-pill" data-status="discount">🔥 Chegirmalar</button>
-        <button class="filter-pill" data-status="inactive">⚪️ Nofaol</button>
+        <button class="filter-pill active btn-bounce" data-status="all">
+          <span>Barcha holatlar</span>
+        </button>
+        <button class="filter-pill btn-bounce" data-status="active">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          <span>Faol</span>
+        </button>
+        <button class="filter-pill btn-bounce" data-status="discount">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+          </svg>
+          <span>Chegirmalar</span>
+        </button>
+        <button class="filter-pill btn-bounce" data-status="inactive">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9"/>
+            <line x1="9" y1="9" x2="15" y2="15"/>
+          </svg>
+          <span>Nofaol</span>
+        </button>
       </div>
 
       <!-- Mahsulotlar Ro'yxati -->
@@ -175,12 +304,12 @@
     <section id="tabOrders" class="tab-pane">
       <!-- Status Filtrlari -->
       <div class="filter-pills-bar">
-        <button class="order-filter-pill active" data-status="all">Barchasi</button>
-        <button class="order-filter-pill" data-status="Yangi">🆕 Yangi</button>
-        <button class="order-filter-pill" data-status="Qabul qilindi">✅ Qabul qilindi</button>
-        <button class="order-filter-pill" data-status="Yetkazilmoqda">🚚 Yetkazilmoqda</button>
-        <button class="order-filter-pill" data-status="Yetkazildi">🏁 Yetkazildi</button>
-        <button class="order-filter-pill" data-status="Bekor qilindi">❌ Bekor</button>
+        <button class="order-filter-pill active btn-bounce" data-status="all">Barchasi</button>
+        <button class="order-filter-pill btn-bounce" data-status="Yangi">Yangi</button>
+        <button class="order-filter-pill btn-bounce" data-status="Qabul qilindi">Qabul qilindi</button>
+        <button class="order-filter-pill btn-bounce" data-status="Yetkazilmoqda">Yetkazilmoqda</button>
+        <button class="order-filter-pill btn-bounce" data-status="Yetkazildi">Yetkazildi</button>
+        <button class="order-filter-pill btn-bounce" data-status="Bekor qilindi">Bekor</button>
       </div>
 
       <!-- Buyurtmalar Ro'yxati -->
@@ -194,8 +323,20 @@
       <!-- Kanal Info Kartochkasi -->
       <div class="channel-card">
         <div class="channel-header-row">
-          <div class="channel-badge">Telegram Kanal</div>
-          <a href="#" target="_blank" id="channelLinkBtn" class="channel-link">Kanalga o'tish &nearr;</a>
+          <div class="channel-badge">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"/>
+              <path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"/>
+              <circle cx="12" cy="12" r="2"/>
+              <path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"/>
+              <path d="M19.1 4.9C23 8.8 23 15.2 19.1 19.1"/>
+            </svg>
+            <span>Telegram Kanal</span>
+          </div>
+          <a href="#" target="_blank" id="channelLinkBtn" class="channel-link btn-bounce">
+            <span>Kanalga o'tish</span>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M7 7h10v10"/></svg>
+          </a>
         </div>
         <div class="channel-details">
           <div class="detail-row">
@@ -211,18 +352,32 @@
 
       <!-- Kanal Sinxronizatsiyasi -->
       <div class="card-box">
-        <h3 class="section-title">🔄 O'chirilgan postlarni tozalash</h3>
-        <p class="section-desc">Kanalda o'chirilgan yoki sotilgan postlarni avtomatik aniqlab, do'kondan yashiradi.</p>
-        <button class="btn-primary" id="btnRunSyncChannel">
-          <span>⚡️ Kanalni sinxronlash (Sync)</span>
+        <div class="box-head">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21.5 2v6h-6M21.34 15.57a9 9 0 1 1-.57-8.38l5.67-5.67"/>
+          </svg>
+          <h3 class="section-title">O'chirilgan postlarni tozalash</h3>
+        </div>
+        <p class="section-desc">Kanalda o'chirilgan yoki sotilgan postlarni avtomatik aniqlab, do'kondan nofaol qiladi.</p>
+        <button class="btn btn-bounce btn-primary" id="btnRunSyncChannel">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21.5 2v6h-6M21.34 15.57a9 9 0 1 1-.57-8.38l5.67-5.67"/>
+          </svg>
+          <span>Kanalni sinxronlash (Sync)</span>
         </button>
         <div id="syncResultBox" class="result-box hidden"></div>
       </div>
 
       <!-- Kanalga Yangi Post Joylash Formasi -->
       <div class="card-box">
-        <h3 class="section-title">📢 Kanalga to'g'ridan-to'g'ri post chiqarish</h3>
-        <p class="section-desc">Ushbu forma orqali yuborilgan mahsulot kanalda rasmiy post sifatida chiqadi va avtomatik mini ilovaga qo'shiladi.</p>
+        <div class="box-head">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m22 2-7 20-4-9-9-4Z"/>
+            <path d="M22 2 11 13"/>
+          </svg>
+          <h3 class="section-title">Kanalga to'g'ridan-to'g'ri post chiqarish</h3>
+        </div>
+        <p class="section-desc">Yuborilgan mahsulot kanalda rasmiy post sifatida chiqadi va avtomatik mini ilovaga qo'shiladi.</p>
 
         <form id="channelPostForm" class="admin-form">
           <div class="form-group">
@@ -257,12 +412,16 @@
           <div class="form-checkbox">
             <label>
               <input type="checkbox" id="postIsDiscount" />
-              <span>🔥 Maxsus aksiya/chegirma sifatida e'lon qilish</span>
+              <span>Maxsus aksiya/chegirma sifatida e'lon qilish</span>
             </label>
           </div>
 
-          <button type="submit" class="btn-success" id="btnSubmitChannelPost">
-            <span>🚀 Kanalga chiqarish</span>
+          <button type="submit" class="btn btn-bounce btn-success" id="btnSubmitChannelPost">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m22 2-7 20-4-9-9-4Z"/>
+              <path d="M22 2 11 13"/>
+            </svg>
+            <span>Kanalga chiqarish</span>
           </button>
         </form>
       </div>
@@ -270,23 +429,47 @@
 
   </main>
 
-  <!-- Bottom Navigation Bar -->
+  <!-- Bottom Navigation Bar (Apple Style Vector Icons) -->
   <nav class="admin-bottom-nav" id="adminBottomNav">
-    <button class="nav-item active" data-tab="tabDashboard">
-      <span class="nav-icon">📊</span>
+    <button class="nav-item active btn-bounce" data-tab="tabDashboard">
+      <span class="nav-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="20" x2="18" y2="10"/>
+          <line x1="12" y1="20" x2="12" y2="4"/>
+          <line x1="6" y1="20" x2="6" y2="14"/>
+        </svg>
+      </span>
       <span class="nav-label">Dashboard</span>
     </button>
-    <button class="nav-item" data-tab="tabProducts">
-      <span class="nav-icon">📦</span>
+    <button class="nav-item btn-bounce" data-tab="tabProducts">
+      <span class="nav-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m7.5 4.27 9 5.15"/>
+          <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/>
+          <path d="m3.3 7 8.7 5 8.7-5"/>
+          <path d="M12 22V12"/>
+        </svg>
+      </span>
       <span class="nav-label">Mahsulotlar</span>
     </button>
-    <button class="nav-item" data-tab="tabOrders">
-      <span class="nav-icon">🛍</span>
+    <button class="nav-item btn-bounce" data-tab="tabOrders">
+      <span class="nav-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/>
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <path d="M16 10a4 4 0 0 1-8 0"/>
+        </svg>
+      </span>
       <span class="nav-label">Buyurtmalar</span>
       <span class="badge-dot hidden" id="orderBadgeDot"></span>
     </button>
-    <button class="nav-item" data-tab="tabChannel">
-      <span class="nav-icon">📢</span>
+    <button class="nav-item btn-bounce" data-tab="tabChannel">
+      <span class="nav-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m22 2-7 20-4-9-9-4Z"/>
+          <path d="M22 2 11 13"/>
+        </svg>
+      </span>
       <span class="nav-label">Kanal</span>
     </button>
   </nav>
@@ -296,20 +479,20 @@
     <div class="modal-sheet">
       <div class="modal-header">
         <h3 id="modalProductTitle">Mahsulotni tahrirlash</h3>
-        <button class="modal-close" id="btnCloseProductModal">&times;</button>
+        <button class="modal-close btn-bounce" id="btnCloseProductModal" aria-label="Yopish">&times;</button>
       </div>
       <form id="productForm" class="modal-body admin-form">
         <input type="hidden" id="formProductId" />
         
         <div class="form-group">
           <label>Nomi *</label>
-          <input type="text" id="formProductName" required />
+          <input type="text" id="formProductName" placeholder="Masalan: iPhone 16 Pro 128GB" required />
         </div>
 
         <div class="form-row">
           <div class="form-group flex-1">
             <label>Narxi *</label>
-            <input type="number" id="formProductPrice" required />
+            <input type="number" id="formProductPrice" placeholder="1050" required />
           </div>
           <div class="form-group flex-1">
             <label>Valyuta</label>
@@ -332,27 +515,27 @@
 
         <div class="form-group">
           <label>Tavsif</label>
-          <textarea id="formProductDesc" rows="3"></textarea>
+          <textarea id="formProductDesc" rows="3" placeholder="Mahsulot haqida ma'lumot..."></textarea>
         </div>
 
         <div class="form-row">
           <div class="form-checkbox">
             <label>
               <input type="checkbox" id="formProductActive" checked />
-              <span>🟢 Faol (do'konda ko'rinsin)</span>
+              <span>Faol (do'konda ko'rinsin)</span>
             </label>
           </div>
           <div class="form-checkbox">
             <label>
               <input type="checkbox" id="formProductDiscount" />
-              <span>🔥 Hafta chegirmasi</span>
+              <span>Hafta chegirmasi</span>
             </label>
           </div>
         </div>
 
         <div class="modal-actions">
-          <button type="button" class="btn-secondary" id="btnCancelProductModal">Bekor qilish</button>
-          <button type="submit" class="btn-primary" id="btnSaveProductModal">Saqlash</button>
+          <button type="button" class="btn btn-bounce btn-secondary" id="btnCancelProductModal">Bekor qilish</button>
+          <button type="submit" class="btn btn-bounce btn-primary" id="btnSaveProductModal">Saqlash</button>
         </div>
       </form>
     </div>
