@@ -118,7 +118,7 @@ html, body {
   z-index: 0;
 }
 
-/* Markaziy Sahna (Logo va Matn bitta qatorda joylashadi) */
+/* Markaziy Sahna (Logo va Matn bitta kompozitsiyada) */
 .splash-brand-stage {
   position: relative;
   z-index: 2;
@@ -127,8 +127,8 @@ html, body {
   justify-content: center;
   min-height: 120px;
   width: 100%;
-  max-width: 360px;
-  padding: 0 20px;
+  max-width: 380px;
+  padding: 0 16px;
 }
 
 /* 1. Apple 3D Logo Qutisi */
@@ -140,8 +140,8 @@ html, body {
   flex-shrink: 0;
   z-index: 3;
   will-change: transform, opacity;
-  animation: splashLogoEntrance 0.75s cubic-bezier(0.16, 1, 0.3, 1) forwards,
-             splashLogoSlideLeft 0.7s cubic-bezier(0.2, 0.9, 0.2, 1) 0.85s forwards;
+  animation: splashLogoEntrance 0.72s cubic-bezier(0.16, 1, 0.3, 1) forwards,
+             splashLogoSlideLeft 0.75s cubic-bezier(0.2, 0.9, 0.2, 1) 0.82s forwards;
 }
 
 .splash-logo-img {
@@ -153,52 +153,89 @@ html, body {
   filter: drop-shadow(0 8px 28px rgba(255, 255, 255, 0.4)) drop-shadow(0 0 12px rgba(245, 158, 11, 0.25));
   user-select: none;
   -webkit-user-drag: none;
-  animation: splashLogoGlowPulse 2.2s ease-in-out infinite 1.5s;
+  animation: splashLogoGlowPulse 2.2s ease-in-out infinite 1.6s;
 }
 
 .splash-logo-glow {
   position: absolute;
-  inset: -20px;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.22) 0%, rgba(245, 158, 11, 0.12) 40%, transparent 70%);
+  inset: -22px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.22) 0%, rgba(245, 158, 11, 0.14) 40%, transparent 70%);
   border-radius: 50%;
   filter: blur(18px);
   z-index: -1;
   pointer-events: none;
-  animation: splashAuraPulse 2.2s ease-in-out infinite 1.5s;
+  animation: splashAuraPulse 2.2s ease-in-out infinite 1.6s;
 }
 
-/* 2. Matn Qutisi (Logo chapga surilganda o'ngdan chiqib keladi) */
+/* 2. Matn Qutisi: Logo chapga surilishi bilan o'ngdan ochiladi */
 .splash-text-container {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   justify-content: center;
-  gap: 4px;
-  margin-left: 14px;
+  max-width: 0;
   opacity: 0;
-  will-change: transform, opacity;
-  animation: splashTextReveal 0.75s cubic-bezier(0.16, 1, 0.3, 1) 0.95s forwards;
-}
-
-.splash-title {
-  font-family: var(--font-heading, 'Outfit', -apple-system, sans-serif);
-  font-size: 30px;
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  color: #ffffff;
-  line-height: 1;
+  overflow: hidden;
   white-space: nowrap;
-  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.6), 0 0 18px rgba(255, 255, 255, 0.2);
+  margin-left: 0;
+  will-change: max-width, opacity, margin-left;
+  animation: splashTextContainerExpand 0.75s cubic-bezier(0.16, 1, 0.3, 1) 0.82s forwards;
 }
 
+/* "Demo" va uning pastidan "Store" */
+.splash-brand-words {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  line-height: 0.92;
+}
+
+.splash-word {
+  font-family: var(--font-heading, 'Outfit', -apple-system, sans-serif);
+  font-size: 34px;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 0.94;
+  display: block;
+  will-change: transform, opacity, filter;
+}
+
+/* Yuqoridagi "Demo" so'zi */
+.splash-word-demo {
+  color: #ffffff;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.7), 0 0 16px rgba(255, 255, 255, 0.22);
+  opacity: 0;
+  transform: translateX(-16px) translateY(4px);
+  filter: blur(4px);
+  animation: splashWordDemoReveal 0.65s cubic-bezier(0.16, 1, 0.3, 1) 0.88s forwards;
+}
+
+/* Pastidagi "Store" so'zi */
+.splash-word-store {
+  background: linear-gradient(135deg, #ffffff 35%, #fbbf24 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 2px 10px rgba(245, 158, 11, 0.35));
+  opacity: 0;
+  transform: translateX(-16px) translateY(8px);
+  animation: splashWordStoreReveal 0.65s cubic-bezier(0.16, 1, 0.3, 1) 0.98s forwards;
+}
+
+/* Tagidagi "APPLE PREMIUM STORE" */
 .splash-subtitle {
   font-family: var(--font-body, 'Inter', -apple-system, sans-serif);
-  font-size: 10px;
+  font-size: 8.5px;
   font-weight: 700;
-  letter-spacing: 0.22em;
+  letter-spacing: 0.24em;
   color: rgba(255, 255, 255, 0.65);
   text-transform: uppercase;
+  margin-top: 5px;
   white-space: nowrap;
+  display: block;
+  opacity: 0;
+  transform: translateY(4px);
+  animation: splashSubtitleReveal 0.6s cubic-bezier(0.16, 1, 0.3, 1) 1.12s forwards;
 }
 
 /* 3. Animatsiya Keyframelar */
@@ -206,7 +243,7 @@ html, body {
 @keyframes splashLogoEntrance {
   0% {
     opacity: 0;
-    transform: scale(0.4) rotate(-6deg);
+    transform: scale(0.35) rotate(-6deg);
   }
   60% {
     opacity: 1;
@@ -218,31 +255,70 @@ html, body {
   }
 }
 
-/* Keyin logo chapga suriladi (yonidagi matnga joy ochadi) */
+/* Logo chapga suriladi */
 @keyframes splashLogoSlideLeft {
   0% {
     transform: translateX(0);
   }
   100% {
-    transform: translateX(0);
+    transform: translateX(-6px);
   }
 }
 
-/* Matn o'ng tomondan nozik surilib va yorishib chiqadi */
-@keyframes splashTextReveal {
+/* Matn konteyneri o'ngdan kengayib ochiladi */
+@keyframes splashTextContainerExpand {
+  0% {
+    max-width: 0;
+    opacity: 0;
+    margin-left: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    max-width: 220px;
+    opacity: 1;
+    margin-left: 16px;
+  }
+}
+
+/* "Demo" so'zi silliq chiqishi */
+@keyframes splashWordDemoReveal {
   0% {
     opacity: 0;
-    transform: translateX(28px) scale(0.92);
-    filter: blur(6px);
-  }
-  60% {
-    opacity: 1;
-    filter: blur(0px);
+    transform: translateX(-16px) translateY(4px) scale(0.96);
+    filter: blur(4px);
   }
   100% {
     opacity: 1;
-    transform: translateX(0) scale(1);
+    transform: translateX(0) translateY(0) scale(1);
     filter: blur(0px);
+  }
+}
+
+/* "Store" so'zi pastdan va chapdan silliq chiqishi */
+@keyframes splashWordStoreReveal {
+  0% {
+    opacity: 0;
+    transform: translateX(-16px) translateY(8px) scale(0.96);
+    filter: blur(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) translateY(0) scale(1);
+    filter: blur(0px);
+  }
+}
+
+/* Subtitle ochilishi */
+@keyframes splashSubtitleReveal {
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
