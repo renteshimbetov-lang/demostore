@@ -2238,20 +2238,46 @@
       return;
     }
 
+    // Chegirma foizlari massivi
+    const DISCOUNT_RATES = [15, 20, 12, 18, 25, 16, 22, 10];
+    let discountIdx = 0;
+
     let html = '';
     prods.forEach(p => {
       const isFav = state.wishlist.has(p.id);
       const brand = p.name.toLowerCase().includes('macbook') || p.name.toLowerCase().includes('iphone') ? 'APPLE' : 'PREMIUM';
+      const isDiscount = Number(p.is_discount) === 1;
+
+      // Chegirma foizi va tejash summasi
+      let discountRate = 0;
+      let oldPriceStr = '';
+      let savedStr = '';
+      if (isDiscount) {
+        discountRate = DISCOUNT_RATES[discountIdx % DISCOUNT_RATES.length];
+        discountIdx++;
+        if (p.currency === 'UZS' && p.price_uzs) {
+          const oldPriceUzs = Math.round(p.price_uzs / (1 - discountRate / 100));
+          const savedUzs = oldPriceUzs - p.price_uzs;
+          oldPriceStr = formatUzsAmount(oldPriceUzs);
+          savedStr = formatUzsAmount(savedUzs);
+        } else if (p.price) {
+          const oldPriceUsd = Math.round(p.price / (1 - discountRate / 100) * 10) / 10;
+          const savedUsd = Math.round((oldPriceUsd - p.price) * 10) / 10;
+          oldPriceStr = '$' + oldPriceUsd;
+          savedStr = '$' + savedUsd;
+        }
+      }
+
       html += `
         <article class="product-card" data-id="${p.id}">
           <div class="card-media">
-            <button class="wishlist-btn ${isFav ? 'active' : ''}${Number(p.is_discount) === 1 ? ' has-gift' : ''}" data-id="${p.id}" aria-label="Sevimlilar">
+            <button class="wishlist-btn ${isFav ? 'active' : ''}${isDiscount ? ' has-gift' : ''}" data-id="${p.id}" aria-label="Sevimlilar">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="${isFav ? '#ef4444' : 'none'}" stroke="currentColor" stroke-width="2">
                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
               </svg>
             </button>
-            ${Number(p.is_discount) === 1 ? `
-              <div class="gift-badge" title="Hafta chegirmasi">
+            ${isDiscount ? `
+              <div class="gift-badge" title="Hafta chegirmasi -${discountRate}%">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                   <polyline points="20 12 20 22 4 22 4 12"></polyline>
                   <rect x="2" y="7" width="20" height="5"></rect>
@@ -2260,6 +2286,13 @@
                   <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path>
                 </svg>
               </div>
+              <div class="gift-info-strip">
+                <span class="gift-strip-emoji">🎁</span>
+                <span class="gift-strip-label">Chegirma</span>
+                <span class="gift-strip-pct">-${discountRate}%</span>
+                <span class="gift-strip-sep">·</span>
+                <span class="gift-strip-saved">${savedStr} tejash</span>
+              </div>
             ` : ''}
             <img src="${getProductImageUrl(p)}" alt="${escapeHtml(p.name)}" class="product-img" loading="lazy" decoding="async" onerror="this.onerror=null; this.src='${FALLBACK_IMAGE_URL}';" />
           </div>
@@ -2267,6 +2300,7 @@
             <span class="product-brand">${brand}</span>
             <h3 class="product-title">${escapeHtml(getCleanCardTitle(p.name))}</h3>
             ${renderProductPriceBlock(p)}
+            ${isDiscount && oldPriceStr ? `<div class="gift-old-price-row"><span class="gift-old-price-label">Avvalgi:</span><span class="gift-old-price-val">${oldPriceStr}</span></div>` : ''}
             <div class="card-actions-stack">
               ${getCartButtonHtml(p.id)}
               ${p.post_url ? `
@@ -2285,6 +2319,26 @@
     });
 
     catalogProductsGridEl.innerHTML = html;
+
+    // IntersectionObserver: ko'ringanda gift badge bounce animatsiyasi
+    if ('IntersectionObserver' in window) {
+      const giftObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const badge = entry.target.querySelector('.gift-badge');
+            if (badge) {
+              badge.classList.remove('gift-entered');
+              void badge.offsetWidth; // reflow
+              badge.classList.add('gift-entered');
+            }
+            giftObserver.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.35 });
+      catalogProductsGridEl.querySelectorAll('.product-card').forEach(card => {
+        if (card.querySelector('.gift-badge')) giftObserver.observe(card);
+      });
+    }
   }
 
   // Katalog grid hodisasi (Event Delegation)

@@ -705,26 +705,26 @@ html.light .card-media {
   z-index: 2;
 }
 
-/* Hafta chegirmasi - premium yaltirayotgan sovg'a badge (o'ng yuqori burchak) */
+/* Hafta chegirmasi - premium yaltirayotgan sovg'a badge (pushti + qizil + sariq) */
 .gift-badge {
   position: absolute;
   top: 7px;
   right: 7px;
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #ffd700 0%, #f59e0b 40%, #ef4444 100%);
+  background: linear-gradient(135deg, #ffd700 0%, #ff1493 45%, #e11d48 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 5;
   pointer-events: none;
   overflow: hidden;
-  animation: gift-spin-glow 2.5s ease-in-out infinite;
+  animation: gift-bounce 1.6s cubic-bezier(0.36, 0.07, 0.19, 0.97) infinite;
   box-shadow:
-    0 0 0 2px rgba(255, 215, 0, 0.4),
-    0 2px 12px rgba(245, 158, 11, 0.55),
-    0 0 20px rgba(239, 68, 68, 0.25);
+    0 0 0 2.5px rgba(255, 20, 147, 0.45),
+    0 3px 14px rgba(225, 29, 72, 0.55),
+    0 0 22px rgba(255, 215, 0, 0.35);
 }
 
 /* Yaltirayotgan shimmer effekti */
@@ -738,7 +738,7 @@ html.light .card-media {
   background: linear-gradient(
     105deg,
     transparent 40%,
-    rgba(255, 255, 255, 0.65) 50%,
+    rgba(255, 255, 255, 0.7) 50%,
     transparent 60%
   );
   animation: gift-shimmer 2s ease-in-out infinite;
@@ -754,9 +754,9 @@ html.light .card-media {
   background: conic-gradient(
     from 0deg,
     transparent 0%,
-    rgba(255, 215, 0, 0.8) 25%,
-    transparent 50%,
-    rgba(255, 165, 0, 0.6) 75%,
+    rgba(255, 20, 147, 0.75) 25%,
+    rgba(255, 215, 0, 0.8) 50%,
+    rgba(225, 29, 72, 0.65) 75%,
     transparent 100%
   );
   animation: gift-ring-spin 2s linear infinite;
@@ -765,30 +765,24 @@ html.light .card-media {
 }
 
 .gift-badge svg {
-  width: 18px;
-  height: 18px;
+  width: 19px;
+  height: 19px;
   color: #ffffff;
-  filter: drop-shadow(0 1px 3px rgba(0,0,0,0.4));
+  filter: drop-shadow(0 1px 3px rgba(0,0,0,0.45));
   position: relative;
   z-index: 2;
-  animation: gift-icon-bounce 2.5s ease-in-out infinite;
 }
 
-@keyframes gift-spin-glow {
-  0%, 100% {
-    box-shadow:
-      0 0 0 2px rgba(255, 215, 0, 0.5),
-      0 2px 14px rgba(245, 158, 11, 0.65),
-      0 0 22px rgba(239, 68, 68, 0.3);
-    transform: scale(1);
-  }
-  50% {
-    box-shadow:
-      0 0 0 3px rgba(255, 215, 0, 0.7),
-      0 3px 20px rgba(245, 158, 11, 0.85),
-      0 0 30px rgba(239, 68, 68, 0.45);
-    transform: scale(1.08);
-  }
+/* Tepaga-pastga kuchli sakrash (bounce) */
+@keyframes gift-bounce {
+  0%   { transform: translateY(0px) scale(1); }
+  18%  { transform: translateY(-7px) scale(1.1); }
+  32%  { transform: translateY(0px) scale(0.96); }
+  46%  { transform: translateY(-4px) scale(1.05); }
+  58%  { transform: translateY(0px) scale(0.98); }
+  70%  { transform: translateY(-2px) scale(1.02); }
+  80%  { transform: translateY(0px) scale(1); }
+  100% { transform: translateY(0px) scale(1); }
 }
 
 @keyframes gift-shimmer {
@@ -803,9 +797,105 @@ html.light .card-media {
   to   { transform: rotate(360deg); }
 }
 
-@keyframes gift-icon-bounce {
-  0%, 100% { transform: translateY(0px) scale(1); }
-  50%       { transform: translateY(-1.5px) scale(1.05); }
+/* gift-entered: viewport ga kirganida bir marta kuchli bounce */
+.gift-badge.gift-entered {
+  animation: gift-bounce-in 0.7s cubic-bezier(0.36, 0.07, 0.19, 0.97) forwards,
+             gift-bounce 1.6s cubic-bezier(0.36, 0.07, 0.19, 0.97) 0.7s infinite;
+}
+@keyframes gift-bounce-in {
+  0%   { transform: translateY(-16px) scale(0.7); opacity: 0; }
+  55%  { transform: translateY(4px) scale(1.12); opacity: 1; }
+  75%  { transform: translateY(-5px) scale(0.96); }
+  90%  { transform: translateY(2px) scale(1.04); }
+  100% { transform: translateY(0px) scale(1); }
+}
+
+/* =========================================================
+   CHEGIRMA INFO STRIP (rasm pastidagi pushti-qizil-sariq lenta)
+   ========================================================= */
+.gift-info-strip {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 8px;
+  background: linear-gradient(90deg, #e11d48 0%, #ff1493 55%, #ffd700 100%);
+  border-radius: 0 0 10px 10px;
+  z-index: 4;
+  overflow: hidden;
+}
+
+.gift-strip-emoji {
+  font-size: 13px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.gift-strip-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.95);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 3px;
+  padding: 1px 4px;
+}
+
+.gift-strip-pct {
+  font-size: 11px;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.3px;
+  flex-shrink: 0;
+}
+
+.gift-strip-sep {
+  font-size: 10px;
+  color: rgba(255,255,255,0.6);
+  flex-shrink: 0;
+}
+
+.gift-strip-saved {
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.92);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* CHEGIRMA label — avvalgi narx qatori */
+.gift-old-price-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 3px;
+  margin-bottom: 2px;
+  flex-wrap: wrap;
+}
+
+.gift-old-price-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #e11d48;
+  background: rgba(225, 29, 72, 0.1);
+  border: 1px solid rgba(225, 29, 72, 0.28);
+  border-radius: 5px;
+  padding: 1px 5px;
+  flex-shrink: 0;
+  letter-spacing: 0.1px;
+}
+
+.gift-old-price-val {
+  font-size: 11px;
+  font-weight: 600;
+  color: #94a3b8;
+  text-decoration: line-through;
 }
 
 /* Gift badge bo'lgan kartochkalarda wishlist btn chap tepaga ketsin */
