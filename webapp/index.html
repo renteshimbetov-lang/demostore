@@ -22,35 +22,55 @@
   <link rel="stylesheet" href="/static/app.min.css?v=71.0" />
 </head>
 <body>
-  <!-- To'liq ekranli Parda (Curtain Reveal) Kirish Animatsiyasi -->
-  <div id="splash-screen" class="splash-screen" aria-label="DemoStore Kirish Animatsiyasi">
-    <!-- Chap parda qismi -->
-    <div class="curtain-panel curtain-left" id="curtainLeft"></div>
-    
-    <!-- O'ng parda qismi -->
-    <div class="curtain-panel curtain-right" id="curtainRight"></div>
+  <!-- Logo Fragmentlari Yig'ilish Kirish Animatsiyasi -->
+  <div id="splash-screen" class="splash-screen splash-assembly" aria-label="DemoStore Kirish Animatsiyasi">
 
-    <!-- Markaziy tarkib: Logo va Do'kon nomi -->
-    <div class="splash-center-content" id="splashCenterContent">
-      <div class="splash-logo-box">
-        <img
-          src="/static/apple_3d_logo.png"
-          alt="Apple Logo"
-          class="splash-logo-img"
-          width="82"
-          height="95"
-          fetchpriority="high"
-        />
-        <div class="splash-logo-glow"></div>
+    <!-- Qora fon -->
+    <div class="splash-bg"></div>
+
+    <!-- Apple logo fragmentlari (4 ta qism turli tomondan uchib keladi) -->
+    <div class="splash-assembly-stage" id="splashStage">
+      <!-- Yuqori-chap fragment -->
+      <div class="splash-frag splash-frag-tl" id="fragTL">
+        <svg viewBox="0 0 120 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M60 10 C40 10, 20 30, 20 55 C20 75, 30 90, 45 100 L60 70 Z" fill="white" opacity="0.95"/>
+        </svg>
+      </div>
+      <!-- Yuqori-o'ng fragment -->
+      <div class="splash-frag splash-frag-tr" id="fragTR">
+        <svg viewBox="0 0 120 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M60 10 C80 10, 100 30, 100 55 C100 75, 90 90, 75 100 L60 70 Z" fill="white" opacity="0.95"/>
+        </svg>
+      </div>
+      <!-- Pastki-chap fragment -->
+      <div class="splash-frag splash-frag-bl" id="fragBL">
+        <svg viewBox="0 0 120 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M45 100 C30 115, 20 130, 35 140 L60 140 L60 70 Z" fill="white" opacity="0.95"/>
+        </svg>
+      </div>
+      <!-- Pastki-o'ng fragment -->
+      <div class="splash-frag splash-frag-br" id="fragBR">
+        <svg viewBox="0 0 120 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M75 100 C90 115, 100 130, 85 140 L60 140 L60 70 Z" fill="white" opacity="0.95"/>
+        </svg>
+      </div>
+      <!-- Barg (leaf) - yuqorida -->
+      <div class="splash-frag splash-frag-leaf" id="fragLeaf">
+        <svg viewBox="0 0 60 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M30 0 C50 0, 55 20, 35 30 C45 15, 30 5, 20 15 C10 5, 10 30, 25 30 C5 20, 5 0, 30 0Z" fill="white" opacity="0.95"/>
+        </svg>
       </div>
 
-      <div class="splash-brand-wrap">
-        <h1 class="splash-brand-title">
-          <span class="blur-text-wrap" aria-label="DemoStore.UZ">
-            <span class="blur-word blur-word-demo"><span class="blur-letter" style="--i:0">D</span><span class="blur-letter" style="--i:1">e</span><span class="blur-letter" style="--i:2">m</span><span class="blur-letter" style="--i:3">o</span></span><span class="blur-word blur-word-store"><span class="blur-letter" style="--i:4">S</span><span class="blur-letter" style="--i:5">t</span><span class="blur-letter" style="--i:6">o</span><span class="blur-letter" style="--i:7">r</span><span class="blur-letter" style="--i:8">e</span></span><span class="splash-brand-dot blur-letter" style="--i:9">.UZ</span>
-          </span>
-        </h1>
-        <p class="splash-brand-subtitle">APPLE PREMIUM STORE</p>
+      <!-- Yig'ilgandan keyin chiqadigan butun logo + nom -->
+      <div class="splash-logo-assembled" id="splashLogoAssembled">
+        <div class="splash-assembled-inner">
+          <img src="/static/apple_3d_logo.png" alt="Apple Logo" class="splash-logo-img-assembled" width="72" height="84" fetchpriority="high"/>
+          <div class="splash-assembled-brand">
+            <span class="splash-assembled-title">DemoStore</span>
+            <span class="splash-assembled-sub">APPLE PREMIUM STORE</span>
+          </div>
+        </div>
+        <div class="splash-assembled-glow"></div>
       </div>
     </div>
 
@@ -63,21 +83,16 @@
     </button>
   </div>
 
-  <!-- Splash Screen Tezyurar va Ishonchli Kontrolleri -->
+  <!-- Splash Assembly Animatsiya Kontrolleri -->
   <script>
     (function () {
-      // Telegram Bot API 8.0+: Darhol to'liq ekranga ochish (Fullscreen mode)
+      // Telegram: darhol to'liq ekranga
       try {
         var tg = window.Telegram?.WebApp;
-        if (tg) {
-          tg.ready();
-          tg.expand();
-          if (typeof tg.requestFullscreen === 'function') {
-            tg.requestFullscreen();
-          }
-        }
+        if (tg) { tg.ready(); tg.expand(); if (tg.requestFullscreen) tg.requestFullscreen(); }
       } catch (e) {}
 
+      // Oldin ko'rsatilgan bo'lsa — o'tkazib yuborish
       try {
         if (sessionStorage.getItem('demostore_intro_shown') === 'true') {
           var el = document.getElementById('splash-screen');
@@ -90,30 +105,45 @@
       var skipBtn = document.getElementById('splashSkipBtn');
       if (!splashEl) return;
 
-      var opened = false;
-      function openCurtain() {
-        if (opened) return;
-        opened = true;
+      var dismissed = false;
+      function dismissSplash() {
+        if (dismissed) return;
+        dismissed = true;
         try { sessionStorage.setItem('demostore_intro_shown', 'true'); } catch (e) {}
-        splashEl.classList.add('curtain-open');
+        splashEl.classList.add('splash-exit');
         splashEl.style.pointerEvents = 'none';
-        setTimeout(function () {
-          splashEl.style.display = 'none';
-        }, 1100);
+        setTimeout(function () { splashEl.style.display = 'none'; }, 700);
       }
 
-      window.dismissIntroCurtains = openCurtain;
+      window.dismissIntroCurtains = dismissSplash;
 
+      // Assembly animatsiyasi ketma-ketligi:
+      // 0ms    — fragmentlar boshlang'ich pozitsiyadan harakat boshlaydi (CSS animatsiya)
+      // 600ms  — fragmentlar yig'ildi, assembled logo paydo bo'ladi
+      // 2800ms — avtomatik yopilish
+
+      var stage = document.getElementById('splashStage');
+      var assembled = document.getElementById('splashLogoAssembled');
+
+      // Fragmentlar CSS animatsiyasi boshlanadi (splash-assembly class bor)
+      // 600ms dan keyin assembled holat
+      setTimeout(function () {
+        if (stage) stage.classList.add('frags-assembled');
+        if (assembled) assembled.classList.add('assembled-visible');
+      }, 650);
+
+      // 2.8s da avtomatik yopish
+      setTimeout(dismissSplash, 2800);
+
+      // Skip tugmasi
       if (skipBtn) {
-        skipBtn.addEventListener('click', function (e) {
-          e.stopPropagation();
-          openCurtain();
-        });
+        skipBtn.addEventListener('click', function (e) { e.stopPropagation(); dismissSplash(); });
       }
-      splashEl.addEventListener('click', openCurtain);
-
-      // 2.4 soniya davomida 3D logo va BlurText animatsiyasi to'liq ko'rinib, pardalar silliq ochiladi
-      setTimeout(openCurtain, 2400);
+      // Ekranga bosish bilan ham yopish (assembled dan keyin)
+      splashEl.addEventListener('click', function () {
+        if (dismissed || !stage || !stage.classList.contains('frags-assembled')) return;
+        dismissSplash();
+      });
     })();
   </script>
 

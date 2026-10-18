@@ -110,146 +110,170 @@ html, body {
   pointer-events: auto;
 }
 
-/* Chap va o'ng parda panellari */
-.curtain-panel {
+/* Qora fon */
+.splash-bg {
   position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 50.5%;
-  background: linear-gradient(145deg, #09090b 0%, #121217 55%, #0e0e12 100%);
-  will-change: transform;
-  transform: translate3d(0, 0, 0);
-  transition: transform 0.38s cubic-bezier(0.25, 1, 0.5, 1);
-  z-index: 1;
+  inset: 0;
+  background: #0a0a0a;
+  z-index: 0;
 }
 
-.curtain-left {
-  left: 0;
-  border-right: 1px solid rgba(255, 255, 255, 0.05);
-  box-shadow: none;
-}
-
-.curtain-right {
-  right: 0;
-  border-left: 1px solid rgba(255, 255, 255, 0.05);
-  box-shadow: none;
-}
-
-/* Pardalarning ikki tarafga surilib ochilishi */
-.splash-screen.curtain-open {
-  pointer-events: none !important;
-}
-
-.splash-screen.curtain-open .curtain-left {
-  transform: translate3d(-102%, 0, 0);
-  transition: transform 1.05s cubic-bezier(0.77, 0, 0.175, 1);
-}
-
-.splash-screen.curtain-open .curtain-right {
-  transform: translate3d(102%, 0, 0);
-  transition: transform 1.05s cubic-bezier(0.77, 0, 0.175, 1);
-}
-
-/* Parda ochilayotganda markazdagi logo yo'q bo'ladi */
-.splash-screen.curtain-open .splash-center-content {
-  opacity: 0;
-  transform: translate(-50%, -50%) scale(0.9);
-  transition: opacity 0.55s ease, transform 0.55s ease;
-}
-.splash-center-content {
-  position: absolute;
-  z-index: 2;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  pointer-events: none;
-  width: 90%;
-  max-width: 320px;
-  opacity: 1;
-  transition: opacity 0.45s cubic-bezier(0.4, 0, 0.2, 1), transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
-  will-change: opacity, transform;
-}
-
-/* Logo qutisi va animatsiyasi */
-.splash-logo-box {
+/* Markaziy sahna */
+.splash-assembly-stage {
   position: relative;
-  width: 90px;
-  height: 98px;
+  z-index: 2;
+  width: 200px;
+  height: 200px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 20px;
-  animation: splashLogoEntrance 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-.splash-logo-img {
-  width: 82px;
-  height: auto;
-  max-height: 96px;
-  object-fit: contain;
-  display: block;
-  filter: drop-shadow(0 6px 24px rgba(255, 255, 255, 0.35));
-  animation: splashLogoPulse 2.4s ease-in-out infinite;
-  user-select: none;
-  -webkit-user-drag: none;
-}
-
-.splash-logo-svg {
-  width: 76px;
-  height: 76px;
-  filter: drop-shadow(0 4px 20px rgba(255, 255, 255, 0.25));
-  animation: splashLogoPulse 2.4s ease-in-out infinite;
-}
-
-.splash-logo-glow {
+/* Har bir fragment */
+.splash-frag {
   position: absolute;
-  inset: -14px;
-  background: radial-gradient(circle, rgba(245, 158, 11, 0.22) 0%, rgba(255, 255, 255, 0.12) 35%, transparent 70%);
-  border-radius: 50%;
-  filter: blur(14px);
-  z-index: -1;
+  width: 90px;
+  height: 100px;
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+/* Fragmentlar uchib kelish animatsiyasi */
+.splash-frag-tl {
+  animation: fragFlyTL 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.05s forwards;
+}
+.splash-frag-tr {
+  animation: fragFlyTR 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.12s forwards;
+}
+.splash-frag-bl {
+  animation: fragFlyBL 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.18s forwards;
+}
+.splash-frag-br {
+  animation: fragFlyBR 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.08s forwards;
+}
+.splash-frag-leaf {
+  width: 44px;
+  height: 36px;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  animation: fragFlyLeaf 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.22s forwards;
+}
+
+/* Fragmentlar yig'ilganda yo'qoladi */
+.frags-assembled .splash-frag {
+  animation: fragDissolve 0.3s ease forwards !important;
+}
+
+/* Fragment keyframes */
+@keyframes fragFlyTL {
+  0%   { opacity: 0; transform: translate(-90px, -90px) rotate(-35deg) scale(0.6); }
+  60%  { opacity: 1; }
+  100% { opacity: 1; transform: translate(0, 0) rotate(0deg) scale(1); }
+}
+@keyframes fragFlyTR {
+  0%   { opacity: 0; transform: translate(90px, -90px) rotate(35deg) scale(0.6); }
+  60%  { opacity: 1; }
+  100% { opacity: 1; transform: translate(0, 0) rotate(0deg) scale(1); }
+}
+@keyframes fragFlyBL {
+  0%   { opacity: 0; transform: translate(-90px, 90px) rotate(25deg) scale(0.6); }
+  60%  { opacity: 1; }
+  100% { opacity: 1; transform: translate(0, 0) rotate(0deg) scale(1); }
+}
+@keyframes fragFlyBR {
+  0%   { opacity: 0; transform: translate(90px, 90px) rotate(-25deg) scale(0.6); }
+  60%  { opacity: 1; }
+  100% { opacity: 1; transform: translate(0, 0) rotate(0deg) scale(1); }
+}
+@keyframes fragFlyLeaf {
+  0%   { opacity: 0; transform: translateX(-50%) translateY(-60px) rotate(20deg) scale(0.5); }
+  60%  { opacity: 1; }
+  100% { opacity: 1; transform: translateX(-50%) translateY(0) rotate(0deg) scale(1); }
+}
+@keyframes fragDissolve {
+  0%   { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(0.7); }
+}
+
+/* Yig'ilgan logo + nom */
+.splash-logo-assembled {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transform: scale(0.85);
+  transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1), transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
   pointer-events: none;
 }
+.splash-logo-assembled.assembled-visible {
+  opacity: 1;
+  transform: scale(1);
+}
 
-/* Do'kon nomi chiqib kelishi */
-.splash-brand-wrap {
+.splash-assembled-inner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  position: relative;
+  z-index: 2;
+}
+
+.splash-logo-img-assembled {
+  width: 60px;
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 6px 20px rgba(255,255,255,0.3));
+  animation: assembledLogoPulse 2s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+.splash-assembled-brand {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  animation: splashBrandEntrance 0.85s 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+  align-items: flex-start;
+  gap: 3px;
 }
-
-.splash-brand-title {
-  font-family: var(--font-heading);
-  font-size: 32px;
+.splash-assembled-title {
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-size: 28px;
   font-weight: 800;
-  letter-spacing: -0.03em;
   color: #ffffff;
-  line-height: 1.1;
-  text-shadow: 0 4px 18px rgba(0, 0, 0, 0.6);
+  letter-spacing: -0.03em;
+  line-height: 1;
+  text-shadow: 0 2px 16px rgba(0,0,0,0.5);
 }
-
-.splash-brand-dot {
-  color: var(--accent-yellow);
-  text-shadow: 0 0 14px var(--yellow-glow);
-}
-
-.splash-brand-subtitle {
-  font-family: var(--font-body);
-  font-size: 11px;
+.splash-assembled-sub {
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.22em;
-  color: #a1a1aa;
+  letter-spacing: 0.2em;
+  color: rgba(255,255,255,0.55);
   text-transform: uppercase;
 }
 
-/* O'tkazib yuborish (Skip) tugmasi */
+.splash-assembled-glow {
+  position: absolute;
+  inset: -30px;
+  background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%);
+  border-radius: 50%;
+  filter: blur(20px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Chiqish animatsiyasi — yuqoriga ko'tarilib ketish */
+.splash-screen.splash-exit {
+  animation: splashExitUp 0.65s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+@keyframes splashExitUp {
+  0%   { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-40px) scale(1.04); }
+}
+
+/* O'tkazish (Skip) tugmasi */
 .splash-skip-btn {
   position: absolute;
   top: max(env(safe-area-inset-top, 16px), 20px);
@@ -258,58 +282,29 @@ html, body {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: rgba(0, 0, 0, 0.55);
+  background: rgba(255, 255, 255, 0.12);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.2);
   color: #ffffff;
   padding: 8px 14px;
   border-radius: 9999px;
-  font-family: var(--font-body);
+  font-family: var(--font-body, 'Inter', sans-serif);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   letter-spacing: -0.01em;
-  transition: transform 0.2s ease, background 0.2s ease, opacity 0.2s ease;
+  transition: transform 0.2s ease, background 0.2s ease;
 }
-
 .splash-skip-btn:active {
   transform: scale(0.94);
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(255, 255, 255, 0.22);
 }
 
-/* Animatsiya keyframelar */
-@keyframes splashLogoEntrance {
-  0% {
-    opacity: 0;
-    transform: scale(0.65) translateY(18px);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
-}
-
-@keyframes splashLogoPulse {
-  0%, 100% {
-    transform: scale(1);
-    filter: drop-shadow(0 4px 20px rgba(255, 255, 255, 0.25));
-  }
-  50% {
-    transform: scale(1.035);
-    filter: drop-shadow(0 6px 26px rgba(245, 158, 11, 0.35));
-  }
-}
-
-@keyframes splashBrandEntrance {
-  0% {
-    opacity: 0;
-    transform: translateY(16px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
+/* Assembled logo pulse */
+@keyframes assembledLogoPulse {
+  0%, 100% { filter: drop-shadow(0 4px 16px rgba(255,255,255,0.25)); }
+  50%       { filter: drop-shadow(0 6px 24px rgba(245,158,11,0.4)); }
 }
 
 #app {
