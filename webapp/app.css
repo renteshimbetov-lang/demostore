@@ -2826,31 +2826,80 @@ html.light .cart-qty-pill button {
 }
 
 /* 4. PROFIL BO'LIMI (Profile Section) */
-.profile-card {
-  margin: 0 16px 14px;
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 18px;
-  padding: 16px;
+/* ==========================================================================
+   PROFIL BO'LIMI — ZAMONAVIY iOS / TELEGRAM USLUBI
+   ========================================================================== */
+
+/* HERO BLOK */
+.profile-hero {
+  position: relative;
+  margin-bottom: 0;
+  overflow: hidden;
+}
+
+.profile-cover-bg {
+  height: 110px;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 40%, #0f3460 70%, #533483 100%);
+  position: relative;
+}
+
+html.light .profile-cover-bg {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+}
+
+.profile-cover-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 70% 50%, rgba(255,255,255,0.07) 0%, transparent 70%);
+}
+
+.profile-hero-body {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   gap: 14px;
+  padding: 0 18px 18px;
+  margin-top: -44px;
+  position: relative;
+  z-index: 2;
+}
+
+.profile-avatar-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.profile-avatar-ring {
+  padding: 3px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f59e0b, #ef4444, #8b5cf6);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+}
+
+html.light .profile-avatar-ring {
+  background: linear-gradient(135deg, #f093fb, #f5576c, #4facfe);
+  box-shadow: 0 4px 20px rgba(103,78,167,0.35);
 }
 
 .profile-avatar-circle {
-  width: 54px;
-  height: 54px;
+  width: 72px;
+  height: 72px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--accent-yellow), #d97706);
-  color: #000000;
+  background: linear-gradient(135deg, #1e293b, #334155);
+  color: #f1f5f9;
   font-family: var(--font-heading);
-  font-size: 1.25rem;
+  font-size: 1.5rem;
   font-weight: 800;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
   overflow: hidden;
+  border: 3px solid var(--bg-main);
+}
+
+html.light .profile-avatar-circle {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: #ffffff;
 }
 
 .profile-avatar-img {
@@ -2859,7 +2908,20 @@ html.light .cart-qty-pill button {
   object-fit: cover;
 }
 
-.profile-info {
+.profile-online-dot {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  width: 14px;
+  height: 14px;
+  background: #22c55e;
+  border: 2.5px solid var(--bg-main);
+  border-radius: 50%;
+}
+
+.profile-hero-info {
+  flex: 1;
+  padding-bottom: 2px;
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -2867,15 +2929,17 @@ html.light .cart-qty-pill button {
 
 .profile-user-name {
   font-family: var(--font-heading);
-  font-size: 1.1rem;
-  font-weight: 700;
+  font-size: 1.25rem;
+  font-weight: 800;
   color: var(--text-main);
   margin: 0;
+  line-height: 1.2;
 }
 
 .profile-user-handle {
   font-size: 0.8rem;
   color: var(--text-sub);
+  font-weight: 500;
 }
 
 .profile-badge {
@@ -2883,182 +2947,268 @@ html.light .cart-qty-pill button {
   align-items: center;
   gap: 4px;
   margin-top: 4px;
-  background: rgba(245, 158, 11, 0.15);
-  color: var(--accent-yellow);
-  padding: 2px 8px;
-  border-radius: var(--radius-full);
+  background: rgba(139, 92, 246, 0.15);
+  color: #8b5cf6;
+  border: 1px solid rgba(139, 92, 246, 0.25);
+  padding: 3px 8px 3px 6px;
+  border-radius: 999px;
   font-size: 0.68rem;
   font-weight: 700;
   width: fit-content;
 }
 
-.profile-stats-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  margin: 0 16px 20px;
+html.light .profile-badge {
+  background: rgba(103, 126, 234, 0.12);
+  color: #4f46e5;
+  border-color: rgba(79, 70, 229, 0.2);
 }
 
-.profile-stat-box {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 14px;
-  padding: 12px 8px;
+/* STATS QATORI */
+.profile-stats-row {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: 3px;
-  cursor: pointer;
-  transition: var(--transition);
+  gap: 10px;
+  padding: 16px 16px 4px;
 }
 
-.profile-stat-box:active {
-  transform: scale(0.96);
-}
-
-.stat-number {
-  font-family: var(--font-heading);
-  font-size: 1.2rem;
-  font-weight: 800;
-  color: var(--accent-yellow);
-}
-
-.stat-label {
-  font-size: 0.72rem;
-  color: var(--text-sub);
-}
-
-.profile-menu-group {
-  margin: 0 16px 20px;
-}
-
-.profile-group-title {
-  font-size: 0.78rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--text-sub);
-  font-weight: 700;
-  margin: 0 0 8px 4px;
-}
-
-.profile-action-row {
+.profile-stat-pill {
+  flex: 1;
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: 16px;
-  padding: 12px 14px;
+  padding: 12px 8px 10px;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
+  gap: 4px;
   cursor: pointer;
-  transition: var(--transition);
+  transition: transform 0.18s cubic-bezier(0.16,1,0.3,1), box-shadow 0.18s ease;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.profile-action-row:active {
-  transform: scale(0.98);
+.profile-stat-pill:active {
+  transform: scale(0.95);
 }
 
-.action-row-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.action-icon-box {
+.stat-pill-icon {
   width: 36px;
   height: 36px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--accent-yellow);
+  border-radius: 11px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-html.light .action-icon-box {
-  background: rgba(0, 0, 0, 0.05);
+.stat-pill-icon.cart-icon-color  { background: rgba(59,130,246,0.12); color: #3b82f6; }
+.stat-pill-icon.wish-icon-color  { background: rgba(239,68,68,0.12);  color: #ef4444; }
+.stat-pill-icon.apple-icon-color { background: rgba(34,197,94,0.12);  color: #22c55e; }
+
+.stat-pill-num {
+  font-family: var(--font-heading);
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--text-main);
+  line-height: 1;
 }
 
-.action-info {
+.stat-pill-lbl {
+  font-size: 0.68rem;
+  color: var(--text-sub);
+  font-weight: 500;
+  text-align: center;
+}
+
+/* SECTION GROUP */
+.profile-section-group {
+  padding: 18px 16px 0;
+}
+
+.profile-section-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-sub);
+  margin-bottom: 8px;
+  padding-left: 4px;
+}
+
+/* iOS USLUBIDAGI LIST CARD */
+.profile-list-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.profile-list-row {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 13px 14px;
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+a.profile-list-link {
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+}
+
+.profile-list-row:active,
+a.profile-list-link:active {
+  background: rgba(0,0,0,0.04);
+}
+
+html:not(.light) .profile-list-row:active,
+html:not(.light) a.profile-list-link:active {
+  background: rgba(255,255,255,0.05);
+}
+
+.profile-list-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.profile-list-body {
+  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 2px;
+  min-width: 0;
 }
 
-.action-info strong {
-  font-size: 0.88rem;
+.profile-list-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-list-sub {
+  font-size: 0.75rem;
+  color: var(--text-sub);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-list-chevron {
+  color: var(--text-sub);
+  opacity: 0.45;
+  flex-shrink: 0;
+}
+
+.profile-list-divider {
+  height: 1px;
+  background: var(--border-color);
+  margin-left: 62px;
+}
+
+/* Til tanlash chips */
+.profile-lang-chips {
+  display: flex;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+.profile-lang-btn {
+  padding: 5px 10px;
+  border-radius: 8px;
+  border: 1.5px solid var(--border-color);
+  background: transparent;
+  color: var(--text-sub);
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.profile-lang-btn.active {
+  background: var(--accent-yellow);
+  border-color: var(--accent-yellow);
+  color: #000000;
+}
+
+/* KAFOLAT KARTI (yangi) */
+.profile-guarantee-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px;
+  background: linear-gradient(135deg, rgba(245,158,11,0.07) 0%, rgba(239,68,68,0.05) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.22);
+  border-radius: 18px;
+}
+
+.guarantee-icon-wrap {
+  width: 44px;
+  height: 44px;
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--accent-yellow);
+  border-radius: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.guarantee-text-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.guarantee-title {
+  font-family: var(--font-heading);
+  font-size: 0.9rem;
+  font-weight: 800;
   color: var(--text-main);
 }
 
-.action-info span {
-  font-size: 0.75rem;
-  color: var(--text-sub);
-}
-
-.theme-switch-indicator {
-  width: 44px;
-  height: 24px;
-  background: var(--border-color);
-  border-radius: var(--radius-full);
-  padding: 2px;
-  display: flex;
-  align-items: center;
-  transition: var(--transition);
-}
-
-.switch-pill {
-  width: 20px;
-  height: 20px;
-  background: var(--text-main);
-  border-radius: 50%;
-  transition: var(--transition);
-  transform: translateX(0);
-}
-
-html.light .theme-switch-indicator {
-  background: var(--accent-yellow);
-}
-
-html.light .switch-pill {
-  transform: translateX(20px);
-  background: #000000;
-}
-
-.chevron-icon {
-  color: var(--text-sub);
-  opacity: 0.6;
-}
-
-.store-guarantee-card {
-  margin: 0 16px 20px;
-  padding: 16px;
-  background: rgba(245, 158, 11, 0.06);
-  border: 1px solid rgba(245, 158, 11, 0.2);
-  border-radius: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.guarantee-card-title {
-  font-family: var(--font-heading);
-  font-size: 0.82rem;
-  letter-spacing: 0.06em;
-  color: var(--accent-yellow);
-}
-
-.guarantee-card-desc {
+.guarantee-desc {
   font-size: 0.78rem;
   color: var(--text-sub);
-  line-height: 1.4;
+  line-height: 1.45;
   margin: 0;
 }
 
-.guarantee-workhours {
+.guarantee-hours {
   font-size: 0.74rem;
-  color: var(--text-main);
+  color: var(--accent-yellow);
   font-weight: 600;
+  margin-top: 2px;
 }
+
+/* APP VERSION */
+.profile-app-version {
+  text-align: center;
+  font-size: 0.68rem;
+  color: var(--text-sub);
+  opacity: 0.5;
+  padding: 18px 16px 24px;
+}
+
+/* Eski profil CSS (backward compat) */
+.profile-card { display: none; }
+.profile-stats-grid { display: none; }
+.profile-menu-group { display: none; }
+.store-guarantee-card { display: none; }
+
+/* stat-number va stat-label (eski grid uchun — endi pill ishlatiladi) */
+.stat-number { font-family: var(--font-heading); font-size: 1.2rem; font-weight: 800; color: var(--accent-yellow); }
+.stat-label { font-size: 0.72rem; color: var(--text-sub); }
 
 /* 5. MAHSULOT BATAFSIL KO'RISH BO'LIMI (Product Detail Full View) */
 .product-detail-section {

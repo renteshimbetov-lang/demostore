@@ -429,121 +429,141 @@
 
       <!-- 5. PROFIL VA BOG'LANISH BO'LIMI (Profile Section — To'liq Bo'lim) -->
       <section class="app-section hidden" id="sectionProfile" data-section="profile">
-        <div class="section-page-head">
-          <div class="page-head-title-wrap">
-            <h1 class="page-head-title">Profil va Aloqa</h1>
-            <span class="page-head-subtitle">Shaxsiy kabinet va qoʻllab-quvvatlash</span>
-          </div>
-        </div>
 
-        <!-- Foydalanuvchi kartasi (Telegram WebApp user info) -->
-        <div class="profile-card">
-          <div class="profile-avatar-circle" id="profileAvatar">DS</div>
-          <div class="profile-info">
-            <h3 class="profile-user-name" id="profileUserName">Hurmatli mijoz</h3>
-            <span class="profile-user-handle" id="profileUserHandle">@foydalanuvchi</span>
-            <div class="profile-badge">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-              <span>DemoStore mijozi</span>
+        <!-- COVER + AVATAR HERO BLOK -->
+        <div class="profile-hero">
+          <div class="profile-cover-bg"></div>
+          <div class="profile-hero-body">
+            <div class="profile-avatar-wrap">
+              <div class="profile-avatar-ring">
+                <div class="profile-avatar-circle" id="profileAvatar">DS</div>
+              </div>
+              <div class="profile-online-dot"></div>
+            </div>
+            <div class="profile-hero-info">
+              <h2 class="profile-user-name" id="profileUserName">Hurmatli mijoz</h2>
+              <span class="profile-user-handle" id="profileUserHandle">@foydalanuvchi</span>
+              <div class="profile-badge">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 0 0 1.946-.806 3.42 3.42 0 0 1 4.438 0 3.42 3.42 0 0 0 1.946.806 3.42 3.42 0 0 1 3.138 3.138 3.42 3.42 0 0 0 .806 1.946 3.42 3.42 0 0 1 0 4.438 3.42 3.42 0 0 0-.806 1.946 3.42 3.42 0 0 1-3.138 3.138 3.42 3.42 0 0 0-1.946.806 3.42 3.42 0 0 1-4.438 0 3.42 3.42 0 0 0-1.946-.806 3.42 3.42 0 0 1-3.138-3.138 3.42 3.42 0 0 0-.806-1.946 3.42 3.42 0 0 1 0-4.438 3.42 3.42 0 0 0 .806-1.946 3.42 3.42 0 0 1 3.138-3.138z"/></svg>
+                <span>Tasdiqlangan mijoz</span>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- Tezkor ko'rsatkichlar (Stats) -->
-        <div class="profile-stats-grid">
-          <div class="profile-stat-box" id="statCartBox">
-            <strong class="stat-number" id="statCartCount">0</strong>
-            <span class="stat-label">Savatda</span>
+        <!-- STATS QATORI -->
+        <div class="profile-stats-row">
+          <div class="profile-stat-pill" id="statCartBox">
+            <div class="stat-pill-icon cart-icon-color">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+            </div>
+            <strong class="stat-pill-num" id="statCartCount">0</strong>
+            <span class="stat-pill-lbl">Savatda</span>
           </div>
-          <div class="profile-stat-box" id="statWishBox">
-            <strong class="stat-number" id="statWishCount">0</strong>
-            <span class="stat-label">Sevimlilar</span>
+          <div class="profile-stat-pill" id="statWishBox">
+            <div class="stat-pill-icon wish-icon-color">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            </div>
+            <strong class="stat-pill-num" id="statWishCount">0</strong>
+            <span class="stat-pill-lbl">Sevimli</span>
           </div>
-          <div class="profile-stat-box">
-            <strong class="stat-number">100%</strong>
-            <span class="stat-label">Asl Apple</span>
+          <div class="profile-stat-pill">
+            <div class="stat-pill-icon apple-icon-color">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <strong class="stat-pill-num">100%</strong>
+            <span class="stat-pill-lbl">Asl Apple</span>
           </div>
         </div>
 
-        <!-- Sozlamalar va Rejim -->
-        <div class="profile-menu-group">
-          <h4 class="profile-group-title" data-i18n="app_settings">Ilova sozlamalari</h4>
+        <!-- SOZLAMALAR GURUHI -->
+        <div class="profile-section-group">
+          <div class="profile-section-label">Sozlamalar</div>
+          <div class="profile-list-card">
 
-          <div class="profile-action-row" id="rowLangSelect">
-            <div class="action-row-left">
-              <div class="action-icon-box">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <line x1="2" y1="12" x2="22" y2="12"></line>
-                  <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
-                </svg>
+            <!-- Til tanlash -->
+            <div class="profile-list-row" id="rowLangSelect">
+              <div class="profile-list-icon" style="background:#e0f2fe; color:#0284c7;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
               </div>
-              <div class="action-info">
-                <strong data-i18n="app_language">Ilova tili</strong>
-                <span id="currentProfileLangLabel">Oʻzbek tili</span>
+              <div class="profile-list-body">
+                <span class="profile-list-title" data-i18n="app_language">Ilova tili</span>
+                <span class="profile-list-sub" id="currentProfileLangLabel">O'zbek tili</span>
+              </div>
+              <div class="profile-lang-chips">
+                <button class="profile-lang-btn active" data-lang="uz">UZ</button>
+                <button class="profile-lang-btn" data-lang="ru">RU</button>
+                <button class="profile-lang-btn" data-lang="en">EN</button>
               </div>
             </div>
-            <div class="profile-lang-chips">
-              <button class="profile-lang-btn active" data-lang="uz">UZ</button>
-              <button class="profile-lang-btn" data-lang="ru">RU</button>
-              <button class="profile-lang-btn" data-lang="en">EN</button>
+
+          </div>
+        </div>
+
+        <!-- BOG'LANISH GURUHI -->
+        <div class="profile-section-group">
+          <div class="profile-section-label">Bog'lanish</div>
+          <div class="profile-list-card">
+
+            <a href="https://t.me/shbdbdjdhdjjdhd" target="_blank" class="profile-list-row profile-list-link">
+              <div class="profile-list-icon" style="background:#dbeafe; color:#2563eb;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+              </div>
+              <div class="profile-list-body">
+                <span class="profile-list-title">Rasmiy Telegram kanal</span>
+                <span class="profile-list-sub">@shbdbdjdhdjjdhd</span>
+              </div>
+              <svg class="profile-list-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m9 18 6-6-6-6"/></svg>
+            </a>
+
+            <div class="profile-list-divider"></div>
+
+            <a href="https://t.me/eshmbetov" target="_blank" class="profile-list-row profile-list-link">
+              <div class="profile-list-icon" style="background:#fef3c7; color:#d97706;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              </div>
+              <div class="profile-list-body">
+                <span class="profile-list-title">Admin bilan yozishmalar</span>
+                <span class="profile-list-sub">@eshmbetov</span>
+              </div>
+              <svg class="profile-list-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m9 18 6-6-6-6"/></svg>
+            </a>
+
+            <div class="profile-list-divider"></div>
+
+            <a href="tel:+998931699003" class="profile-list-row profile-list-link">
+              <div class="profile-list-icon" style="background:#dcfce7; color:#16a34a;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              </div>
+              <div class="profile-list-body">
+                <span class="profile-list-title">Telefon orqali qo'ng'iroq</span>
+                <span class="profile-list-sub">+998-93-169-90-03</span>
+              </div>
+              <svg class="profile-list-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m9 18 6-6-6-6"/></svg>
+            </a>
+
+          </div>
+        </div>
+
+        <!-- KAFOLAT KARTI -->
+        <div class="profile-section-group">
+          <div class="profile-guarantee-card">
+            <div class="guarantee-icon-wrap">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </div>
+            <div class="guarantee-text-wrap">
+              <strong class="guarantee-title">1 Yillik Rasmiy Kafolat</strong>
+              <p class="guarantee-desc">Barcha Apple qurilmalari yangi, qadoqlangan holda yetkaziladi. Toshkent bo'ylab 2 soatda, viloyatlarga 1 kunda yetkazib berish.</p>
+              <span class="guarantee-hours">🕘 Har kuni 09:00 — 22:00</span>
             </div>
           </div>
         </div>
 
-        <!-- Bog'lanish kanallari -->
-        <div class="profile-menu-group">
-          <h4 class="profile-group-title">Bogʻlanish va Qoʻllab-quvvatlash</h4>
-          <div class="contact-links-list">
-            <a href="https://t.me/shbdbdjdhdjjdhd" target="_blank" class="contact-link-card">
-              <div class="contact-icon-box tg-box">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="m22 2-7 20-4-9-9-4Z"></path>
-                  <path d="M22 2 11 13"></path>
-                </svg>
-              </div>
-              <div class="contact-card-info">
-                <strong>Rasmiy Telegram Kanal</strong>
-                <span>@shbdbdjdhdjjdhd</span>
-              </div>
-              <svg class="chevron-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
-            </a>
+        <!-- APP VERSION -->
+        <div class="profile-app-version">DemoStore v2.0 · Telegram Mini App</div>
 
-            <a href="https://t.me/eshmbetov" target="_blank" class="contact-link-card">
-              <div class="contact-icon-box menejer-box">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                </svg>
-              </div>
-              <div class="contact-card-info">
-                <strong>Admin bilan aloqa</strong>
-                <span>@eshmbetov</span>
-              </div>
-              <svg class="chevron-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
-            </a>
-
-            <a href="tel:+998931699003" class="contact-link-card">
-              <div class="contact-icon-box phone-box">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
-                </svg>
-              </div>
-              <div class="contact-card-info">
-                <strong>Telefon orqali qoʻngʻiroq</strong>
-                <span>+998-93-169-90-03</span>
-              </div>
-              <svg class="chevron-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
-            </a>
-          </div>
-        </div>
-
-        <!-- Do'kon kafolati -->
-        <div class="store-guarantee-card">
-          <strong class="guarantee-card-title">DEMOSTORE KAFOLATI</strong>
-          <p class="guarantee-card-desc">Barcha Apple qurilmalari yangi va qadoqlangan holatda yetkaziladi. Toshkent boʻylab 2 soatda, viloyatlarga 1 kunda yetkazib berish mavjud.</p>
-          <div class="guarantee-workhours">Ish vaqti: Har kuni 09:00 dan 22:00 gacha</div>
-        </div>
       </section>
+
 
       <!-- 6. MAHSULOT BATAFSIL KO'RISH BO'LIMI (Product Detail Full Section) -->
       <section class="app-section product-detail-section hidden" id="sectionProductDetail" data-section="product-detail">
