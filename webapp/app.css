@@ -93,7 +93,7 @@ html, body {
 }
 
 /* ==========================================================================
-   TELEGRAM MINI APP PARDA (CURTAIN REVEAL) INTRO ANIMATSIYASI
+   TELEGRAM MINI APP APPLE INTRO ANIMATSIYASI (Center Logo -> Slide Left -> Text Reveal)
    ========================================================================== */
 #splash-screen,
 .splash-screen {
@@ -110,167 +110,175 @@ html, body {
   pointer-events: auto;
 }
 
-/* Qora fon */
+/* Qora fon + nozik radial nur */
 .splash-bg {
   position: absolute;
   inset: 0;
-  background: #0a0a0a;
+  background: radial-gradient(circle at 50% 45%, #18181f 0%, #0c0c10 50%, #060608 100%);
   z-index: 0;
 }
 
-/* Markaziy sahna */
-.splash-assembly-stage {
+/* Markaziy Sahna (Logo va Matn bitta qatorda joylashadi) */
+.splash-brand-stage {
   position: relative;
   z-index: 2;
-  width: 200px;
-  height: 200px;
   display: flex;
   align-items: center;
   justify-content: center;
+  min-height: 120px;
+  width: 100%;
+  max-width: 360px;
+  padding: 0 20px;
 }
 
-/* Har bir fragment */
-.splash-frag {
-  position: absolute;
-  width: 90px;
-  height: 100px;
-  opacity: 0;
-  will-change: transform, opacity;
-}
-
-/* Fragmentlar uchib kelish animatsiyasi */
-.splash-frag-tl {
-  animation: fragFlyTL 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.05s forwards;
-}
-.splash-frag-tr {
-  animation: fragFlyTR 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.12s forwards;
-}
-.splash-frag-bl {
-  animation: fragFlyBL 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.18s forwards;
-}
-.splash-frag-br {
-  animation: fragFlyBR 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.08s forwards;
-}
-.splash-frag-leaf {
-  width: 44px;
-  height: 36px;
-  top: -20px;
-  left: 50%;
-  transform: translateX(-50%);
-  animation: fragFlyLeaf 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.22s forwards;
-}
-
-/* Fragmentlar yig'ilganda yo'qoladi */
-.frags-assembled .splash-frag {
-  animation: fragDissolve 0.3s ease forwards !important;
-}
-
-/* Fragment keyframes */
-@keyframes fragFlyTL {
-  0%   { opacity: 0; transform: translate(-90px, -90px) rotate(-35deg) scale(0.6); }
-  60%  { opacity: 1; }
-  100% { opacity: 1; transform: translate(0, 0) rotate(0deg) scale(1); }
-}
-@keyframes fragFlyTR {
-  0%   { opacity: 0; transform: translate(90px, -90px) rotate(35deg) scale(0.6); }
-  60%  { opacity: 1; }
-  100% { opacity: 1; transform: translate(0, 0) rotate(0deg) scale(1); }
-}
-@keyframes fragFlyBL {
-  0%   { opacity: 0; transform: translate(-90px, 90px) rotate(25deg) scale(0.6); }
-  60%  { opacity: 1; }
-  100% { opacity: 1; transform: translate(0, 0) rotate(0deg) scale(1); }
-}
-@keyframes fragFlyBR {
-  0%   { opacity: 0; transform: translate(90px, 90px) rotate(-25deg) scale(0.6); }
-  60%  { opacity: 1; }
-  100% { opacity: 1; transform: translate(0, 0) rotate(0deg) scale(1); }
-}
-@keyframes fragFlyLeaf {
-  0%   { opacity: 0; transform: translateX(-50%) translateY(-60px) rotate(20deg) scale(0.5); }
-  60%  { opacity: 1; }
-  100% { opacity: 1; transform: translateX(-50%) translateY(0) rotate(0deg) scale(1); }
-}
-@keyframes fragDissolve {
-  0%   { opacity: 1; transform: scale(1); }
-  100% { opacity: 0; transform: scale(0.7); }
-}
-
-/* Yig'ilgan logo + nom */
-.splash-logo-assembled {
-  position: absolute;
-  inset: 0;
+/* 1. Apple 3D Logo Qutisi */
+.splash-logo-container {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  opacity: 0;
-  transform: scale(0.85);
-  transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1), transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
-  pointer-events: none;
-}
-.splash-logo-assembled.assembled-visible {
-  opacity: 1;
-  transform: scale(1);
-}
-
-.splash-assembled-inner {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  position: relative;
-  z-index: 2;
-}
-
-.splash-logo-img-assembled {
-  width: 60px;
-  height: auto;
-  object-fit: contain;
-  filter: drop-shadow(0 6px 20px rgba(255,255,255,0.3));
-  animation: assembledLogoPulse 2s ease-in-out infinite;
   flex-shrink: 0;
+  z-index: 3;
+  will-change: transform, opacity;
+  animation: splashLogoEntrance 0.75s cubic-bezier(0.16, 1, 0.3, 1) forwards,
+             splashLogoSlideLeft 0.7s cubic-bezier(0.2, 0.9, 0.2, 1) 0.85s forwards;
 }
 
-.splash-assembled-brand {
+.splash-logo-img {
+  width: 72px;
+  height: auto;
+  max-height: 86px;
+  object-fit: contain;
+  display: block;
+  filter: drop-shadow(0 8px 28px rgba(255, 255, 255, 0.4)) drop-shadow(0 0 12px rgba(245, 158, 11, 0.25));
+  user-select: none;
+  -webkit-user-drag: none;
+  animation: splashLogoGlowPulse 2.2s ease-in-out infinite 1.5s;
+}
+
+.splash-logo-glow {
+  position: absolute;
+  inset: -20px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.22) 0%, rgba(245, 158, 11, 0.12) 40%, transparent 70%);
+  border-radius: 50%;
+  filter: blur(18px);
+  z-index: -1;
+  pointer-events: none;
+  animation: splashAuraPulse 2.2s ease-in-out infinite 1.5s;
+}
+
+/* 2. Matn Qutisi (Logo chapga surilganda o'ngdan chiqib keladi) */
+.splash-text-container {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 3px;
+  justify-content: center;
+  gap: 4px;
+  margin-left: 14px;
+  opacity: 0;
+  will-change: transform, opacity;
+  animation: splashTextReveal 0.75s cubic-bezier(0.16, 1, 0.3, 1) 0.95s forwards;
 }
-.splash-assembled-title {
-  font-family: var(--font-heading, 'Outfit', sans-serif);
-  font-size: 28px;
+
+.splash-title {
+  font-family: var(--font-heading, 'Outfit', -apple-system, sans-serif);
+  font-size: 30px;
   font-weight: 800;
-  color: #ffffff;
   letter-spacing: -0.03em;
+  color: #ffffff;
   line-height: 1;
-  text-shadow: 0 2px 16px rgba(0,0,0,0.5);
+  white-space: nowrap;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.6), 0 0 18px rgba(255, 255, 255, 0.2);
 }
-.splash-assembled-sub {
-  font-family: var(--font-body, 'Inter', sans-serif);
+
+.splash-subtitle {
+  font-family: var(--font-body, 'Inter', -apple-system, sans-serif);
   font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.2em;
-  color: rgba(255,255,255,0.55);
+  letter-spacing: 0.22em;
+  color: rgba(255, 255, 255, 0.65);
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
-.splash-assembled-glow {
-  position: absolute;
-  inset: -30px;
-  background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%);
-  border-radius: 50%;
-  filter: blur(20px);
-  pointer-events: none;
-  z-index: 0;
+/* 3. Animatsiya Keyframelar */
+/* Logo dastlab markazda elastik paydo bo'ladi */
+@keyframes splashLogoEntrance {
+  0% {
+    opacity: 0;
+    transform: scale(0.4) rotate(-6deg);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.08) rotate(1deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
 }
 
-/* Chiqish animatsiyasi — yuqoriga ko'tarilib ketish */
+/* Keyin logo chapga suriladi (yonidagi matnga joy ochadi) */
+@keyframes splashLogoSlideLeft {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+/* Matn o'ng tomondan nozik surilib va yorishib chiqadi */
+@keyframes splashTextReveal {
+  0% {
+    opacity: 0;
+    transform: translateX(28px) scale(0.92);
+    filter: blur(6px);
+  }
+  60% {
+    opacity: 1;
+    filter: blur(0px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+    filter: blur(0px);
+  }
+}
+
+/* Logo va fon aurasining mayin pulsatsiyasi */
+@keyframes splashLogoGlowPulse {
+  0%, 100% {
+    transform: scale(1);
+    filter: drop-shadow(0 8px 24px rgba(255, 255, 255, 0.35)) drop-shadow(0 0 12px rgba(245, 158, 11, 0.2));
+  }
+  50% {
+    transform: scale(1.03);
+    filter: drop-shadow(0 10px 32px rgba(255, 255, 255, 0.55)) drop-shadow(0 0 18px rgba(245, 158, 11, 0.4));
+  }
+}
+
+@keyframes splashAuraPulse {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.15); }
+}
+
+/* Chiqish animatsiyasi — yuqoriga mayin ko'tarilib ketish */
 .splash-screen.splash-exit {
   animation: splashExitUp 0.65s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
+
 @keyframes splashExitUp {
-  0%   { opacity: 1; transform: translateY(0) scale(1); }
-  100% { opacity: 0; transform: translateY(-40px) scale(1.04); }
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-45px) scale(1.03);
+    pointer-events: none;
+    visibility: hidden;
+  }
 }
 
 /* O'tkazish (Skip) tugmasi */
@@ -296,15 +304,10 @@ html, body {
   letter-spacing: -0.01em;
   transition: transform 0.2s ease, background 0.2s ease;
 }
+
 .splash-skip-btn:active {
   transform: scale(0.94);
   background: rgba(255, 255, 255, 0.22);
-}
-
-/* Assembled logo pulse */
-@keyframes assembledLogoPulse {
-  0%, 100% { filter: drop-shadow(0 4px 16px rgba(255,255,255,0.25)); }
-  50%       { filter: drop-shadow(0 6px 24px rgba(245,158,11,0.4)); }
 }
 
 #app {
@@ -443,6 +446,14 @@ html.dark .live-usd-badge {
   cursor: pointer;
   position: relative;
   transition: var(--transition);
+}
+
+#btnOpenMenu {
+  display: inline-flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  flex-shrink: 0;
+  z-index: 1005;
 }
 
 .icon-btn:active {
@@ -1179,7 +1190,7 @@ html.dark .btn-channel-link {
   align-items: center;
   justify-content: space-around;
   padding: 4px 6px;
-  z-index: 999;
+  z-index: 9999;
   transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s ease, visibility 0.28s;
   will-change: transform, opacity;
 }

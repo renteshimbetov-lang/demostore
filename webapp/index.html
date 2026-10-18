@@ -18,63 +18,38 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet">
   </noscript>
   
-  <link rel="stylesheet" href="/static/mini_app_buttons.min.css?v=71.0" />
-  <link rel="stylesheet" href="/static/app.min.css?v=71.0" />
+  <link rel="stylesheet" href="/static/mini_app_buttons.min.css?v=72.0" />
+  <link rel="stylesheet" href="/static/app.min.css?v=72.0" />
 </head>
 <body>
-  <!-- Logo Fragmentlari Yig'ilish Kirish Animatsiyasi -->
-  <div id="splash-screen" class="splash-screen splash-assembly" aria-label="DemoStore Kirish Animatsiyasi">
-
-    <!-- Qora fon -->
+  <!-- DemoStore Apple Premium Kirish Animatsiyasi (Logo Markazda Chiqib -> Chapga Suriladi -> Yonidan Matn Chiqadi) -->
+  <div id="splash-screen" class="splash-screen" aria-label="DemoStore Kirish Animatsiyasi">
+    <!-- Chuqur qora fon va nozik yorug'lik -->
     <div class="splash-bg"></div>
 
-    <!-- Apple logo fragmentlari (4 ta qism turli tomondan uchib keladi) -->
-    <div class="splash-assembly-stage" id="splashStage">
-      <!-- Yuqori-chap fragment -->
-      <div class="splash-frag splash-frag-tl" id="fragTL">
-        <svg viewBox="0 0 120 140" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M60 10 C40 10, 20 30, 20 55 C20 75, 30 90, 45 100 L60 70 Z" fill="white" opacity="0.95"/>
-        </svg>
-      </div>
-      <!-- Yuqori-o'ng fragment -->
-      <div class="splash-frag splash-frag-tr" id="fragTR">
-        <svg viewBox="0 0 120 140" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M60 10 C80 10, 100 30, 100 55 C100 75, 90 90, 75 100 L60 70 Z" fill="white" opacity="0.95"/>
-        </svg>
-      </div>
-      <!-- Pastki-chap fragment -->
-      <div class="splash-frag splash-frag-bl" id="fragBL">
-        <svg viewBox="0 0 120 140" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M45 100 C30 115, 20 130, 35 140 L60 140 L60 70 Z" fill="white" opacity="0.95"/>
-        </svg>
-      </div>
-      <!-- Pastki-o'ng fragment -->
-      <div class="splash-frag splash-frag-br" id="fragBR">
-        <svg viewBox="0 0 120 140" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M75 100 C90 115, 100 130, 85 140 L60 140 L60 70 Z" fill="white" opacity="0.95"/>
-        </svg>
-      </div>
-      <!-- Barg (leaf) - yuqorida -->
-      <div class="splash-frag splash-frag-leaf" id="fragLeaf">
-        <svg viewBox="0 0 60 50" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M30 0 C50 0, 55 20, 35 30 C45 15, 30 5, 20 15 C10 5, 10 30, 25 30 C5 20, 5 0, 30 0Z" fill="white" opacity="0.95"/>
-        </svg>
+    <!-- Markaziy Brend Sahna -->
+    <div class="splash-brand-stage" id="splashBrandStage">
+      <!-- 1. Apple 3D Logo (Avval markazda chiqadi, so'ng chapga suriladi) -->
+      <div class="splash-logo-container" id="splashLogoContainer">
+        <img
+          src="/static/apple_3d_logo.png"
+          alt="Apple Logo"
+          class="splash-logo-img"
+          width="76"
+          height="88"
+          fetchpriority="high"
+        />
+        <div class="splash-logo-glow"></div>
       </div>
 
-      <!-- Yig'ilgandan keyin chiqadigan butun logo + nom -->
-      <div class="splash-logo-assembled" id="splashLogoAssembled">
-        <div class="splash-assembled-inner">
-          <img src="/static/apple_3d_logo.png" alt="Apple Logo" class="splash-logo-img-assembled" width="72" height="84" fetchpriority="high"/>
-          <div class="splash-assembled-brand">
-            <span class="splash-assembled-title">DemoStore</span>
-            <span class="splash-assembled-sub">APPLE PREMIUM STORE</span>
-          </div>
-        </div>
-        <div class="splash-assembled-glow"></div>
+      <!-- 2. Do'kon nomi va tavsifi (Logo chapga surilganda o'ngdan chiqib keladi) -->
+      <div class="splash-text-container" id="splashTextContainer">
+        <span class="splash-title">DemoStore</span>
+        <span class="splash-subtitle">APPLE PREMIUM STORE</span>
       </div>
     </div>
 
-    <!-- Foydalanuvchi xohlasa o'tkazib yuborish tugmasi -->
+    <!-- O'tkazish (Skip) tugmasi -->
     <button class="splash-skip-btn" id="splashSkipBtn" aria-label="O'tkazish" type="button">
       <span>O'tkazish</span>
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -83,21 +58,16 @@
     </button>
   </div>
 
-  <!-- Splash Assembly Animatsiya Kontrolleri -->
+  <!-- Splash Animatsiya Kontrolleri (Har safar qayta yuklanganda ham ishlaydi) -->
   <script>
     (function () {
       // Telegram: darhol to'liq ekranga
       try {
         var tg = window.Telegram?.WebApp;
-        if (tg) { tg.ready(); tg.expand(); if (tg.requestFullscreen) tg.requestFullscreen(); }
-      } catch (e) {}
-
-      // Oldin ko'rsatilgan bo'lsa — o'tkazib yuborish
-      try {
-        if (sessionStorage.getItem('demostore_intro_shown') === 'true') {
-          var el = document.getElementById('splash-screen');
-          if (el) el.style.display = 'none';
-          return;
+        if (tg) {
+          tg.ready();
+          tg.expand();
+          if (typeof tg.requestFullscreen === 'function') tg.requestFullscreen();
         }
       } catch (e) {}
 
@@ -109,41 +79,34 @@
       function dismissSplash() {
         if (dismissed) return;
         dismissed = true;
-        try { sessionStorage.setItem('demostore_intro_shown', 'true'); } catch (e) {}
         splashEl.classList.add('splash-exit');
         splashEl.style.pointerEvents = 'none';
-        setTimeout(function () { splashEl.style.display = 'none'; }, 700);
+        setTimeout(function () {
+          splashEl.style.display = 'none';
+        }, 650);
       }
 
       window.dismissIntroCurtains = dismissSplash;
 
-      // Assembly animatsiyasi ketma-ketligi:
-      // 0ms    — fragmentlar boshlang'ich pozitsiyadan harakat boshlaydi (CSS animatsiya)
-      // 600ms  — fragmentlar yig'ildi, assembled logo paydo bo'ladi
-      // 2800ms — avtomatik yopilish
-
-      var stage = document.getElementById('splashStage');
-      var assembled = document.getElementById('splashLogoAssembled');
-
-      // Fragmentlar CSS animatsiyasi boshlanadi (splash-assembly class bor)
-      // 600ms dan keyin assembled holat
-      setTimeout(function () {
-        if (stage) stage.classList.add('frags-assembled');
-        if (assembled) assembled.classList.add('assembled-visible');
-      }, 650);
-
-      // 2.8s da avtomatik yopish
-      setTimeout(dismissSplash, 2800);
+      // 2.5 soniyadan keyin avtomatik silliq yopiladi
+      var autoTimer = setTimeout(dismissSplash, 2500);
 
       // Skip tugmasi
       if (skipBtn) {
-        skipBtn.addEventListener('click', function (e) { e.stopPropagation(); dismissSplash(); });
+        skipBtn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          clearTimeout(autoTimer);
+          dismissSplash();
+        });
       }
-      // Ekranga bosish bilan ham yopish (assembled dan keyin)
-      splashEl.addEventListener('click', function () {
-        if (dismissed || !stage || !stage.classList.contains('frags-assembled')) return;
-        dismissSplash();
-      });
+
+      // Ekranga bosilganda ham o'tkazish (1s dan keyin faollashadi)
+      setTimeout(function () {
+        splashEl.addEventListener('click', function () {
+          clearTimeout(autoTimer);
+          dismissSplash();
+        });
+      }, 900);
     })();
   </script>
 
@@ -850,7 +813,7 @@
     </div>
   </div>
 
-  <script src="/static/mini_app_core.min.js?v=71.0"></script>
-  <script src="/static/app.min.js?v=71.0"></script>
+  <script src="/static/mini_app_core.min.js?v=72.0"></script>
+  <script src="/static/app.min.js?v=72.0"></script>
 </body>
 </html>

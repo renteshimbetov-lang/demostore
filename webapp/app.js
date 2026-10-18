@@ -1536,7 +1536,8 @@
       if (mainContentEl) mainContentEl.style.paddingTop = 'var(--app-safe-top, 12px)';
     } else {
       mobileHeaderEl?.classList.remove('hidden');
-      mobileDockEl?.classList.remove('hidden');
+      document.body.classList.remove('search-focused', 'keyboard-open');
+      mobileDockEl?.classList.remove('hidden', 'dock-hidden-keyboard');
       if (mainContentEl) mainContentEl.style.paddingTop = '';
       setTimeout(updateHeaderHeight, 10);
     }
@@ -3835,6 +3836,15 @@
   // ==========================================================================
   let dockRestoreTimer = null;
 
+  function isKeyboardOpenByViewport() {
+    try {
+      if (window.visualViewport) {
+        return (window.innerHeight - window.visualViewport.height) > 120;
+      }
+    } catch (e) {}
+    return false;
+  }
+
   function hideDockForKeyboard() {
     clearTimeout(dockRestoreTimer);
     document.body.classList.add('search-focused', 'keyboard-open');
@@ -3844,30 +3854,18 @@
   }
 
   function showDockAfterKeyboard() {
-    document.body.classList.remove('search-focused');
     clearTimeout(dockRestoreTimer);
     dockRestoreTimer = setTimeout(() => {
-      // Faqatgina qidiruv yoki boshqa input faol bo'lmaganda dock qaytariladi
-      if (document.activeElement !== searchInputEl && !isKeyboardOpenByViewport()) {
-        document.body.classList.remove('keyboard-open');
-        if (mobileDockEl) {
-          mobileDockEl.classList.remove('dock-hidden-keyboard');
-        }
+      document.body.classList.remove('search-focused', 'keyboard-open');
+      if (mobileDockEl && state.currentTab !== 'product-detail') {
+        mobileDockEl.classList.remove('dock-hidden-keyboard');
+        mobileDockEl.classList.remove('hidden');
       }
-    }, 140);
+    }, 100);
   }
 
-  function isKeyboardOpenByViewport() {
-    if (window.visualViewport) {
-      return (window.innerHeight - window.visualViewport.height) > 120;
-    }
-    return false;
-  }
-
-  // Qidiruv maydoniga bosilishi bilanoq pastki dock tugmasi sakrab chiqmasligi uchun darhol yashiriladi
+  // Faqat qidiruvga haqiqatan fokus tushganda yashirish
   searchInputEl?.addEventListener('focus', hideDockForKeyboard);
-  searchInputEl?.addEventListener('touchstart', hideDockForKeyboard, { passive: true });
-  searchInputEl?.addEventListener('pointerdown', hideDockForKeyboard, { passive: true });
   searchInputEl?.addEventListener('blur', showDockAfterKeyboard);
 
   // Enter / Go / Search tugmasi bosilganda ham klaviaturani silliq yopish
@@ -3880,12 +3878,14 @@
   // Visual Viewport kuzatuvchisi (iOS Safari / Android Chrome / Telegram WebApp klaviatura o'lchamini kuzatish)
   if (window.visualViewport) {
     window.visualViewport.addEventListener('resize', () => {
-      if (isKeyboardOpenByViewport()) {
-        hideDockForKeyboard();
-      } else {
-        if (document.activeElement !== searchInputEl) {
+      try {
+        if (isKeyboardOpenByViewport()) {
+          hideDockForKeyboard();
+        } else {
           showDockAfterKeyboard();
         }
+      } catch (e) {
+        showDockAfterKeyboard();
       }
     });
   }
@@ -4110,11 +4110,6 @@
     const splashSkipBtn = document.getElementById('splashSkipBtn');
     if (!splashScreen) return;
 
-    if (sessionStorage.getItem('demostore_intro_shown') === 'true' || splashScreen.classList.contains('curtain-open')) {
-      splashScreen.style.display = 'none';
-      return;
-    }
-
     let isDismissed = false;
     function openCurtains() {
       if (isDismissed) return;
@@ -4226,8 +4221,11 @@
     updateCartBadges();
     setupCatalogPriceFilter();
     updateFilterCurrencyUI('USD', false);
-    updateActiveFilterBadges();
     checkAdminAccess();
+    document.body.classList.remove('search-focused', 'keyboard-open');
+    if (mobileDockEl) {
+      mobileDockEl.classList.remove('dock-hidden-keyboard');
+    }
 
     // 1. Agar keshda mahsulotlar bo'lsa — darhol 0ms da chizish!
     const hasCache = Boolean(state.products && state.products.length > 0);

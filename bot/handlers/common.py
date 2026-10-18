@@ -25,6 +25,21 @@ def setup_common_router(db: Database) -> Router:
         is_admin_user = bool(user and user.id in config.admin_ids)
         reply_kb = get_main_menu(is_admin=is_admin_user)
 
+        # Telegram pastki chap 'Do'kon' Menu Button'ni kafolatli o'rnatish
+        base_url = config.webapp_url.rstrip('/') if config.webapp_url else ""
+        if base_url and base_url.startswith("https://") and message.bot:
+            try:
+                from aiogram.types import MenuButtonWebApp
+                await message.bot.set_chat_menu_button(
+                    chat_id=message.chat.id,
+                    menu_button=MenuButtonWebApp(
+                        text="Do'kon",
+                        web_app=WebAppInfo(url=f"{base_url}/?app=store")
+                    )
+                )
+            except Exception:
+                pass
+
         # 1. Salomlashish
         await message.answer(
             f"Assalomu alaykum, <b>{user.first_name if user else 'Qadrli mijoz'}</b>!\n"
