@@ -15,3 +15,5 @@ remove_bg
 *.sqlite
 *.sqlite3
 .cbu_rate_cache.json
+*.mov
+*.mp4

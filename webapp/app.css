@@ -118,17 +118,20 @@ html, body {
   z-index: 0;
 }
 
-/* Markaziy Sahna (Logo va Matn bitta kompozitsiyada) */
+/* Markaziy Sahna (Har doim ekranning mutlaq markazida saqlanadi) */
 .splash-brand-stage {
-  position: relative;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   z-index: 2;
   display: flex;
   align-items: center;
   justify-content: center;
+  width: auto;
   min-height: 120px;
-  width: 100%;
-  max-width: 380px;
-  padding: 0 16px;
+  padding: 0;
+  pointer-events: none;
 }
 
 /* 1. Apple 3D Logo Qutisi */
@@ -140,34 +143,33 @@ html, body {
   flex-shrink: 0;
   z-index: 3;
   will-change: transform, opacity;
-  animation: splashLogoEntrance 0.72s cubic-bezier(0.16, 1, 0.3, 1) forwards,
-             splashLogoSlideLeft 0.75s cubic-bezier(0.2, 0.9, 0.2, 1) 0.82s forwards;
+  animation: splashLogoEntrance 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .splash-logo-img {
-  width: 72px;
+  width: 74px;
   height: auto;
-  max-height: 86px;
+  max-height: 88px;
   object-fit: contain;
   display: block;
-  filter: drop-shadow(0 8px 28px rgba(255, 255, 255, 0.4)) drop-shadow(0 0 12px rgba(245, 158, 11, 0.25));
+  filter: drop-shadow(0 8px 28px rgba(255, 255, 255, 0.4)) drop-shadow(0 0 14px rgba(245, 158, 11, 0.28));
   user-select: none;
   -webkit-user-drag: none;
-  animation: splashLogoGlowPulse 2.2s ease-in-out infinite 1.6s;
+  animation: splashLogoGlowPulse 2.4s ease-in-out infinite 1.8s;
 }
 
 .splash-logo-glow {
   position: absolute;
-  inset: -22px;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.22) 0%, rgba(245, 158, 11, 0.14) 40%, transparent 70%);
+  inset: -24px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.24) 0%, rgba(245, 158, 11, 0.14) 45%, transparent 70%);
   border-radius: 50%;
-  filter: blur(18px);
+  filter: blur(20px);
   z-index: -1;
   pointer-events: none;
-  animation: splashAuraPulse 2.2s ease-in-out infinite 1.6s;
+  animation: splashAuraPulse 2.4s ease-in-out infinite 1.8s;
 }
 
-/* 2. Matn Qutisi: Logo chapga surilishi bilan o'ngdan ochiladi */
+/* 2. Matn Qutisi: Logo chapga surilishi bilan o'ngdan xotirjam ochiladi */
 .splash-text-container {
   display: flex;
   flex-direction: column;
@@ -179,21 +181,21 @@ html, body {
   white-space: nowrap;
   margin-left: 0;
   will-change: max-width, opacity, margin-left;
-  animation: splashTextContainerExpand 0.75s cubic-bezier(0.16, 1, 0.3, 1) 0.82s forwards;
+  animation: splashTextContainerExpand 0.95s cubic-bezier(0.16, 1, 0.3, 1) 1.15s forwards;
 }
 
-/* "Demo" va uning pastidan "Store" */
+/* "Demo" va uning pastidan "Store" (Bellissimo uslubida) */
 .splash-brand-words {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 1px;
+  gap: 2px;
   line-height: 0.92;
 }
 
 .splash-word {
   font-family: var(--font-heading, 'Outfit', -apple-system, sans-serif);
-  font-size: 34px;
+  font-size: 36px;
   font-weight: 800;
   letter-spacing: -0.035em;
   line-height: 0.94;
@@ -206,20 +208,19 @@ html, body {
   color: #ffffff;
   text-shadow: 0 4px 20px rgba(0, 0, 0, 0.7), 0 0 16px rgba(255, 255, 255, 0.22);
   opacity: 0;
-  transform: translateX(-16px) translateY(4px);
-  filter: blur(4px);
-  animation: splashWordDemoReveal 0.65s cubic-bezier(0.16, 1, 0.3, 1) 0.88s forwards;
+  transform: translateX(-24px);
+  filter: blur(5px);
+  animation: splashWordDemoReveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) 1.2s forwards;
 }
 
 /* Pastidagi "Store" so'zi */
 .splash-word-store {
-  background: linear-gradient(135deg, #ffffff 35%, #fbbf24 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 2px 10px rgba(245, 158, 11, 0.35));
+  color: #ffffff;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.7), 0 0 16px rgba(255, 255, 255, 0.22);
   opacity: 0;
-  transform: translateX(-16px) translateY(8px);
-  animation: splashWordStoreReveal 0.65s cubic-bezier(0.16, 1, 0.3, 1) 0.98s forwards;
+  transform: translateX(-24px);
+  filter: blur(5px);
+  animation: splashWordStoreReveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) 1.32s forwards;
 }
 
 /* Tagidagi "APPLE PREMIUM STORE" */
@@ -230,12 +231,12 @@ html, body {
   letter-spacing: 0.24em;
   color: rgba(255, 255, 255, 0.65);
   text-transform: uppercase;
-  margin-top: 5px;
+  margin-top: 6px;
   white-space: nowrap;
   display: block;
   opacity: 0;
-  transform: translateY(4px);
-  animation: splashSubtitleReveal 0.6s cubic-bezier(0.16, 1, 0.3, 1) 1.12s forwards;
+  transform: translateY(6px);
+  animation: splashSubtitleReveal 0.65s cubic-bezier(0.16, 1, 0.3, 1) 1.5s forwards;
 }
 
 /* 3. Animatsiya Keyframelar */
@@ -243,11 +244,11 @@ html, body {
 @keyframes splashLogoEntrance {
   0% {
     opacity: 0;
-    transform: scale(0.35) rotate(-6deg);
+    transform: scale(0.3) rotate(-5deg);
   }
-  60% {
+  65% {
     opacity: 1;
-    transform: scale(1.08) rotate(1deg);
+    transform: scale(1.06) rotate(1deg);
   }
   100% {
     opacity: 1;
@@ -255,30 +256,20 @@ html, body {
   }
 }
 
-/* Logo chapga suriladi */
-@keyframes splashLogoSlideLeft {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(-6px);
-  }
-}
-
-/* Matn konteyneri o'ngdan kengayib ochiladi */
+/* Matn konteyneri o'ngdan kengayib ochiladi (markaziy blok kengayib logo silliq chapga siljiydi) */
 @keyframes splashTextContainerExpand {
   0% {
     max-width: 0;
     opacity: 0;
     margin-left: 0;
   }
-  30% {
+  25% {
     opacity: 1;
   }
   100% {
-    max-width: 220px;
+    max-width: 240px;
     opacity: 1;
-    margin-left: 16px;
+    margin-left: 18px;
   }
 }
 
@@ -286,26 +277,26 @@ html, body {
 @keyframes splashWordDemoReveal {
   0% {
     opacity: 0;
-    transform: translateX(-16px) translateY(4px) scale(0.96);
-    filter: blur(4px);
+    transform: translateX(-24px) scale(0.96);
+    filter: blur(5px);
   }
   100% {
     opacity: 1;
-    transform: translateX(0) translateY(0) scale(1);
+    transform: translateX(0) scale(1);
     filter: blur(0px);
   }
 }
 
-/* "Store" so'zi pastdan va chapdan silliq chiqishi */
+/* "Store" so'zi silliq chiqishi */
 @keyframes splashWordStoreReveal {
   0% {
     opacity: 0;
-    transform: translateX(-16px) translateY(8px) scale(0.96);
-    filter: blur(4px);
+    transform: translateX(-24px) scale(0.96);
+    filter: blur(5px);
   }
   100% {
     opacity: 1;
-    transform: translateX(0) translateY(0) scale(1);
+    transform: translateX(0) scale(1);
     filter: blur(0px);
   }
 }
