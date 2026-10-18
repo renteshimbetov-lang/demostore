@@ -2082,7 +2082,7 @@
                   </svg>
                   <span>Kanaldan koʻrish</span>
                 </button>
-              ` : ''}
+              ` : '<div class="btn-channel-placeholder"></div>'}
             </div>
           </div>
         </article>
@@ -2258,7 +2258,7 @@
                   </svg>
                   <span>${t('view_in_channel')}</span>
                 </button>
-              ` : ''}
+              ` : '<div class="btn-channel-placeholder"></div>'}
             </div>
           </div>
         </article>
@@ -3322,7 +3322,7 @@
                   </svg>
                   <span>${t('view_in_channel')}</span>
                 </button>
-              ` : ''}
+              ` : '<div class="btn-channel-placeholder"></div>'}
             </div>
           </div>
         </article>

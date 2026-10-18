@@ -946,6 +946,14 @@ html.dark .btn-channel-link {
   color: #38bdf8;
 }
 
+/* "Kanaldan ko'rish" tugmasi bo'lmagan kartochkalar uchun balandlik ushlagich */
+.btn-channel-placeholder {
+  height: 34px;
+  width: 100%;
+  pointer-events: none;
+  visibility: hidden;
+}
+
 /* ==========================================================================
    4. iOS FLOATING DOCK (Zero Scroll Jitter Suzuvchi Panel)
    ========================================================================== */
