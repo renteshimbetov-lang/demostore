@@ -539,8 +539,11 @@ html.dark .live-usd-badge {
   gap: 8px;
   padding: 12px 16px;
   overflow-x: auto;
+  scroll-behavior: smooth;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
+  /* Faqat manual scroll, auto-scroll yo'q */
+  overscroll-behavior-x: contain;
 }
 
 .category-slider::-webkit-scrollbar {
@@ -558,11 +561,16 @@ html.dark .live-usd-badge {
   font-weight: 600;
   white-space: nowrap;
   cursor: pointer;
-  transition: var(--transition);
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease,
+              box-shadow 0.2s ease, transform 0.15s ease;
+  flex-shrink: 0;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .category-pill:active {
-  transform: scale(0.95);
+  transform: scale(0.92);
+  opacity: 0.85;
 }
 
 .category-pill.active {
@@ -571,6 +579,7 @@ html.dark .live-usd-badge {
   border-color: var(--btn-main-border);
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
   font-weight: 700;
+  transform: scale(1);
 }
 
 /* ==========================================================================
@@ -694,6 +703,116 @@ html.light .card-media {
   padding: 2px 6px;
   border-radius: 6px;
   z-index: 2;
+}
+
+/* Hafta chegirmasi - premium yaltirayotgan sovg'a badge (o'ng yuqori burchak) */
+.gift-badge {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ffd700 0%, #f59e0b 40%, #ef4444 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+  pointer-events: none;
+  overflow: hidden;
+  animation: gift-spin-glow 2.5s ease-in-out infinite;
+  box-shadow:
+    0 0 0 2px rgba(255, 215, 0, 0.4),
+    0 2px 12px rgba(245, 158, 11, 0.55),
+    0 0 20px rgba(239, 68, 68, 0.25);
+}
+
+/* Yaltirayotgan shimmer effekti */
+.gift-badge::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -60%;
+  width: 60%;
+  height: 200%;
+  background: linear-gradient(
+    105deg,
+    transparent 40%,
+    rgba(255, 255, 255, 0.65) 50%,
+    transparent 60%
+  );
+  animation: gift-shimmer 2s ease-in-out infinite;
+  border-radius: 50%;
+}
+
+/* Tashqi halqa yaltirab turishi */
+.gift-badge::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0%,
+    rgba(255, 215, 0, 0.8) 25%,
+    transparent 50%,
+    rgba(255, 165, 0, 0.6) 75%,
+    transparent 100%
+  );
+  animation: gift-ring-spin 2s linear infinite;
+  z-index: -1;
+  filter: blur(1px);
+}
+
+.gift-badge svg {
+  width: 18px;
+  height: 18px;
+  color: #ffffff;
+  filter: drop-shadow(0 1px 3px rgba(0,0,0,0.4));
+  position: relative;
+  z-index: 2;
+  animation: gift-icon-bounce 2.5s ease-in-out infinite;
+}
+
+@keyframes gift-spin-glow {
+  0%, 100% {
+    box-shadow:
+      0 0 0 2px rgba(255, 215, 0, 0.5),
+      0 2px 14px rgba(245, 158, 11, 0.65),
+      0 0 22px rgba(239, 68, 68, 0.3);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow:
+      0 0 0 3px rgba(255, 215, 0, 0.7),
+      0 3px 20px rgba(245, 158, 11, 0.85),
+      0 0 30px rgba(239, 68, 68, 0.45);
+    transform: scale(1.08);
+  }
+}
+
+@keyframes gift-shimmer {
+  0%   { left: -60%; opacity: 0; }
+  20%  { opacity: 1; }
+  60%  { left: 120%; opacity: 0; }
+  100% { left: 120%; opacity: 0; }
+}
+
+@keyframes gift-ring-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes gift-icon-bounce {
+  0%, 100% { transform: translateY(0px) scale(1); }
+  50%       { transform: translateY(-1.5px) scale(1.05); }
+}
+
+/* Gift badge bo'lgan kartochkalarda wishlist btn chap tepaga ketsin */
+.card-media:has(.gift-badge) .wishlist-btn,
+.wishlist-btn.has-gift {
+  right: auto;
+  left: 8px;
 }
 
 .wishlist-btn {
