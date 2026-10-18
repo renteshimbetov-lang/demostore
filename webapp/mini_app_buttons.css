@@ -22,7 +22,8 @@
   cursor: pointer;
   user-select: none;
   border-radius: 14px;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.18s ease, border-color 0.18s ease, color 0.15s ease;
+  will-change: transform;
   overflow: hidden;
   -webkit-tap-highlight-color: transparent;
 }
@@ -42,7 +43,7 @@
   background: linear-gradient(135deg, #4F46E5 0%, #3B82F6 100%);
   color: #FFFFFF;
   box-shadow: 0 4px 14px rgba(79, 70, 229, 0.28);
-  transition: transform 0.24s cubic-bezier(0.25, 1.4, 0.5, 1), box-shadow 0.2s ease;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   will-change: transform;
 }
 .btn-bounce:hover {
@@ -50,8 +51,8 @@
   box-shadow: 0 8px 20px rgba(79, 70, 229, 0.38);
 }
 .btn-bounce:active {
-  transform: scale(0.96) !important;
-  transition: transform 0.1s cubic-bezier(0.2, 0, 0, 1) !important;
+  transform: scale(0.955);
+  transition: transform 0.06s cubic-bezier(0.4, 0, 1, 1), box-shadow 0.06s ease;
 }
 
 /* ----------------------------------------------------
@@ -74,7 +75,7 @@
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05), inset 0 1px 1px rgba(255, 255, 255, 0.9);
   position: relative;
   overflow: hidden;
-  transition: transform 0.24s cubic-bezier(0.25, 1.4, 0.5, 1), box-shadow 0.2s ease, border-color 0.2s ease;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
   will-change: transform;
 }
 
@@ -109,9 +110,9 @@ html.dark .btn-liquid::before {
 }
 
 .btn-liquid:active {
-  transform: scale(0.96) !important;
+  transform: scale(0.955);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  transition: transform 0.1s cubic-bezier(0.2, 0, 0, 1) !important;
+  transition: transform 0.06s cubic-bezier(0.4, 0, 1, 1), box-shadow 0.06s ease;
 }
 
 /* ----------------------------------------------------
@@ -124,7 +125,8 @@ html.dark .btn-liquid::before {
   border-radius: 14px;
   box-shadow: 0 6px 0 #059669, 0 10px 18px rgba(16, 185, 129, 0.35);
   transform: translateY(0);
-  transition: all 0.08s ease;
+  transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+  will-change: transform;
 }
 .btn-3d:hover {
   filter: brightness(1.05);
@@ -132,6 +134,7 @@ html.dark .btn-liquid::before {
 .btn-3d:active {
   transform: translateY(5px);
   box-shadow: 0 1px 0 #059669, 0 3px 6px rgba(16, 185, 129, 0.2);
+  transition: transform 0.07s cubic-bezier(0.4, 0, 1, 1), box-shadow 0.07s ease;
 }
 
 /* ----------------------------------------------------
@@ -156,8 +159,9 @@ html.dark .btn-liquid::before {
   transform: translateY(-2px) scale(1.01);
 }
 .btn-neon:active {
-  transform: scale(0.95);
+  transform: scale(0.955);
   filter: brightness(1.2);
+  transition: transform 0.06s cubic-bezier(0.4, 0, 1, 1);
 }
 
 /* ----------------------------------------------------
@@ -170,7 +174,8 @@ html.dark .btn-liquid::before {
   box-shadow: 0 6px 16px rgba(2, 132, 199, 0.35);
 }
 .btn-ripple:active {
-  transform: scale(0.97);
+  transform: scale(0.955);
+  transition: transform 0.06s cubic-bezier(0.4, 0, 1, 1);
 }
 .ripple-ink {
   position: absolute;
@@ -204,7 +209,8 @@ html.dark .btn-liquid::before {
   text-align: center;
   cursor: pointer;
   box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.18s ease, background-color 0.18s ease;
+  will-change: transform;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
 }
@@ -218,9 +224,10 @@ body.dark-mode .card-btn, [data-theme="dark"] .card-btn {
   box-shadow: 0 8px 24px -4px rgba(15, 23, 42, 0.1);
 }
 .card-btn:active {
-  transform: scale(0.92);
+  transform: scale(0.93);
   border-color: #6366F1;
   background: rgba(99, 102, 241, 0.08);
+  transition: transform 0.07s cubic-bezier(0.4, 0, 1, 1), box-shadow 0.07s ease;
 }
 .card-btn.active {
   border-color: #6366F1;
@@ -289,8 +296,9 @@ body.dark-mode .sticky-bottom-bar, [data-theme="dark"] .sticky-bottom-bar {
   transform: translateY(-2px);
 }
 .btn-main-action:active {
-  transform: scale(0.96);
+  transform: scale(0.955);
   box-shadow: 0 3px 10px rgba(37, 99, 235, 0.3);
+  transition: transform 0.07s cubic-bezier(0.4, 0, 1, 1), box-shadow 0.07s ease;
 }
 
 /* ----------------------------------------------------
