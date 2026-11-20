@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+from typing import Optional, List, Dict, Any
 from aiogram import Router, F, Bot
 from aiogram.filters import Command
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton, InputMediaPhoto

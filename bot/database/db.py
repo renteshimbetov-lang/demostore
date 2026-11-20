@@ -3,7 +3,7 @@ import json
 import logging
 import asyncio
 from datetime import datetime, date
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Tuple
 
 try:
     import asyncpg

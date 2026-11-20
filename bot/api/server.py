@@ -3,7 +3,7 @@ import json
 import logging
 import os
 import time
-from typing import Dict, Optional, Tuple
+from typing import Dict, Optional, Tuple, Any, List
 import aiohttp
 from aiohttp import web
 from bot.config import config
@@ -199,16 +199,10 @@ def create_web_app(db: Database, webapp_dir: str, bot=None) -> web.Application:
                 )
 
     async def get_categories(request: web.Request) -> web.Response:
-        user = extract_and_validate_telegram_user(request)
-        if not user:
-            return web.json_response({"error": "Unauthorized"}, status=401)
         categories = await db.get_categories()
         return web.json_response(categories)
 
     async def get_currency(request: web.Request) -> web.Response:
-        user = extract_and_validate_telegram_user(request)
-        if not user:
-            return web.json_response({"error": "Unauthorized"}, status=401)
         from bot.utils.currency import get_cbu_usd_rate, format_rate_compact, CACHE_TTL_SECONDS
         force = request.query.get("force", "").strip().lower() in ("1", "true")
         rate = await get_cbu_usd_rate(force_refresh=force)
@@ -220,9 +214,6 @@ def create_web_app(db: Database, webapp_dir: str, bot=None) -> web.Application:
         })
 
     async def get_products(request: web.Request) -> web.Response:
-        user = extract_and_validate_telegram_user(request)
-        if not user:
-            return web.json_response({"error": "Unauthorized"}, status=401)
         from bot.utils.currency import get_cbu_usd_rate, convert_usd_to_uzs, format_rate_compact
         category_id_param = request.query.get("category_id")
         sort_param = request.query.get("sort", "default")
@@ -695,6 +686,12 @@ def create_web_app(db: Database, webapp_dir: str, bot=None) -> web.Application:
     # Mini-ilova Frontend statik fayllari
     if os.path.exists(webapp_dir):
         app.router.add_static("/static", path=webapp_dir, name="static")
+        taplink_dir = os.path.join(webapp_dir, "taplink_assets")
+        if os.path.exists(taplink_dir):
+            app.router.add_static("/taplink_assets", path=taplink_dir, name="taplink_assets")
+        images_dir = os.path.join(webapp_dir, "images")
+        if os.path.exists(images_dir):
+            app.router.add_static("/images", path=images_dir, name="images")
 
         async def serve_index(request: web.Request) -> web.FileResponse:
             index_path = os.path.join(webapp_dir, "index.html")
