@@ -848,14 +848,40 @@ def setup_admin_router(db: Database, bot: Bot) -> Router:
             return
 
         await callback.answer("Sinxronlash boshlandi...")
-        from bot.handlers.channel import sync_deleted_channel_posts
-        deleted = await sync_deleted_channel_posts(db, config.channel_username)
+        from bot.utils.channel_sync import full_channel_sync
+        res = await full_channel_sync(db, config.channel_username, auto_activate=True)
         res_text = (
-            f"🔄 <b>Kanal muvaffaqiyatli sinxronlandi!</b>\n"
-            f"O'chirilgan postlar: <b>{len(deleted)} ta</b> aniqlandi va mini appdan olib tashlandi."
+            f"🔄 <b>Kanal muvaffaqiyatli sinxronlandi!</b>\n\n"
+            f"📡 Tekshirilgan postlar: <b>{res['scanned']} ta</b>\n"
+            f"✨ Yangi qo'shildi: <b>{res['created']} ta</b>\n"
+            f"♻️ Yangilandi: <b>{res['updated']} ta</b>\n"
+            f"🗑 O'chirilgan/sotilgan: <b>{res['deleted']} ta</b>\n\n"
+            f"<i>Barcha mahsulotlar mini appda va bazada yangilandi!</i>"
         )
         if callback.message:
             await callback.message.answer(res_text, parse_mode="HTML")
+
+    @router.message(Command("sync"))
+    @router.message(Command("sync_channel"))
+    async def sync_channel_command(message: Message):
+        if not message.from_user or not is_admin(message.from_user.id):
+            return
+
+        wait_msg = await message.answer("⏳ Kanal bilan sinxronlash boshlandi, biroz kuting...")
+        from bot.utils.channel_sync import full_channel_sync
+        res = await full_channel_sync(db, config.channel_username, auto_activate=True)
+        res_text = (
+            f"🔄 <b>Kanal muvaffaqiyatli sinxronlandi!</b>\n\n"
+            f"📡 Tekshirilgan postlar: <b>{res['scanned']} ta</b>\n"
+            f"✨ Yangi qo'shildi: <b>{res['created']} ta</b>\n"
+            f"♻️ Yangilandi: <b>{res['updated']} ta</b>\n"
+            f"🗑 O'chirilgan/sotilgan: <b>{res['deleted']} ta</b>\n\n"
+            f"<i>Barcha mahsulotlar mini appda va bazada yangilandi!</i>"
+        )
+        try:
+            await wait_msg.edit_text(res_text, parse_mode="HTML")
+        except Exception:
+            await message.answer(res_text, parse_mode="HTML")
 
     # =========================================================================
     # 4. Admin chatda to'g'ridan-to'g'ri rasm va narx yuborganda avtomatik post taklif qilish

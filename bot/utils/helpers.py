@@ -24,11 +24,11 @@ def format_order_summary(order_id: int, full_name: str, phone: str, address: str
     return "\n".join(lines)
 
 def is_phone_product(name: str = "", description: str = "") -> bool:
-    """Mahsulot telefon / smartfon ekanligini aniqlash"""
+    """Mahsulot telefon / smartfon / planshet ekanligini aniqlash"""
     text = f"{name or ''} {description or ''}".lower()
     if any(k in text for k in ["macbook", "noutbuk", "laptop", "surface", "asus", "thinkpad", "dell", "hp"]):
         return False
-    if any(k in text for k in ["iphone", "samsung", "redmi", "xiaomi", "telefon", "smartfon", "galaxy", "pro max", "plus", "mini"]):
+    if any(k in text for k in ["iphone", "samsung", "redmi", "xiaomi", "telefon", "smartfon", "galaxy", "pro max", "plus", "mini", "ipad", "planshet", "tablet"]):
         return True
     return False
 

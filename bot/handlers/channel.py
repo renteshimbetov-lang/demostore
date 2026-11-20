@@ -105,19 +105,29 @@ def setup_channel_router(db: Database, bot: Bot) -> Router:
         file_ids: List[str] = []
         primary_file_id = None
         if not keep_media:
+            from bot.utils.photo_selector import select_best_index_async
+
             # 1-manba: Telegram file_id lar (doimiy, tezkor, xatosiz tartibda)
             file_ids = extract_all_photo_file_ids(all_messages)
             if file_ids:
                 gallery_urls = [f"/api/photo/{fid}" for fid in file_ids]
-                image_url = gallery_urls[0]
-                primary_file_id = file_ids[0]
+                # Rasm qoidasi: Smartfonlar -> 1-rasm (orqa tarafi); Noutbuklar -> to'g'ridan olingan ochiq ekran
+                best_idx = await select_best_index_async(name, description, file_ids, bot=bot)
+                image_url = gallery_urls[best_idx]
+                primary_file_id = file_ids[best_idx]
+                if best_idx > 0:
+                    gallery_urls = [gallery_urls[best_idx]] + [u for i, u in enumerate(gallery_urls) if i != best_idx]
+                    file_ids = [file_ids[best_idx]] + [f for i, f in enumerate(file_ids) if i != best_idx]
             else:
                 # 2-manba: ommaviy kanal CDN rasmlari
                 chan_user = main_msg.chat.username or config.channel_username
                 gallery_urls = await asyncio.to_thread(fetch_channel_embed_photos, chan_user, message_id) if chan_user else []
                 if gallery_urls:
-                    image_url = gallery_urls[0]
+                    best_idx = await select_best_index_async(name, description, gallery_urls)
+                    image_url = gallery_urls[best_idx]
                     primary_file_id = None
+                    if best_idx > 0:
+                        gallery_urls = [gallery_urls[best_idx]] + [u for i, u in enumerate(gallery_urls) if i != best_idx]
                 else:
                     image_url = "/static/apple_3d_logo.png"
                     gallery_urls = [image_url]

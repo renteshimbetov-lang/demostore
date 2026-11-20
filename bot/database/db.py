@@ -607,7 +607,7 @@ class Database:
                 c_name = "Quloqchinlar va Audio"
             elif any(k in lower_name for k in ["macbook", "noutbuk", "laptop", "surface", "thinkpad", "asus", "lenovo", "dell", "hp", "acer", "matebook"]):
                 c_name = "Noutbuklar"
-            elif any(k in lower_name for k in ["iphone", "ayfon", "samsung", "galaxy", "redmi", "xiaomi", "smartfon", "pixel", "honor", "poco"]):
+            elif any(k in lower_name for k in ["iphone", "ayfon", "samsung", "galaxy", "redmi", "xiaomi", "smartfon", "pixel", "honor", "poco", "ipad", "planshet", "tablet"]):
                 c_name = "Smartfonlar"
             elif any(k in lower_name for k in ["chexol", "case", "kabel", "cable", "adapter", "blok", "zaryadka", "remeshok", "steklo"]):
                 c_name = "Aksessuarlar"
