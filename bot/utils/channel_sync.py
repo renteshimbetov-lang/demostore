@@ -1,6 +1,6 @@
 """
-Telegram kanalidagi postlarni to'liq tahlil qilish, rasmlarni saralash (smartfon/noutbuk qoidasi),
-narx va tavsiflarni ajratish hamda PostgreSQL (RDS) bazasiga sinxronlash moduli.
+Telegram kanalidagi postlarni to'liq tahlil qilish, rasmlarni saralash (smartfon/noutbuk/planshet qoidasi),
+narx va tavsiflarni ajratish hamda PostgreSQL (RDS) bazasiga boshidan to'liq sinxronlash moduli.
 """
 import asyncio
 import json
@@ -17,34 +17,53 @@ from bot.utils.ssl_context import get_ssl_context
 
 logger = logging.getLogger("ChannelSync")
 
-async def fetch_channel_post_ids(channel_username: str) -> List[int]:
-    """Kanalning ommaviy veb sahifasidan post identifikatorlarini (message_id) olish"""
+async def fetch_channel_post_ids(channel_username: str, fetch_all: bool = True) -> List[int]:
+    """Kanalning ommaviy veb sahifasidan post identifikatorlarini boshidan oxirigacha olish"""
     clean_username = channel_username.lstrip("@")
-    url = f"https://t.me/s/{clean_username}"
     ctx = get_ssl_context()
-    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"})
+    all_ids = set()
 
-    def _fetch():
+    def _fetch_page(url: str) -> List[int]:
         try:
+            req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"})
             with urllib.request.urlopen(req, timeout=12, context=ctx) as r:
                 html = r.read().decode("utf-8")
                 matches = re.findall(rf"/{clean_username}/(\d+)", html)
-                return sorted(list(set(int(m) for m in matches)))
+                return [int(m) for m in matches]
         except Exception as e:
-            logger.warning(f"Kanal veb sahifasini o'qishda xatolik: {e}")
+            logger.warning(f"Kanal sahifasini o'qishda xatolik ({url}): {e}")
             return []
 
-    return await asyncio.to_thread(_fetch)
+    # 1. Eng oxirgi sahifani olish
+    first_page_ids = await asyncio.to_thread(_fetch_page, f"https://t.me/s/{clean_username}")
+    if not first_page_ids:
+        return []
+    all_ids.update(first_page_ids)
+
+    # 2. Kanal boshigacha (barcha eski postlar) sahifalab orqaga qaytish (?before=min_id)
+    if fetch_all:
+        min_id = min(first_page_ids)
+        while min_id > 1:
+            older_ids = await asyncio.to_thread(_fetch_page, f"https://t.me/s/{clean_username}?before={min_id}")
+            new_older = [x for x in older_ids if x < min_id]
+            if not new_older:
+                break
+            all_ids.update(new_older)
+            min_id = min(new_older)
+
+    sorted_ids = sorted(list(all_ids))
+    logger.info(f"Kanal (@{clean_username}) bo'yicha jami {len(sorted_ids)} ta post ID topildi (diapazon: {min(sorted_ids) if sorted_ids else 0} - {max(sorted_ids) if sorted_ids else 0})")
+    return sorted_ids
 
 async def fetch_post_details(channel_username: str, message_id: int) -> Optional[Dict[str, Any]]:
-    """Yagona post sahifasidan (embed) matn va barcha rasmlarni olish"""
+    """Yagona post sahifasidan (embed) matn va barcha haqiqiy rasmlarni olish"""
     clean_username = channel_username.lstrip("@")
     url = f"https://t.me/{clean_username}/{message_id}?embed=1"
     ctx = get_ssl_context()
-    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"})
 
     def _fetch():
         try:
+            req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"})
             with urllib.request.urlopen(req, timeout=10, context=ctx) as r:
                 html = r.read().decode("utf-8")
                 if "Post not found" in html or "tgme_widget_message_error" in html:
@@ -81,16 +100,18 @@ async def fetch_post_details(channel_username: str, message_id: int) -> Optional
 
 async def full_channel_sync(db: Database, channel_username: str, auto_activate: bool = True) -> Dict[str, Any]:
     """
-    Kanalni to'liq tekshirish va bazani sinxronlash:
-    1. Kanal postlarini skanlash.
+    Kanalni boshidan oxirigacha to'liq tekshirish va bazani sinxronlash:
+    1. Kanalning barcha postlarini (boshidan oxirigacha) skanlash.
     2. Sotilgan yoki o'chirilgan postlarni nofaol qilish.
     3. Yangi mahsulotlarni qabul qilish, kompyuter ko'rishi (CV) qoidasi bilan eng chiroyli rasmni asosiy qilib tanlash.
-    4. Baza bilan integratsiya qilish.
+    4. Toifalarga (Smartfonlar, Planshetlar, Noutbuklar, Aqlli soatlar va h.k.) to'g'ri taqsimlash.
+    5. Takroriy postlarni birlashtirish va bazani yangilash.
     """
     clean_username = channel_username.lstrip("@")
-    logger.info(f"Kanal (@{clean_username}) to'liq sinxronlash boshlandi...")
+    channel_id = f"@{clean_username}"
+    logger.info(f"Kanal (@{clean_username}) boshidan boshlab to'liq sinxronlash boshlandi...")
 
-    post_ids = await fetch_channel_post_ids(clean_username)
+    post_ids = await fetch_channel_post_ids(clean_username, fetch_all=True)
     if not post_ids:
         logger.warning(f"Kanalda postlar topilmadi yoki ulanish cheklandi: @{clean_username}")
         return {"scanned": 0, "created": 0, "updated": 0, "deleted": 0, "products": []}
@@ -101,16 +122,28 @@ async def full_channel_sync(db: Database, channel_username: str, auto_activate: 
     deleted_count = 0
     synced_items = []
 
-    # 1. Albom va postlarni guruhlash uchun tahlil
-    channel_id = f"@{clean_username}"
+    # Jonli valyuta kursi
+    from bot.utils.currency import get_cbu_usd_rate
+    live_rate = await get_cbu_usd_rate()
 
-    for msg_id in post_ids:
-        details = await fetch_post_details(clean_username, msg_id)
+    # Bir vaqtda tezkor so'rov yuborish uchun semafor (15 ta oqim)
+    sem = asyncio.Semaphore(15)
+
+    async def fetch_one(pid: int):
+        async with sem:
+            return await fetch_post_details(clean_username, pid)
+
+    logger.info(f"Jami {len(post_ids)} ta post tafsilotlari tezkorlik bilan o'qilmoqda...")
+    post_details_list = await asyncio.gather(*(fetch_one(pid) for pid in post_ids))
+
+    logger.info("Postlar tahlil qilinmoqda va bazaga yozilmoqda...")
+    for details in post_details_list:
         if not details:
             continue
 
+        msg_id = details["message_id"]
+
         if details.get("deleted"):
-            # Kanalda o'chirilgan post bo'lsa bazadan nofaol qilish
             existing = await db.get_product_by_channel_post(channel_id, msg_id)
             if existing and existing.get("is_active") == 1:
                 await db.deactivate_product_by_channel_post(channel_id, msg_id)
@@ -126,23 +159,18 @@ async def full_channel_sync(db: Database, channel_username: str, auto_activate: 
             deleted_count += 1
             continue
 
-        # Matn bo'lmasa yoki narx topilmasa o'tkazib yuborish
         if not raw_text or len(raw_text) < 5:
             continue
 
-        from bot.utils.currency import get_cbu_usd_rate
-        live_rate = await get_cbu_usd_rate()
         name, description, price, currency, price_uzs = parse_channel_post_content(raw_text, usd_rate=live_rate)
 
-        # Agar narx aniqlanmagan bo'lsa (e'lon yoki oddiy xabar)
         if not price or price <= 0:
             continue
 
-        # Rasmlarni saralash (smartfon/noutbuk qoidasi)
+        # Rasmlarni saralash (smartfon/noutbuk/planshet qoidasi)
         if photos:
             best_idx = await select_best_index_async(name, description, photos)
             primary_photo = photos[best_idx]
-            # Galereyada tanlangan asosiy rasm birinchi o'ringa joylanadi
             gallery_urls = [primary_photo] + [u for i, u in enumerate(photos) if i != best_idx]
         else:
             primary_photo = "/static/apple_3d_logo.png"
@@ -154,7 +182,6 @@ async def full_channel_sync(db: Database, channel_username: str, auto_activate: 
         # Mavjudligini tekshirish
         existing = await db.get_product_by_channel_post(channel_id, msg_id)
         if existing:
-            # Yangilash (agar avval yoki matnda chegirma bo'lsa is_discount=1 saqlanadi)
             disc_flag = 1 if (has_discount or existing.get("is_discount") == 1) else 0
             await db.execute("""
                 UPDATE products 
@@ -167,7 +194,7 @@ async def full_channel_sync(db: Database, channel_username: str, auto_activate: 
             updated_count += 1
             synced_items.append({"id": existing["id"], "name": name, "price": price, "action": "updated"})
         else:
-            # Takroriy tekshiruv (bitta mahsulot albom orqali bir necha xabarga bo'lingan bo'lishi mumkin)
+            # Takroriy tekshiruv (albom bir nechta postga bo'lingan bo'lsa)
             dup = await db.find_duplicate_product(name=name, description=description, price=price)
             if dup:
                 dup_id = dup["id"]
@@ -200,7 +227,7 @@ async def full_channel_sync(db: Database, channel_username: str, auto_activate: 
             created_count += 1
             synced_items.append({"id": pid, "name": name, "price": price, "action": "created"})
 
-    logger.info(f"Sinxronlash yakunlandi: Jami {scanned_count} ta post, Yangi: {created_count}, Yangilangan: {updated_count}, O'chirilgan: {deleted_count}")
+    logger.info(f"To'liq sinxronlash yakunlandi: Jami {scanned_count} ta post, Yangi: {created_count}, Yangilangan: {updated_count}, O'chirilgan: {deleted_count}")
     return {
         "scanned": scanned_count,
         "created": created_count,
