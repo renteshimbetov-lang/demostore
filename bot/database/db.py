@@ -229,7 +229,8 @@ class Database:
                     ("Noutbuklar", "laptop"),
                     ("Quloqchinlar va Audio", "headphones"),
                     ("Aqlli soatlar", "watch"),
-                    ("Aksessuarlar", "plug")
+                    ("Aksessuarlar", "plug"),
+                    ("Planshetlar", "tablet")
                 ]
                 for name, icon in categories:
                     await conn.execute(
@@ -607,7 +608,9 @@ class Database:
                 c_name = "Quloqchinlar va Audio"
             elif any(k in lower_name for k in ["macbook", "noutbuk", "laptop", "surface", "thinkpad", "asus", "lenovo", "dell", "hp", "acer", "matebook"]):
                 c_name = "Noutbuklar"
-            elif any(k in lower_name for k in ["iphone", "ayfon", "samsung", "galaxy", "redmi", "xiaomi", "smartfon", "pixel", "honor", "poco", "ipad", "planshet", "tablet"]):
+            elif any(k in lower_name for k in ["ipad", "planshet", "tablet"]):
+                c_name = "Planshetlar"
+            elif any(k in lower_name for k in ["iphone", "ayfon", "samsung", "galaxy", "redmi", "xiaomi", "smartfon", "pixel", "honor", "poco"]):
                 c_name = "Smartfonlar"
             elif any(k in lower_name for k in ["chexol", "case", "kabel", "cable", "adapter", "blok", "zaryadka", "remeshok", "steklo"]):
                 c_name = "Aksessuarlar"
@@ -619,6 +622,8 @@ class Database:
                 c_name = "Quloqchinlar va Audio"
             elif any(k in full_search for k in ["macbook", "noutbuk", "laptop", "macos", "m1 pro", "m2 pro", "m3 pro", "m4 pro", "retina"]):
                 c_name = "Noutbuklar"
+            elif any(k in full_search for k in ["ipad", "planshet", "tablet"]):
+                c_name = "Planshetlar"
             elif any(k in full_search for k in ["iphone", "ayfon", "samsung", "galaxy", "redmi", "xiaomi", "smartfon", "imei", "pixel"]):
                 c_name = "Smartfonlar"
             else:

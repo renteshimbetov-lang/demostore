@@ -159,6 +159,7 @@ def setup_admin_router(db: Database, bot: Bot) -> Router:
                 "💡 <i>Kanalga yangi post qo'yilganda '🔥 Hafta chegirmaga qo'shish' tugmasi orqali tovarlarni bu yerga biriktirishingiz mumkin.</i>"
             )
             keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="➕ Mahsulot qo'shish", callback_data="add_disc_list")],
                 [InlineKeyboardButton(text="Ortga", callback_data="admin_main")]
             ])
             if callback.message:
@@ -179,6 +180,7 @@ def setup_admin_router(db: Database, bot: Bot) -> Router:
                     callback_data=f"rem_disc_{p['id']}"
                 )
             ])
+        buttons.append([InlineKeyboardButton(text="➕ Yana mahsulot qo'shish", callback_data="add_disc_list")])
         buttons.append([InlineKeyboardButton(text="Ortga", callback_data="admin_main")])
 
         if callback.message:
@@ -196,6 +198,35 @@ def setup_admin_router(db: Database, bot: Bot) -> Router:
         name = prod["name"] if prod else "Mahsulot"
         await callback.answer(f"'{name}' Hafta chegirmalaridan chiqarildi.", show_alert=True)
         await show_discounts_callback(callback)
+
+    @router.callback_query(F.data == "add_disc_list")
+    async def add_discount_list_callback(callback: CallbackQuery):
+        if not is_admin(callback.from_user.id):
+            return
+        prods = await db.fetch("SELECT id, name, price, is_discount FROM products WHERE is_active = 1 ORDER BY id DESC LIMIT 20;")
+        text = "➕ <b>Hafta chegirmasiga mahsulot qo'shish / o'chirish</b>\n\nMahsulot ustiga bosing:"
+        buttons = []
+        for p in prods:
+            status = "🔥 " if p.get("is_discount") == 1 else ""
+            buttons.append([InlineKeyboardButton(text=f"{status}{p['name']} (${p['price']})", callback_data=f"toggle_disc_{p['id']}")])
+        buttons.append([InlineKeyboardButton(text="Ortga", callback_data="admin_discounts")])
+        if callback.message:
+            await callback.message.edit_text(text, reply_markup=InlineKeyboardMarkup(inline_keyboard=buttons), parse_mode="HTML")
+        await callback.answer()
+
+    @router.callback_query(F.data.startswith("toggle_disc_"))
+    async def toggle_discount_callback(callback: CallbackQuery):
+        if not is_admin(callback.from_user.id):
+            return
+        prod_id = int(callback.data.split("_")[2])
+        prod = await db.get_product(prod_id)
+        if prod:
+            new_val = 0 if prod.get("is_discount") == 1 else 1
+            await db.set_product_discount(prod_id, new_val)
+            name = prod["name"]
+            msg = f"'{name}' Hafta chegirmalariga qo'shildi!" if new_val == 1 else f"'{name}' Chegirmalardan chiqarildi."
+            await callback.answer(msg, show_alert=True)
+        await add_discount_list_callback(callback)
 
     @router.callback_query(F.data == "admin_orders")
     async def show_orders_callback(callback: CallbackQuery):

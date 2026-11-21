@@ -558,19 +558,32 @@
 
     // 1. SMARTFONLAR (Smartphones)
     if (catId === 1) {
-      // Noutbuk, soat, quloqchin hech qachon smartfon toifasiga kirmaydi
+      // Noutbuk, soat, quloqchin, planshet hech qachon smartfon toifasiga kirmaydi
       if (
         name.includes('macbook') || name.includes('surface') || name.includes('asus') || name.includes('laptop') || name.includes('noutbuk') ||
         name.includes('watch') || name.includes('soat') || name.includes('iwatch') ||
-        name.includes('airpods') || name.includes('quloqchin') || name.includes('naushnik') || name.includes('headphone')
+        name.includes('airpods') || name.includes('quloqchin') || name.includes('naushnik') || name.includes('headphone') ||
+        name.includes('ipad') || name.includes('planshet') || name.includes('tablet')
       ) {
         return false;
       }
-      if (p.category_id === 1 && !catName.includes('soat') && !catName.includes('audio') && !catName.includes('noutbuk')) return true;
+      if (p.category_id === 1 && !catName.includes('soat') && !catName.includes('audio') && !catName.includes('noutbuk') && !catName.includes('planshet')) return true;
       if (catName.includes('smartfon') || name.includes('iphone') || name.includes('samsung') || name.includes('galaxy') || name.includes('redmi')) {
         return true;
       }
       return false;
+    }
+
+    // 6. PLANSHETLAR (iPads / Tablets)
+    if (catId === 6) {
+      if (
+        name.includes('macbook') || name.includes('surface') || name.includes('asus') || name.includes('laptop') || name.includes('noutbuk') ||
+        name.includes('watch') || name.includes('soat') || name.includes('iwatch') ||
+        name.includes('airpods') || name.includes('quloqchin')
+      ) {
+        return false;
+      }
+      return p.category_id === 6 || catName.includes('planshet') || name.includes('ipad') || name.includes('tablet');
     }
 
     // 2. NOUTBUKLAR (Laptops)
@@ -628,6 +641,7 @@
       search_placeholder: "Mahsulotlarni qidirish...",
       cat_all: "Barchasi",
       cat_smartphones: "Smartfonlar",
+      cat_tablets: "Planshetlar",
       cat_laptops: "Noutbuklar",
       cat_audio: "Quloqchinlar va Audio",
       cat_watches: "Aqlli soatlar",
@@ -705,6 +719,7 @@
       search_placeholder: "Поиск товаров...",
       cat_all: "Все товары",
       cat_smartphones: "Смартфоны",
+      cat_tablets: "Планшеты",
       cat_laptops: "Ноутбуки",
       cat_audio: "Наушники и аудио",
       cat_watches: "Умные часы",
@@ -782,6 +797,7 @@
       search_placeholder: "Search products...",
       cat_all: "All Products",
       cat_smartphones: "Smartphones",
+      cat_tablets: "Tablets",
       cat_laptops: "Laptops",
       cat_audio: "Headphones & Audio",
       cat_watches: "Smart Watches",
@@ -2161,6 +2177,7 @@
     if (!list || list.length <= 1) return list;
     const buckets = {
       1: [], // Smartfonlar (iPhone)
+      6: [], // Planshetlar (iPad)
       2: [], // Noutbuklar (MacBook)
       4: [], // Aqlli soatlar (Apple Watch)
       3: [], // Quloqchinlar va Audio (AirPods)
@@ -2177,7 +2194,7 @@
     });
 
     const result = [];
-    const keys = [1, 2, 4, 3, 5, 'other'];
+    const keys = [1, 6, 2, 4, 3, 5, 'other'];
     let idx = 0;
     let hasMore = true;
     while (hasMore) {
@@ -2216,6 +2233,7 @@
     const catKeys = {
       0: 'cat_all',
       1: 'cat_smartphones',
+      6: 'cat_tablets',
       2: 'cat_laptops',
       3: 'cat_audio',
       4: 'cat_watches',

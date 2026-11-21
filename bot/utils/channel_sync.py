@@ -149,19 +149,21 @@ async def full_channel_sync(db: Database, channel_username: str, auto_activate: 
             gallery_urls = [primary_photo]
 
         post_url = details.get("post_url") or f"https://t.me/{clean_username}/{msg_id}"
+        has_discount = any(w in raw_text.lower() for w in ["#chegirma", "chegirma", "#aksiya", "aksiya", "#skidka", "skidka", "#haftachegirmasi", "#sale", "discount"])
 
         # Mavjudligini tekshirish
         existing = await db.get_product_by_channel_post(channel_id, msg_id)
         if existing:
-            # Yangilash
+            # Yangilash (agar avval yoki matnda chegirma bo'lsa is_discount=1 saqlanadi)
+            disc_flag = 1 if (has_discount or existing.get("is_discount") == 1) else 0
             await db.execute("""
                 UPDATE products 
                 SET name = $1, description = $2, price = $3, image_url = $4,
                     gallery_images = $5, post_url = $6, currency = $7, price_uzs = $8,
-                    is_active = $9, is_available = 1
-                WHERE id = $10;
+                    is_active = $9, is_available = 1, is_discount = $10
+                WHERE id = $11;
             """, name, description, price, primary_photo, json.dumps(gallery_urls),
-                 post_url, currency, price_uzs, 1 if auto_activate else existing.get("is_active", 0), existing["id"])
+                 post_url, currency, price_uzs, 1 if auto_activate else existing.get("is_active", 0), disc_flag, existing["id"])
             updated_count += 1
             synced_items.append({"id": existing["id"], "name": name, "price": price, "action": "updated"})
         else:
@@ -169,12 +171,13 @@ async def full_channel_sync(db: Database, channel_username: str, auto_activate: 
             dup = await db.find_duplicate_product(name=name, description=description, price=price)
             if dup:
                 dup_id = dup["id"]
+                disc_flag = 1 if (has_discount or dup.get("is_discount") == 1) else 0
                 await db.execute("""
                     UPDATE products 
                     SET post_url = $1, channel_id = $2, message_id = $3,
-                        gallery_images = $4, image_url = $5
-                    WHERE id = $6;
-                """, post_url, channel_id, msg_id, json.dumps(gallery_urls), primary_photo, dup_id)
+                        gallery_images = $4, image_url = $5, is_discount = $6
+                    WHERE id = $7;
+                """, post_url, channel_id, msg_id, json.dumps(gallery_urls), primary_photo, disc_flag, dup_id)
                 updated_count += 1
                 continue
 
@@ -192,6 +195,8 @@ async def full_channel_sync(db: Database, channel_username: str, auto_activate: 
                 currency=currency,
                 price_uzs=price_uzs
             )
+            if has_discount and pid:
+                await db.execute("UPDATE products SET is_discount = 1 WHERE id = $1;", pid)
             created_count += 1
             synced_items.append({"id": pid, "name": name, "price": price, "action": "created"})
 
