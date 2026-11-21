@@ -232,7 +232,7 @@
           <div class="section-top">
             <div class="section-title-wrap">
               <h2 class="section-title" id="sectionTitle" data-i18n="popular_products">Ommabop tovarlar</h2>
-              <span class="results-count-badge" id="resultsCount">Yuklanmoqda...</span>
+              <span class="results-count-badge" id="resultsCount" data-i18n="loading">Yuklanmoqda...</span>
             </div>
           </div>
 
@@ -265,9 +265,9 @@
                 <path d="M8 11h6"></path>
               </svg>
             </div>
-            <h3 class="empty-title">Hech narsa topilmadi</h3>
-            <p class="empty-description">Qidiruv soʻrovingiz yoki tanlangan narx boʻyicha mahsulot topilmadi.</p>
-            <button id="resetFiltersBtn" class="btn-buy" style="margin-top: 14px; width: auto; padding: 10px 24px;">
+            <h3 class="empty-title" data-i18n="empty_title">Hech narsa topilmadi</h3>
+            <p class="empty-description" data-i18n="empty_desc">Qidiruv soʻrovingiz yoki tanlangan narx boʻyicha mahsulot topilmadi.</p>
+            <button id="resetFiltersBtn" class="btn-buy" style="margin-top: 14px; width: auto; padding: 10px 24px;" data-i18n="reset_filters">
               Filtrlarni tozalash
             </button>
           </div>
@@ -297,18 +297,18 @@
         <!-- Katalogda narx bo'yicha qidirish ($ Dan - $ Gacha) -->
         <div class="catalog-price-filter-card" id="catalogPriceFilterCard">
           <div class="cpf-header">
-            <span class="cpf-title">Narx boʻyicha qidirish ($)</span>
-            <button type="button" class="cpf-reset-btn hidden" id="btnCatalogResetPrice">Tozalash</button>
+            <span class="cpf-title" data-i18n="filter_price_title">Narx boʻyicha qidirish ($)</span>
+            <button type="button" class="cpf-reset-btn hidden" id="btnCatalogResetPrice" data-i18n="clear">Tozalash</button>
           </div>
           <div class="cpf-inputs-row">
             <div class="cpf-input-group">
-              <span class="cpf-input-prefix">Dan</span>
+              <span class="cpf-input-prefix" data-i18n="price_dan">Dan</span>
               <input type="number" id="catalogPriceMin" class="cpf-input" placeholder="0" inputmode="numeric" />
               <span class="cpf-input-suffix">$</span>
             </div>
             <span class="cpf-divider">—</span>
             <div class="cpf-input-group">
-              <span class="cpf-input-prefix">Gacha</span>
+              <span class="cpf-input-prefix" data-i18n="price_gacha">Gacha</span>
               <input type="number" id="catalogPriceMax" class="cpf-input" placeholder="1500" inputmode="numeric" />
               <span class="cpf-input-suffix">$</span>
             </div>
@@ -319,7 +319,7 @@
         <div class="catalog-products-wrap">
           <div class="section-top" style="margin-top: 10px;">
             <div class="section-title-wrap">
-              <h2 class="section-title" id="catalogSectionTitle">Barcha mahsulotlar</h2>
+              <h2 class="section-title" id="catalogSectionTitle" data-i18n="all_products_title">Barcha mahsulotlar</h2>
               <span class="results-count-badge" id="catalogResultsCount">...</span>
             </div>
           </div>
@@ -331,8 +331,8 @@
       <section class="app-section hidden" id="sectionCart" data-section="cart">
         <div class="section-page-head">
           <div class="page-head-title-wrap">
-            <h1 class="page-head-title">Sizning savatingiz</h1>
-            <span class="page-head-subtitle" id="cartSectionSubtitle">0 ta mahsulot tanlandi</span>
+            <h1 class="page-head-title" data-i18n="cart_head_title">Sizning savatingiz</h1>
+            <span class="page-head-subtitle" id="cartSectionSubtitle" data-i18n="cart_empty_items">0 ta mahsulot tanlandi</span>
           </div>
           <button class="clear-cart-btn hidden" id="btnClearCart" title="Savatni tozalash">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -340,7 +340,7 @@
               <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
               <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
             </svg>
-            <span>Tozalash</span>
+            <span data-i18n="clear">Tozalash</span>
           </button>
         </div>
 
@@ -351,20 +351,20 @@
           <!-- Hisob-kitob va Xulosa bloki -->
           <div class="cart-checkout-card" id="cartSectionSummary">
             <div class="cart-summary-line">
-              <span>Mahsulotlar qiymati:</span>
+              <span data-i18n="subtotal">Mahsulotlar qiymati:</span>
               <strong id="cartSubtotalPrice">$0</strong>
             </div>
             <div class="cart-summary-line">
-              <span>Yetkazib berish:</span>
-              <span class="free-badge">Bepul</span>
+              <span data-i18n="delivery_label">Yetkazib berish:</span>
+              <span class="free-badge" data-i18n="free_badge">Bepul</span>
             </div>
             <div class="cart-summary-line">
-              <span>Rasmiy kafolat:</span>
-              <span class="guarantee-text">1 yil bepul xizmat</span>
+              <span data-i18n="warranty_label">Rasmiy kafolat:</span>
+              <span class="guarantee-text" data-i18n="warranty_text">1 yil bepul xizmat</span>
             </div>
             <div class="cart-divider"></div>
             <div class="cart-summary-line total-line">
-              <span>Jami toʻlov:</span>
+              <span data-i18n="total">Jami toʻlov:</span>
               <strong class="cart-total-price-large" id="cartFinalTotalPrice">$0</strong>
             </div>
             <button class="btn-buy btn-checkout-large btn-bounce" id="btnCheckoutSection" data-haptic="heavy">
@@ -372,11 +372,11 @@
                 <path d="m22 2-7 20-4-9-9-4Z"></path>
                 <path d="M22 2 11 13"></path>
               </svg>
-              <span>Telegram orqali buyurtma berish</span>
+              <span data-i18n="order_via_tg">Telegram orqali buyurtma berish</span>
             </button>
             <div class="cart-guarantee-note">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-              <span>100% original mahsulotlar • Ishonchli xarid</span>
+              <span data-i18n="trust_note">100% original mahsulotlar • Ishonchli xarid</span>
             </div>
           </div>
         </div>
@@ -390,9 +390,9 @@
               <path d="M16 10a4 4 0 0 1-8 0"></path>
             </svg>
           </div>
-          <h3 class="empty-box-title">Savatingiz hozircha boʻsh</h3>
-          <p class="empty-box-desc">Oʻzingizga kerakli original Apple qurilmasini tanlang va savatga qoʻshing.</p>
-          <button class="btn-buy btn-start-shopping" id="btnStartShopping">
+          <h3 class="empty-box-title" data-i18n="cart_empty_title">Savatingiz hozircha boʻsh</h3>
+          <p class="empty-box-desc" data-i18n="cart_empty_desc">Oʻzingizga kerakli original Apple qurilmasini tanlang va savatga qoʻshing.</p>
+          <button class="btn-buy btn-start-shopping" id="btnStartShopping" data-i18n="start_shopping">
             Katalogga oʻtish
           </button>
         </div>
@@ -402,8 +402,8 @@
       <section class="app-section hidden" id="sectionWishlist" data-section="wishlist">
         <div class="section-page-head">
           <div class="page-head-title-wrap">
-            <h1 class="page-head-title">Sevimlilar</h1>
-            <span class="page-head-subtitle" id="wishlistSectionSubtitle">0 ta saqlangan mahsulot</span>
+            <h1 class="page-head-title" data-i18n="wishlist_title">Sevimlilar</h1>
+            <span class="page-head-subtitle" id="wishlistSectionSubtitle" data-i18n="wishlist_empty_items">0 ta saqlangan mahsulot</span>
           </div>
         </div>
 
@@ -416,9 +416,9 @@
               <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
             </svg>
           </div>
-          <h3 class="empty-box-title">Sevimlilar roʻyxati boʻsh</h3>
-          <p class="empty-box-desc">Yoqqan mahsulotlaringizning yurakchasini bosib shu yerda saqlab qoʻyishingiz mumkin.</p>
-          <button class="btn-buy btn-start-shopping" id="btnBrowseProducts">
+          <h3 class="empty-box-title" data-i18n="wishlist_empty_title">Sevimlilar roʻyxati boʻsh</h3>
+          <p class="empty-box-desc" data-i18n="wishlist_empty_desc">Yoqqan mahsulotlaringizning yurakchasini bosib shu yerda saqlab qoʻyishingiz mumkin.</p>
+          <button class="btn-buy btn-start-shopping" id="btnBrowseProducts" data-i18n="start_shopping">
             Mahsulotlarni koʻrish
           </button>
         </div>
@@ -438,11 +438,11 @@
               <div class="profile-online-dot"></div>
             </div>
             <div class="profile-hero-info">
-              <h2 class="profile-user-name" id="profileUserName">Hurmatli mijoz</h2>
+              <h2 class="profile-user-name" id="profileUserName" data-i18n="default_client">Hurmatli mijoz</h2>
               <span class="profile-user-handle" id="profileUserHandle">@foydalanuvchi</span>
               <div class="profile-badge">
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 0 0 1.946-.806 3.42 3.42 0 0 1 4.438 0 3.42 3.42 0 0 0 1.946.806 3.42 3.42 0 0 1 3.138 3.138 3.42 3.42 0 0 0 .806 1.946 3.42 3.42 0 0 1 0 4.438 3.42 3.42 0 0 0-.806 1.946 3.42 3.42 0 0 1-3.138 3.138 3.42 3.42 0 0 0-1.946.806 3.42 3.42 0 0 1-4.438 0 3.42 3.42 0 0 0-1.946-.806 3.42 3.42 0 0 1-3.138-3.138 3.42 3.42 0 0 0-.806-1.946 3.42 3.42 0 0 1 0-4.438 3.42 3.42 0 0 0 .806-1.946 3.42 3.42 0 0 1 3.138-3.138z"/></svg>
-                <span>Tasdiqlangan mijoz</span>
+                <span data-i18n="customer_badge">Tasdiqlangan mijoz</span>
               </div>
             </div>
           </div>
@@ -455,27 +455,27 @@
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
             </div>
             <strong class="stat-pill-num" id="statCartCount">0</strong>
-            <span class="stat-pill-lbl">Savatda</span>
+            <span class="stat-pill-lbl" data-i18n="stat_in_cart">Savatda</span>
           </div>
           <div class="profile-stat-pill" id="statWishBox">
             <div class="stat-pill-icon wish-icon-color">
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
             </div>
             <strong class="stat-pill-num" id="statWishCount">0</strong>
-            <span class="stat-pill-lbl">Sevimli</span>
+            <span class="stat-pill-lbl" data-i18n="stat_fav">Sevimli</span>
           </div>
           <div class="profile-stat-pill">
             <div class="stat-pill-icon apple-icon-color">
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
             </div>
             <strong class="stat-pill-num">100%</strong>
-            <span class="stat-pill-lbl">Asl Apple</span>
+            <span class="stat-pill-lbl" data-i18n="stat_apple">Asl Apple</span>
           </div>
         </div>
 
         <!-- SOZLAMALAR GURUHI -->
         <div class="profile-section-group">
-          <div class="profile-section-label">Sozlamalar</div>
+          <div class="profile-section-label" data-i18n="app_settings">Sozlamalar</div>
           <div class="profile-list-card">
 
             <!-- Til tanlash -->
@@ -499,7 +499,7 @@
 
         <!-- BOG'LANISH GURUHI -->
         <div class="profile-section-group">
-          <div class="profile-section-label">Bog'lanish</div>
+          <div class="profile-section-label" data-i18n="support_title">Bog'lanish</div>
           <div class="profile-list-card">
 
             <a href="https://t.me/shbdbdjdhdjjdhd" target="_blank" class="profile-list-row profile-list-link">
@@ -507,7 +507,7 @@
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
               </div>
               <div class="profile-list-body">
-                <span class="profile-list-title">Rasmiy Telegram kanal</span>
+                <span class="profile-list-title" data-i18n="tg_channel">Rasmiy Telegram kanal</span>
                 <span class="profile-list-sub">@shbdbdjdhdjjdhd</span>
               </div>
               <svg class="profile-list-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m9 18 6-6-6-6"/></svg>
@@ -520,7 +520,7 @@
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
               </div>
               <div class="profile-list-body">
-                <span class="profile-list-title">Admin bilan yozishmalar</span>
+                <span class="profile-list-title" data-i18n="tg_manager">Admin bilan yozishmalar</span>
                 <span class="profile-list-sub">@eshmbetov</span>
               </div>
               <svg class="profile-list-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m9 18 6-6-6-6"/></svg>
@@ -533,7 +533,7 @@
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
               </div>
               <div class="profile-list-body">
-                <span class="profile-list-title">Telefon orqali qo'ng'iroq</span>
+                <span class="profile-list-title" data-i18n="phone_call">Telefon orqali qo'ng'iroq</span>
                 <span class="profile-list-sub">+998-93-169-90-03</span>
               </div>
               <svg class="profile-list-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m9 18 6-6-6-6"/></svg>
@@ -549,9 +549,9 @@
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
             </div>
             <div class="guarantee-text-wrap">
-              <strong class="guarantee-title">1 Yillik Rasmiy Kafolat</strong>
-              <p class="guarantee-desc">Barcha Apple qurilmalari yangi, qadoqlangan holda yetkaziladi. Toshkent bo'ylab 2 soatda, viloyatlarga 1 kunda yetkazib berish.</p>
-              <span class="guarantee-hours">🕘 Har kuni 09:00 — 22:00</span>
+              <strong class="guarantee-title" data-i18n="guarantee_title">1 Yillik Rasmiy Kafolat</strong>
+              <p class="guarantee-desc" data-i18n="guarantee_desc">Barcha Apple qurilmalari yangi, qadoqlangan holda yetkaziladi. Toshkent bo'ylab 2 soatda, viloyatlarga 1 kunda yetkazib berish.</p>
+              <span class="guarantee-hours" data-i18n="work_hours">🕘 Har kuni 09:00 — 22:00</span>
             </div>
           </div>
         </div>
@@ -584,7 +584,7 @@
         <!-- Suzuvchi pastki xarid paneli (Apple Minimalist) -->
         <div class="pd-bottom-bar" id="pdBottomBar">
           <div class="pd-price-box">
-            <span class="pd-price-label">Narxi:</span>
+            <span class="pd-price-label" data-i18n="price_label">Narxi:</span>
             <div class="pd-bottom-price-stack">
               <strong class="pd-bottom-usd-val" id="pdBottomPrice">$0</strong>
               <span class="pd-bottom-uzs-val" id="pdBottomPriceUzs">≈ 0 soʻm</span>
@@ -606,7 +606,7 @@
           <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
           <polyline points="9 22 9 12 15 12 15 22"></polyline>
         </svg>
-        <span>Bosh sahifa</span>
+        <span data-i18n="nav_home">Bosh sahifa</span>
       </button>
 
       <button class="dock-item" id="dockCatalog" data-tab="catalog" data-haptic="light">
@@ -616,7 +616,7 @@
           <rect x="14" y="14" width="7" height="7"></rect>
           <rect x="3" y="14" width="7" height="7"></rect>
         </svg>
-        <span>Katalog</span>
+        <span data-i18n="nav_catalog">Katalog</span>
       </button>
 
       <button class="dock-item" id="dockCart" data-tab="cart" data-haptic="medium">
@@ -628,7 +628,7 @@
           </svg>
           <span class="badge dock-badge hidden" id="dockCartBadge"></span>
         </div>
-        <span>Savat</span>
+        <span data-i18n="nav_cart">Savat</span>
       </button>
 
       <button class="dock-item" id="dockWishlist" data-tab="wishlist" data-haptic="light">
@@ -638,7 +638,7 @@
           </svg>
           <span class="badge dock-badge hidden" id="dockWishBadge"></span>
         </div>
-        <span>Sevimlilar</span>
+        <span data-i18n="nav_wishlist">Sevimlilar</span>
       </button>
 
       <button class="dock-item" id="dockProfile" data-tab="profile" data-haptic="light">
@@ -646,7 +646,7 @@
           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
           <circle cx="12" cy="7" r="4"></circle>
         </svg>
-        <span>Profil</span>
+        <span data-i18n="nav_profile">Profil</span>
       </button>
     </nav>
 
@@ -657,14 +657,14 @@
     <aside class="drawer drawer-left" id="leftNavDrawer" aria-label="Yon Menyu">
       <div class="drawer-head">
         <div class="drawer-title-row">
-          <span class="drawer-title">Menyu</span>
+          <span class="drawer-title" data-i18n="menu_title">Menyu</span>
         </div>
         <button class="icon-btn close-btn" id="btnCloseMenu" aria-label="Yopish">✕</button>
       </div>
       <div class="drawer-body">
         <div class="drawer-brand-card">
           <strong class="drawer-brand-name">DEMOSTORE</strong>
-          <p class="drawer-brand-desc">Asl Apple mahsulotlari va tezkor yetkazib berish xizmati.</p>
+          <p class="drawer-brand-desc" data-i18n="drawer_desc">Asl Apple mahsulotlari va tezkor yetkazib berish xizmati.</p>
         </div>
 
         <!-- Til tanlash (Language Switcher in Drawer) -->
@@ -680,23 +680,27 @@
         <nav class="nav-links-list">
           <a href="#" class="nav-link-row" data-action="all">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
-            <span>Bosh sahifa</span>
+            <span data-i18n="nav_home">Bosh sahifa</span>
           </a>
           <a href="#" class="nav-link-row" data-action="cat-1">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
-            <span>Smartfonlar (iPhone)</span>
+            <span data-i18n="cat_smartphones">Smartfonlar (iPhone)</span>
+          </a>
+          <a href="#" class="nav-link-row" data-action="cat-6">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
+            <span data-i18n="cat_tablets">Planshetlar (iPad)</span>
           </a>
           <a href="#" class="nav-link-row" data-action="cat-2">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="2" y1="20" x2="22" y2="20"></line></svg>
-            <span>Noutbuklar (MacBook)</span>
+            <span data-i18n="cat_laptops">Noutbuklar (MacBook)</span>
           </a>
           <a href="#" class="nav-link-row" data-action="cat-3">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"></path><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path></svg>
-            <span>Quloqchinlar va Audio</span>
+            <span data-i18n="cat_audio">Quloqchinlar va Audio</span>
           </a>
           <a href="#" class="nav-link-row" data-action="wishlist">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
-            <span>Sevimlilar roʻyxati</span>
+            <span data-i18n="nav_wishlist">Sevimlilar roʻyxati</span>
           </a>
           <a href="#" class="nav-link-row" data-action="cart">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -704,15 +708,15 @@
               <line x1="3" y1="6" x2="21" y2="6"></line>
               <path d="M16 10a4 4 0 0 1-8 0"></path>
             </svg>
-            <span>Savat</span>
+            <span data-i18n="nav_cart">Savat</span>
           </a>
           <a href="https://t.me/shbdbdjdhdjjdhd" target="_blank" class="nav-link-row external-link">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg>
-            <span>Rasmiy Telegram Kanal</span>
+            <span data-i18n="tg_channel">Rasmiy Telegram Kanal</span>
           </a>
           <a href="#" class="nav-link-row" data-action="contact">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-            <span>Bogʻlanish & Qoʻllab-quvvatlash</span>
+            <span data-i18n="support_title">Bogʻlanish & Qoʻllab-quvvatlash</span>
           </a>
           <a href="/admin" class="nav-link-row nav-link-admin hidden" id="navLinkAdmin" style="color: #6366f1; font-weight: 600;">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>
@@ -817,7 +821,7 @@
     </div>
   </div>
 
-  <script src="/static/mini_app_core.min.js?v=76.0"></script>
-  <script src="/static/app.min.js?v=76.0"></script>
+  <script src="/static/mini_app_core.min.js?v=78.0"></script>
+  <script src="/static/app.min.js?v=78.0"></script>
 </body>
 </html>

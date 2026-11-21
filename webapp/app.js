@@ -515,7 +515,7 @@
 
     if (!hasInstallment) return null;
     return {
-      initialPay: initialPay || "Boshlang'ich to'lov mavjud",
+      initialPay: initialPay || t('initial_payment_available'),
       plans: plans
     };
   }
@@ -667,6 +667,7 @@
       price_gacha: "Gacha",
       price_range_all: "Barchasi",
       view_in_channel: "Kanaldan koʻrish",
+      view_in_channel_long: "Telegram kanaldan koʻrish",
       adding: "Qo'shilmoqda...",
       added: "Qo'shildi!",
       clear: "Tozalash",
@@ -706,7 +707,34 @@
       profile_subtitle: "Shaxsiy kabinet va qoʻllab-quvvatlash",
       cart_title: "Savat",
       items_suffix: "ta mahsulot",
-      saved_suffix: "ta saqlangan mahsulot"
+      saved_suffix: "ta saqlangan mahsulot",
+      loading: "Yuklanmoqda...",
+      cart_head_title: "Sizning savatingiz",
+      all_products_title: "Barcha mahsulotlar",
+      delivery_label: "Yetkazib berish:",
+      free_badge: "Bepul",
+      warranty_label: "Rasmiy kafolat:",
+      warranty_text: "1 yil bepul xizmat",
+      order_via_tg: "Telegram orqali buyurtma berish",
+      trust_note: "100% original mahsulotlar • Ishonchli xarid",
+      default_client: "Hurmatli mijoz",
+      stat_in_cart: "Savatda",
+      stat_fav: "Sevimli",
+      stat_apple: "Asl Apple",
+      discount_label: "Chegirma",
+      save_suffix: "tejash",
+      old_price_prefix: "Avvalgi:",
+      weekly_discount_badge: "Hafta chegirmasi",
+      pd_guarantee_title: "1 YILLIK RASMIY KAFOLAT",
+      pd_guarantee_desc: "Ushbu Apple qurilmasi yangi va qadoqlangan holda yetkazib beriladi. Toʻlov tovar qoʻlingizga yetgach amalga oshiriladi.",
+      specs_title: "Asosiy parametrlar va xususiyatlar",
+      installment_title: "Boʻlib toʻlash (Muddatli toʻlov)",
+      initial_payment_available: "Boshlang'ich to'lov mavjud",
+      month_short: "oy",
+      menu_title: "Menyu",
+      drawer_desc: "Asl Apple mahsulotlari va tezkor yetkazib berish xizmati.",
+      cart_empty_items: "0 ta mahsulot tanlandi",
+      wishlist_empty_items: "0 ta saqlangan mahsulot"
     },
     ru: {
       lang_name: "Русский язык",
@@ -745,6 +773,7 @@
       price_gacha: "До",
       price_range_all: "Все цены",
       view_in_channel: "В канале",
+      view_in_channel_long: "Смотреть в Telegram-канале",
       adding: "Добавление...",
       added: "Добавлено!",
       clear: "Очистить",
@@ -784,7 +813,34 @@
       profile_subtitle: "Личный кабинет и поддержка",
       cart_title: "Корзина",
       items_suffix: "товаров",
-      saved_suffix: "сохраненных товаров"
+      saved_suffix: "сохраненных товаров",
+      loading: "Загрузка...",
+      cart_head_title: "Ваша корзина",
+      all_products_title: "Все товары",
+      delivery_label: "Доставка:",
+      free_badge: "Бесплатно",
+      warranty_label: "Официальная гарантия:",
+      warranty_text: "1 год бесплатного сервиса",
+      order_via_tg: "Оформить через Telegram",
+      trust_note: "100% оригинальная продукция • Надежная покупка",
+      default_client: "Уважаемый клиент",
+      stat_in_cart: "В корзине",
+      stat_fav: "В избранном",
+      stat_apple: "Оригинал Apple",
+      discount_label: "Скидка",
+      save_suffix: "экономия",
+      old_price_prefix: "Старая цена:",
+      weekly_discount_badge: "Скидка недели",
+      pd_guarantee_title: "1 ГОД ОФИЦИАЛЬНОЙ ГАРАНТИИ",
+      pd_guarantee_desc: "Данное устройство Apple доставляется новым и запечатанным. Оплата при получении товара.",
+      specs_title: "Основные характеристики",
+      installment_title: "Рассрочка (Оплата по частям)",
+      initial_payment_available: "Первоначальный взнос имеется",
+      month_short: "мес",
+      menu_title: "Меню",
+      drawer_desc: "Оригинальная продукция Apple и быстрая служба доставки.",
+      cart_empty_items: "0 товаров выбрано",
+      wishlist_empty_items: "0 сохраненных товаров"
     },
     en: {
       lang_name: "English",
@@ -823,6 +879,7 @@
       price_gacha: "To",
       price_range_all: "All prices",
       view_in_channel: "In Channel",
+      view_in_channel_long: "View in Telegram Channel",
       adding: "Adding...",
       added: "Added!",
       clear: "Clear",
@@ -862,7 +919,34 @@
       profile_subtitle: "Personal account and help center",
       cart_title: "Shopping Cart",
       items_suffix: "items",
-      saved_suffix: "saved items"
+      saved_suffix: "saved items",
+      loading: "Loading...",
+      cart_head_title: "Your Shopping Cart",
+      all_products_title: "All Products",
+      delivery_label: "Delivery:",
+      free_badge: "Free",
+      warranty_label: "Official Warranty:",
+      warranty_text: "1 year free service",
+      order_via_tg: "Order via Telegram",
+      trust_note: "100% genuine products • Trusted purchase",
+      default_client: "Valued Customer",
+      stat_in_cart: "In Cart",
+      stat_fav: "Favorites",
+      stat_apple: "Original Apple",
+      discount_label: "Discount",
+      save_suffix: "save",
+      old_price_prefix: "Regular:",
+      weekly_discount_badge: "Weekly Deal",
+      pd_guarantee_title: "1 YEAR OFFICIAL WARRANTY",
+      pd_guarantee_desc: "This Apple device is delivered brand new and factory sealed. Payment upon receiving goods.",
+      specs_title: "Key Specifications & Features",
+      installment_title: "Installment Plan",
+      initial_payment_available: "Down payment option available",
+      month_short: "mo",
+      menu_title: "Menu",
+      drawer_desc: "Original Apple products and express delivery service.",
+      cart_empty_items: "0 items selected",
+      wishlist_empty_items: "0 saved items"
     }
   };
 
@@ -1073,6 +1157,16 @@
     // Qidiruv input placeholderi
     if (searchInputEl) searchInputEl.placeholder = t('search_placeholder');
 
+    // Narx filtri placeholderlari
+    const pMin = document.getElementById('filterPriceMin');
+    if (pMin) pMin.placeholder = t('price_dan');
+    const pMax = document.getElementById('filterPriceMax');
+    if (pMax) pMax.placeholder = t('price_gacha');
+    const cpMin = document.getElementById('catalogPriceMin');
+    if (cpMin) cpMin.placeholder = t('price_dan');
+    const cpMax = document.getElementById('catalogPriceMax');
+    if (cpMax) cpMax.placeholder = t('price_gacha');
+
     // Barcha data-i18n elementlarini matn bilan to'ldirish
     document.querySelectorAll('[data-i18n]').forEach(el => {
       const k = el.dataset.i18n;
@@ -1095,6 +1189,21 @@
 
     // Mahsulot batafsil va barcha kartochka tugmalari yozuvlarini sinxronlash
     syncAllProductButtons();
+
+    // Savat va sevimlilar sarlavhalari hisoblagichini doimo yangilash
+    if (cartSectionSubtitleEl) {
+      const cartCount = Object.values(state.cart).reduce((sum, i) => sum + i.qty, 0);
+      cartSectionSubtitleEl.textContent = `${cartCount} ${t('items_suffix')}`;
+    }
+    if (wishlistSectionSubtitleEl) {
+      const favCount = state.products.filter(p => state.wishlist.has(p.id)).length;
+      wishlistSectionSubtitleEl.textContent = `${favCount} ${t('saved_suffix')}`;
+    }
+
+    // Agar mahsulot batafsil oynasi ochiq bo'lsa, undagi yozuvlarni ham yangilash
+    if (state.currentTab === 'product-detail' && state.selectedProduct) {
+      openProductModal(state.selectedProduct);
+    }
 
     // Agar mahsulotlar mavjud bo'lsa, joriy bo'limni yangilash
     if (state.products && state.products.length > 0) {
@@ -1904,7 +2013,7 @@
     const totalCount = items.reduce((sum, i) => sum + i.qty, 0);
 
     if (cartSectionSubtitleEl) {
-      cartSectionSubtitleEl.textContent = `${totalCount} ta mahsulot tanlandi`;
+      cartSectionSubtitleEl.textContent = `${totalCount} ${t('items_suffix')}`;
     }
 
     if (items.length === 0) {
@@ -2067,7 +2176,7 @@
     const favProducts = state.products.filter(p => state.wishlist.has(p.id));
 
     if (wishlistSectionSubtitleEl) {
-      wishlistSectionSubtitleEl.textContent = `${favProducts.length} ta saqlangan mahsulot`;
+      wishlistSectionSubtitleEl.textContent = `${favProducts.length} ${t('saved_suffix')}`;
     }
 
     if (favProducts.length === 0) {
@@ -2083,7 +2192,7 @@
       html += `
         <article class="product-card" data-id="${p.id}">
           <div class="card-media">
-            <button class="wishlist-btn active" data-id="${p.id}" aria-label="Sevimlilar">
+            <button class="wishlist-btn active" data-id="${p.id}" aria-label="${t('nav_wishlist')}">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="#ef4444" stroke="#ef4444" stroke-width="2">
                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
               </svg>
@@ -2102,7 +2211,7 @@
                     <path d="m22 2-7 20-4-9-9-4Z"></path>
                     <path d="M22 2 11 13"></path>
                   </svg>
-                  <span>Kanaldan koʻrish</span>
+                  <span>${t('view_in_channel')}</span>
                 </button>
               ` : '<div class="btn-channel-placeholder"></div>'}
             </div>
@@ -2290,13 +2399,13 @@
       html += `
         <article class="product-card" data-id="${p.id}">
           <div class="card-media">
-            <button class="wishlist-btn ${isFav ? 'active' : ''}${isDiscount ? ' has-gift' : ''}" data-id="${p.id}" aria-label="Sevimlilar">
+            <button class="wishlist-btn ${isFav ? 'active' : ''}${isDiscount ? ' has-gift' : ''}" data-id="${p.id}" aria-label="${t('nav_wishlist')}">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="${isFav ? '#ef4444' : 'none'}" stroke="currentColor" stroke-width="2">
                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
               </svg>
             </button>
             ${isDiscount ? `
-              <div class="gift-badge" title="Hafta chegirmasi -${discountRate}%">
+              <div class="gift-badge" title="${t('weekly_discount_badge')} -${discountRate}%">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                   <polyline points="20 12 20 22 4 22 4 12"></polyline>
                   <rect x="2" y="7" width="20" height="5"></rect>
@@ -2307,10 +2416,10 @@
               </div>
               <div class="gift-info-strip">
                 <span class="gift-strip-emoji">🎁</span>
-                <span class="gift-strip-label">Chegirma</span>
+                <span class="gift-strip-label">${t('discount_label')}</span>
                 <span class="gift-strip-pct">-${discountRate}%</span>
                 <span class="gift-strip-sep">·</span>
-                <span class="gift-strip-saved">${savedStr} tejash</span>
+                <span class="gift-strip-saved">${savedStr} ${t('save_suffix')}</span>
               </div>
             ` : ''}
             <img src="${getProductImageUrl(p)}" alt="${escapeHtml(p.name)}" class="product-img" loading="lazy" decoding="async" onerror="this.onerror=null; this.src='${FALLBACK_IMAGE_URL}';" />
@@ -2319,7 +2428,7 @@
             <span class="product-brand">${brand}</span>
             <h3 class="product-title">${escapeHtml(getCleanCardTitle(p.name))}</h3>
             ${renderProductPriceBlock(p)}
-            ${isDiscount && oldPriceStr ? `<div class="gift-old-price-row"><span class="gift-old-price-label">Avvalgi:</span><span class="gift-old-price-val">${oldPriceStr}</span></div>` : ''}
+            ${isDiscount && oldPriceStr ? `<div class="gift-old-price-row"><span class="gift-old-price-label">${t('old_price_prefix')}</span><span class="gift-old-price-val">${oldPriceStr}</span></div>` : ''}
             <div class="card-actions-stack">
               ${getCartButtonHtml(p.id)}
               ${p.post_url ? `
@@ -2400,22 +2509,23 @@
   // 7. PROFIL BO'LIMI (PROFILE SECTION)
   // ==========================================================================
   function renderProfileSection() {
-    const user = tg?.initDataUnsafe?.user;
+    const user = window.TelegramUser || window.Telegram?.WebApp?.initDataUnsafe?.user || tg?.initDataUnsafe?.user;
     if (user) {
       if (profileUserNameEl) {
         const name = [user.first_name, user.last_name].filter(Boolean).join(' ');
-        profileUserNameEl.textContent = name || 'Hurmatli mijoz';
+        profileUserNameEl.textContent = name || t('default_client');
       }
       if (profileUserHandleEl) {
         profileUserHandleEl.textContent = user.username ? `@${user.username}` : `ID: ${user.id}`;
       }
       if (profileAvatarEl) {
-        if (user.photo_url) {
-          profileAvatarEl.innerHTML = `<img src="${user.photo_url}" alt="Avatar" class="profile-avatar-img" />`;
-        } else {
-          const initials = (user.first_name ? user.first_name[0] : 'D') + (user.last_name ? user.last_name[0] : 'S');
-          profileAvatarEl.textContent = initials.toUpperCase();
-        }
+        const initials = ((user.first_name ? user.first_name[0] : 'D') + (user.last_name ? user.last_name[0] : 'S')).toUpperCase();
+        const avatarSrc = user.photo_url || `/api/user_avatar/${user.id}`;
+        profileAvatarEl.innerHTML = `<img src="${avatarSrc}" alt="Avatar" class="profile-avatar-img" onerror="this.onerror=null; this.parentElement.textContent='${initials}';" />`;
+      }
+    } else {
+      if (profileUserNameEl) {
+        profileUserNameEl.textContent = t('default_client');
       }
     }
 
@@ -2425,7 +2535,7 @@
 
     const isLight = document.documentElement.classList.contains('light');
     if (currentThemeLabelEl) {
-      currentThemeLabelEl.textContent = isLight ? 'Kunduzgi rejim faol' : 'Tungi rejim faol';
+      currentThemeLabelEl.textContent = isLight ? t('theme_light_active') : t('theme_dark_active');
     }
   }
 
@@ -2514,7 +2624,7 @@
       
       ${specs.length > 0 ? `
         <div class="specs-container">
-          <div class="specs-title">Asosiy parametrlar va xususiyatlar</div>
+          <div class="specs-title">${t('specs_title')}</div>
           <div class="specs-list">
             ${specs.map(s => `
               <div class="spec-row">
@@ -2526,7 +2636,7 @@
         </div>
       ` : (cleanDesc ? `
         <div class="specs-container">
-          <div class="specs-title">Asosiy parametrlar va xususiyatlar</div>
+          <div class="specs-title">${t('specs_title')}</div>
           <div class="pd-description-body">
             ${cleanDesc.split('\n').map(l => l.trim() ? `<p class="pd-desc-line">${escapeHtml(l)}</p>` : `<div class="pd-desc-spacer"></div>`).join('')}
           </div>
@@ -2540,7 +2650,7 @@
               <rect width="20" height="14" x="2" y="5" rx="2"></rect>
               <line x1="2" x2="22" y1="10" y2="10"></line>
             </svg>
-            <span>Boʻlib toʻlash (Muddatli toʻlov)</span>
+            <span>${t('installment_title')}</span>
           </div>
           <div class="installment-initial">${escapeHtml(installmentPlan.initialPay)}</div>
           <div class="installment-pills">
@@ -2556,14 +2666,14 @@
               <path d="m22 2-7 20-4-9-9-4Z"></path>
               <path d="M22 2 11 13"></path>
             </svg>
-            <span>Telegram kanaldan koʻrish</span>
+            <span>${t('view_in_channel_long')}</span>
           </button>
         </div>
       ` : ''}
 
       <div class="store-guarantee-card" style="margin: 16px 0 24px;">
-        <strong class="guarantee-card-title">1 YILLIK RASMIY KAFOLAT</strong>
-        <p class="guarantee-card-desc">Ushbu Apple qurilmasi yangi va qadoqlangan holda yetkazib beriladi. Toʻlov tovar qoʻlingizga yetgach amalga oshiriladi.</p>
+        <strong class="guarantee-card-title">${t('pd_guarantee_title')}</strong>
+        <p class="guarantee-card-desc">${t('pd_guarantee_desc')}</p>
       </div>
     `;
 
@@ -3418,13 +3528,13 @@
       html += `
         <article class="product-card" data-id="${p.id}">
           <div class="card-media">
-            <button class="wishlist-btn ${isFav ? 'active' : ''}${isDiscount ? ' has-gift' : ''}" data-id="${p.id}" aria-label="Sevimlilar">
+            <button class="wishlist-btn ${isFav ? 'active' : ''}${isDiscount ? ' has-gift' : ''}" data-id="${p.id}" aria-label="${t('nav_wishlist')}">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="${isFav ? '#ef4444' : 'none'}" stroke="currentColor" stroke-width="2">
                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
               </svg>
             </button>
             ${isDiscount ? `
-              <div class="gift-badge" title="Hafta chegirmasi -${discountRate}%">
+              <div class="gift-badge" title="${t('weekly_discount_badge')} -${discountRate}%">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                   <polyline points="20 12 20 22 4 22 4 12"></polyline>
                   <rect x="2" y="7" width="20" height="5"></rect>
@@ -3435,10 +3545,10 @@
               </div>
               <div class="gift-info-strip">
                 <span class="gift-strip-emoji">🎁</span>
-                <span class="gift-strip-label">Chegirma</span>
+                <span class="gift-strip-label">${t('discount_label')}</span>
                 <span class="gift-strip-pct">-${discountRate}%</span>
                 <span class="gift-strip-sep">·</span>
-                <span class="gift-strip-saved">${savedStr} tejash</span>
+                <span class="gift-strip-saved">${savedStr} ${t('save_suffix')}</span>
               </div>
             ` : ''}
             <img src="${getProductImageUrl(p)}" alt="${escapeHtml(p.name)}" class="product-img" loading="lazy" decoding="async" onerror="this.onerror=null; this.src='${FALLBACK_IMAGE_URL}';" />
@@ -3447,7 +3557,7 @@
             <span class="product-brand">${brand}</span>
             <h3 class="product-title">${escapeHtml(getCleanCardTitle(p.name))}</h3>
             ${renderProductPriceBlock(p)}
-            ${isDiscount && oldPriceStr ? `<div class="gift-old-price-row"><span class="gift-old-price-label">Avvalgi:</span><span class="gift-old-price-val">${oldPriceStr}</span></div>` : ''}
+            ${isDiscount && oldPriceStr ? `<div class="gift-old-price-row"><span class="gift-old-price-label">${t('old_price_prefix')}</span><span class="gift-old-price-val">${oldPriceStr}</span></div>` : ''}
             <div class="card-actions-stack">
               ${getCartButtonHtml(p.id)}
               ${p.post_url ? `

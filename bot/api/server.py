@@ -198,6 +198,57 @@ def create_web_app(db: Database, webapp_dir: str, bot=None) -> web.Application:
                     headers={"Cache-Control": "no-cache, no-store, must-revalidate"}
                 )
 
+    async def get_user_avatar_proxy(request: web.Request) -> web.Response:
+        """
+        Telegram foydalanuvchisining haqiqiy profil rasmini (avatarini) xavfsiz proksi qilib berish.
+        Foydalanuvchi rasmini 24 soat keshlaydi. Rasm bo'lmasa 404 qaytaradi.
+        """
+        user_id_str = request.match_info.get("user_id", "").strip()
+        if not user_id_str or not user_id_str.isdigit():
+            fb_bytes, fb_type = _get_fallback_image(webapp_dir)
+            return web.Response(body=fb_bytes, content_type=fb_type, status=404)
+
+        user_id = int(user_id_str)
+        cache_key = f"avatar_{user_id}"
+
+        # 1. Kesh tekshiruvi (L1 RAM + L2 Redis)
+        cached = await cache_manager.get_photo(cache_key)
+        if cached:
+            c_bytes, c_type = cached
+            return web.Response(
+                body=c_bytes,
+                content_type=c_type,
+                headers={"Cache-Control": "public, max-age=86400"}
+            )
+
+        # 2. Telegram Bot API orqali profil rasmlarini so'rash
+        if bot:
+            try:
+                photos = await bot.get_user_profile_photos(user_id=user_id, limit=1)
+                if photos and photos.total_count > 0 and photos.photos:
+                    # photos.photos[0] - eng so'nggi yuklangan rasmning barcha o'lchamlari
+                    file_id = photos.photos[0][-1].file_id
+                    file_info = await bot.get_file(file_id)
+                    if file_info.file_path:
+                        token = getattr(bot, "token", config.bot_token)
+                        url = f"https://api.telegram.org/file/bot{token}/{file_info.file_path}"
+                        session = await _get_photo_session()
+                        async with session.get(url, timeout=aiohttp.ClientTimeout(total=8)) as resp:
+                            if resp.status == 200:
+                                img_bytes = await resp.read()
+                                ctype = resp.headers.get("Content-Type", "image/jpeg")
+                                await cache_manager.set_photo(cache_key, img_bytes, ctype, ttl_seconds=86400)
+                                return web.Response(
+                                    body=img_bytes,
+                                    content_type=ctype,
+                                    headers={"Cache-Control": "public, max-age=86400"}
+                                )
+            except Exception as e:
+                logger.warning(f"Foydalanuvchi avatarini yuklashda xatolik ({user_id}): {e}")
+
+        # Rasm topilmadi yoki maxfiylik sozlamalari tufayli yopiq
+        return web.Response(status=404)
+
     async def get_categories(request: web.Request) -> web.Response:
         categories = await db.get_categories()
         return web.json_response(categories)
@@ -661,6 +712,7 @@ def create_web_app(db: Database, webapp_dir: str, bot=None) -> web.Application:
 
     # Marshrutlarni ro'yxatdan o'tkazish
     app.router.add_get("/api/photo/{file_id}", get_photo_proxy)
+    app.router.add_get("/api/user_avatar/{user_id}", get_user_avatar_proxy)
     app.router.add_get("/api/categories", get_categories)
     app.router.add_get("/api/currency", get_currency)
     app.router.add_get("/api/products", get_products)
