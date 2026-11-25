@@ -36,7 +36,7 @@ def load_config() -> Config:
 
     database_url = os.getenv("DATABASE_URL", "").strip()
     db_path = os.getenv("DATABASE_PATH", "demostore.db").strip()
-    store_name = os.getenv("STORE_NAME", "Demo Store").strip()
+    store_name = os.getenv("STORE_NAME", "PApple").strip()
     support_phone = os.getenv("SUPPORT_PHONE", "+998901234567").strip()
     support_username = os.getenv("SUPPORT_USERNAME", "@demostore_support").strip()
     render_external_url = os.getenv("RENDER_EXTERNAL_URL", "").strip()

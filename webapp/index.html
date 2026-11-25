@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <title>TechnoPrice — Texnika va Gadjetlar | Mini App</title>
+  <title>PApple — Malika bozori, A blok, 12-doʻkon | Mini App</title>
   
   <!-- Telegram Web App SDK -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -15,8 +15,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="/static/mini_app_buttons.min.css?v=81.0" />
-  <link rel="stylesheet" href="/static/app.min.css?v=81.0" />
+  <link rel="stylesheet" href="/static/mini_app_buttons.min.css?v=82.0" />
+  <link rel="stylesheet" href="/static/app.min.css?v=82.0" />
 </head>
 <body>
   <!-- TechnoPrice Kirish Animatsiyasi (Logo Markazda Chiqib -> Chapga Suriladi -> Yonidan Matn Chiqadi) -->
@@ -26,26 +26,29 @@
 
     <!-- Markaziy Brend Sahna -->
     <div class="splash-brand-stage" id="splashBrandStage">
-      <!-- 1. TechnoPrice Icon (Avval markazda chiqadi, so'ng chapga suriladi) -->
+      <!-- 1. PApple Icon -->
       <div class="splash-logo-container" id="splashLogoContainer">
-        <img
-          src="/static/technoprice_icon.png?v=79.0"
-          alt="TechnoPrice Logo"
-          class="splash-logo-img splash-logo-technoprice"
-          width="74"
-          height="74"
-          fetchpriority="high"
-        />
+        <svg class="splash-logo-img" viewBox="0 0 64 64" width="76" height="76" aria-hidden="true">
+          <defs>
+            <linearGradient id="pg-h-splash" gradientUnits="userSpaceOnUse" x1="10" y1="8" x2="54" y2="56">
+              <stop offset="0" stop-color="#f9e7b0"></stop>
+              <stop offset=".42" stop-color="#e2bd4f"></stop>
+              <stop offset="1" stop-color="#a47c16"></stop>
+            </linearGradient>
+          </defs>
+          <rect width="64" height="64" rx="18" fill="#111" stroke="#333" stroke-width="1.5"></rect>
+          <path d="M22 46V18h12a8 8 0 0 1 0 16H22" fill="none" stroke="url(#pg-h-splash)" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"></path>
+          <circle cx="42" cy="38" r="4" fill="#e2bd4f"></circle>
+        </svg>
         <div class="splash-logo-glow"></div>
       </div>
 
-      <!-- 2. Do'kon nomi: yuqorida "techno", uning pastidan "price" -->
+      <!-- 2. Do'kon nomi: P qorada, APPLE sariqda -->
       <div class="splash-text-container" id="splashTextContainer">
-        <div class="splash-brand-words">
-          <span class="splash-word splash-word-techno">techno</span>
-          <span class="splash-word splash-word-price">price</span>
+        <div class="splash-brand-words papple-splash-title">
+          <span class="papple-p-box">P</span><span class="papple-apple-gold">APPLE</span>
         </div>
-        <span class="splash-subtitle">ONLINE STORE</span>
+        <span class="splash-subtitle">MALIKA BOZORI, A-12</span>
       </div>
     </div>
 
@@ -125,10 +128,21 @@
 
         <!-- Markaz: Logo -->
         <div class="brand-center-group">
-          <a href="#" class="brand-logo brand-logo-technoprice" id="logoBtn" aria-label="technoprice">
-            <span class="logo-technoprice-wrap">
-              <img src="/static/technoprice_logo.png?v=79.0" alt="technoprice" class="logo-technoprice-img light-mode-logo" />
-              <img src="/static/technoprice_logo_white.png?v=79.0" alt="technoprice" class="logo-technoprice-img dark-mode-logo" />
+          <a href="#" class="brand-logo papple-brand-link" id="logoBtn" aria-label="PApple">
+            <svg class="papple-mark" viewBox="0 0 64 64" width="30" height="30" aria-hidden="true" focusable="false">
+              <defs>
+                <linearGradient id="pg-h-head" gradientUnits="userSpaceOnUse" x1="10" y1="8" x2="54" y2="56">
+                  <stop offset="0" stop-color="#f9e7b0"></stop>
+                  <stop offset=".42" stop-color="#e2bd4f"></stop>
+                  <stop offset="1" stop-color="#a47c16"></stop>
+                </linearGradient>
+              </defs>
+              <rect width="64" height="64" rx="18" fill="#000"></rect>
+              <path d="M22 46V18h12a8 8 0 0 1 0 16H22" fill="none" stroke="url(#pg-h-head)" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"></path>
+              <circle cx="42" cy="38" r="3.5" fill="#e2bd4f"></circle>
+            </svg>
+            <span class="papple-brand-name">
+              <span class="p-char">P</span><span class="apple-char">APPLE</span>
             </span>
           </a>
         </div>
@@ -221,8 +235,8 @@
             </svg>
           </div>
           <div class="papple-hero-content">
-            <span class="papple-hero-badge">PApple & TechnoPrice</span>
-            <h1 class="papple-hero-title">Premium Texnika va Gadjetlar</h1>
+            <span class="papple-hero-badge"><span class="badge-p">P</span><span class="badge-apple">APPLE</span> · Malika bozori, A-12</span>
+            <h1 class="papple-hero-title"><span class="title-p">P</span><span class="title-apple">APPLE</span> Doʻkoni</h1>
             <p class="papple-hero-sub">Malika bozori, A blok, 12-doʻkon. Halqaro kafolat va xavfsiz yetkazib berish.</p>
             <div class="papple-hero-actions">
               <button type="button" class="pill dark" id="btnHeroKatalogNav">
@@ -625,7 +639,7 @@
         </div>
 
         <!-- APP VERSION -->
-        <div class="profile-app-version">TechnoPrice v2.0 · Telegram Mini App</div>
+        <div class="profile-app-version"><span class="p-char">P</span><span class="apple-char">APPLE</span> v2.0 · Telegram Mini App</div>
 
       </section>
 
@@ -731,8 +745,8 @@
       </div>
       <div class="drawer-body">
         <div class="drawer-brand-card">
-          <strong class="drawer-brand-name">TECHNOPRICE</strong>
-          <p class="drawer-brand-desc" data-i18n="drawer_desc">Eng sifatli texnika mahsulotlari va tezkor yetkazib berish xizmati.</p>
+          <strong class="drawer-brand-name"><span class="p-char">P</span><span class="apple-char">APPLE</span></strong>
+          <p class="drawer-brand-desc" data-i18n="drawer_desc">Malika bozori, A blok, 12-doʻkon. Rasmiy kafolat va tezkor yetkazib berish xizmati.</p>
         </div>
 
         <!-- Til tanlash (Language Switcher in Drawer) -->
@@ -889,7 +903,7 @@
     </div>
   </div>
 
-  <script src="/static/mini_app_core.min.js?v=81.0"></script>
-  <script src="/static/app.min.js?v=81.0"></script>
+  <script src="/static/mini_app_core.min.js?v=82.0"></script>
+  <script src="/static/app.min.js?v=82.0"></script>
 </body>
 </html>

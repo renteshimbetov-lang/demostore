@@ -5014,6 +5014,87 @@ h1, h2, h3, h4, .section-title, .product-title, .papple-hero-title, .deals-secti
   stroke: var(--papple-gold-deep) !important;
 }
 
+/* ==========================================================================
+   PAPPLE BRAND IDENTITY (P in Black, APPLE in Gold/Yellow)
+   ========================================================================== */
+
+.papple-brand-link {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  text-decoration: none !important;
+  cursor: pointer !important;
+}
+.papple-mark {
+  flex: 0 0 30px;
+  width: 30px;
+  height: 30px;
+  display: block;
+}
+.papple-brand-name {
+  font-family: 'Manrope', system-ui, sans-serif !important;
+  font-size: 21px !important;
+  line-height: 1 !important;
+  letter-spacing: -0.04em !important;
+  display: inline-flex !important;
+  align-items: baseline !important;
+}
+.p-char {
+  color: #000000 !important;
+  font-weight: 900 !important;
+}
+.apple-char {
+  color: #e2bd4f !important;
+  font-weight: 800 !important;
+}
+
+/* Splash Screen PAPPLE */
+.papple-splash-title {
+  display: inline-flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 2px !important;
+  font-family: 'Manrope', system-ui, sans-serif !important;
+  font-size: 32px !important;
+  letter-spacing: -0.04em !important;
+  line-height: 1 !important;
+}
+.papple-p-box {
+  background: #ffffff !important;
+  color: #000000 !important;
+  font-weight: 900 !important;
+  border-radius: 8px !important;
+  padding: 1px 7px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4) !important;
+}
+.papple-apple-gold {
+  color: #e2bd4f !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.03em !important;
+}
+
+/* Hero Badge & Title PAPPLE */
+.badge-p {
+  color: #ffffff !important;
+  font-weight: 900 !important;
+}
+.badge-apple {
+  color: #e2bd4f !important;
+  font-weight: 800 !important;
+}
+.title-p {
+  color: #000000 !important;
+  font-weight: 900 !important;
+}
+.title-apple {
+  color: #e2bd4f !important;
+  font-weight: 800 !important;
+}
+
+
 
 
 
