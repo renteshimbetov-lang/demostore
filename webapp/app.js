@@ -695,11 +695,11 @@
       tg_channel: "Rasmiy Telegram Kanal",
       tg_manager: "Menejer bilan aloqa (Buyurtma)",
       phone_call: "Telefon orqali qoʻngʻiroq",
-      guarantee_title: "DEMOSTORE KAFOLATI",
-      guarantee_desc: "Barcha Apple qurilmalari yangi va qadoqlangan holatda yetkaziladi. Toshkent boʻylab 2 soatda, viloyatlarga 1 kunda yetkazib berish mavjud.",
+      guarantee_title: "TECHNOPRICE KAFOLATI",
+      guarantee_desc: "Barcha texnika qurilmalari yangi va qadoqlangan holatda yetkaziladi. Toshkent boʻylab 2 soatda, viloyatlarga 1 kunda yetkazib berish mavjud.",
       work_hours: "Ish vaqti: Har kuni 09:00 dan 22:00 gacha",
-      original_apple: "Asl Apple",
-      customer_badge: "DemoStore mijozi",
+      original_apple: "100% Kafolat",
+      customer_badge: "TechnoPrice mijozi",
       catalog_title: "Katalog",
       catalog_subtitle: "Toifani tanlang yoki barcha tovarlarni koʻring",
       wishlist_title: "Sevimlilar",
@@ -801,11 +801,11 @@
       tg_channel: "Официальный Telegram канал",
       tg_manager: "Связь с менеджером (Заказ)",
       phone_call: "Звонок по телефону",
-      guarantee_title: "ГАРАНТИЯ DEMOSTORE",
-      guarantee_desc: "Все устройства Apple доставляются новыми и запечатанными. Доставка по Ташкенту за 2 часа, в регионы — за 1 день.",
+      guarantee_title: "ГАРАНТИЯ TECHNOPRICE",
+      guarantee_desc: "Все устройства доставляются новыми и запечатанными. Доставка по Ташкенту за 2 часа, в регионы — за 1 день.",
       work_hours: "Режим работы: Ежедневно с 09:00 до 22:00",
-      original_apple: "Оригинал Apple",
-      customer_badge: "Клиент DemoStore",
+      original_apple: "100% Гарантия",
+      customer_badge: "Клиент TechnoPrice",
       catalog_title: "Каталог",
       catalog_subtitle: "Выберите категорию или посмотрите все товары",
       wishlist_title: "Избранное",
@@ -907,11 +907,11 @@
       tg_channel: "Official Telegram Channel",
       tg_manager: "Contact Manager (Order)",
       phone_call: "Phone Call",
-      guarantee_title: "DEMOSTORE GUARANTEE",
-      guarantee_desc: "All Apple devices are delivered brand new and sealed. Express delivery across Tashkent within 2 hours, regions within 1 day.",
+      guarantee_title: "TECHNOPRICE GUARANTEE",
+      guarantee_desc: "All devices are delivered brand new and sealed. Express delivery across Tashkent within 2 hours, regions within 1 day.",
       work_hours: "Working hours: Daily 09:00 to 22:00",
       original_apple: "100% Genuine",
-      customer_badge: "DemoStore Customer",
+      customer_badge: "TechnoPrice Customer",
       catalog_title: "Catalog",
       catalog_subtitle: "Select a category or browse all devices",
       wishlist_title: "Favorites",
@@ -1228,19 +1228,39 @@
       .replace(/'/g, '&#39;');
   }
 
-  const FALLBACK_IMAGE_URL = '/static/apple_3d_logo.png';
+  const FALLBACK_IMAGE_URL = '/static/technoprice_icon.png';
+
+  function getBrandName(name) {
+    const lower = String(name || '').toLowerCase();
+    if (lower.includes('macbook') || lower.includes('iphone') || lower.includes('ipad') || lower.includes('iwatch') || lower.includes('airpods') || lower.includes('apple')) {
+      return 'APPLE';
+    }
+    if (lower.includes('samsung') || lower.includes('galaxy')) {
+      return 'SAMSUNG';
+    }
+    if (lower.includes('xiaomi') || lower.includes('redmi') || lower.includes('poco')) {
+      return 'XIAOMI';
+    }
+    return 'TECHNOPRICE';
+  }
 
   function getProductImageUrl(prod) {
     if (!prod) return FALLBACK_IMAGE_URL;
-    // 1. Agar to'g'ridan-to'g'ri Telegram CDN yoki tashqi havola bo'lsa (https://...)
+    // 1. Agar eskiruvchi telesco.pe havolasi bo'lsa, doimiy server rasmidan olamiz
+    if (prod.image_url && String(prod.image_url).includes('telesco.pe')) {
+      return '/static/products/' + prod.id + '.jpg';
+    }
+    // 2. Agar to'g'ridan-to'g'ri tashqi havola bo'lsa (telesco.pe emas)
     if (prod.image_url && (String(prod.image_url).startsWith('http://') || String(prod.image_url).startsWith('https://'))) {
       return prod.image_url;
     }
-    // 2. Agar Telegram photo_file_id bo'lsa
+    // 3. Agar Telegram photo_file_id bo'lsa
     if (prod.photo_file_id) return '/api/photo/' + prod.photo_file_id;
-    // 3. Agar mavjud image_url bo'lsa
+    // 4. Agar mavjud image_url bo'lsa (/static/...)
     if (prod.image_url && String(prod.image_url).trim()) return prod.image_url;
     if (prod.image && String(prod.image).trim()) return prod.image;
+    // 5. Har qanday mahsulot uchun doimiy lokal faylni tekshiramiz
+    if (prod.id) return '/static/products/' + prod.id + '.jpg';
     return FALLBACK_IMAGE_URL;
   }
 
@@ -2032,7 +2052,7 @@
       const p = item.product;
       const subtotal = p.price * item.qty;
       total += subtotal;
-      const brand = p.name.toLowerCase().includes('macbook') || p.name.toLowerCase().includes('iphone') ? 'APPLE' : 'PREMIUM';
+      const brand = getBrandName(p.name);
 
       return `
         <div class="cart-section-item" data-id="${p.id}">
@@ -2106,7 +2126,7 @@
     if (items.length === 0) return;
 
     let total = 0;
-    let text = "Assalomu alaykum! Men DemoStore mini-ilovasi orqali quyidagi buyurtmani rasmiylashtirmoqchiman:\n\n";
+    let text = "Assalomu alaykum! Men TechnoPrice mini-ilovasi orqali quyidagi buyurtmani rasmiylashtirmoqchiman:\n\n";
     items.forEach((item, idx) => {
       const p = item.product;
       const subtotal = p.price * item.qty;
@@ -2188,7 +2208,7 @@
     wishlistSectionEmptyEl.classList.add('hidden');
     let html = '';
     favProducts.forEach(p => {
-      const brand = p.name.toLowerCase().includes('macbook') || p.name.toLowerCase().includes('iphone') ? 'APPLE' : 'PREMIUM';
+      const brand = getBrandName(p.name);
       html += `
         <article class="product-card" data-id="${p.id}">
           <div class="card-media">
@@ -2278,6 +2298,22 @@
       pill.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
       renderCatalog();
     });
+  });
+
+  // PApple Bosh sahifa Kategoriya pill va Hero tugmalari
+  const homeCategorySliderEl = document.getElementById('homeCategorySlider');
+  homeCategorySliderEl?.querySelectorAll('.category-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      triggerHaptic('light');
+      const catId = parseInt(pill.dataset.category, 10);
+      switchTab('catalog', catId);
+    });
+  });
+
+  const btnHeroKatalogNav = document.getElementById('btnHeroKatalogNav');
+  btnHeroKatalogNav?.addEventListener('click', () => {
+    triggerHaptic('medium');
+    switchTab('catalog');
   });
 
 
@@ -2373,7 +2409,7 @@
     let html = '';
     prods.forEach(p => {
       const isFav = state.wishlist.has(p.id);
-      const brand = p.name.toLowerCase().includes('macbook') || p.name.toLowerCase().includes('iphone') ? 'APPLE' : 'PREMIUM';
+      const brand = getBrandName(p.name);
       const isDiscount = Number(p.is_discount) === 1;
 
       // Chegirma foizi va tejash summasi
@@ -3502,7 +3538,7 @@
     let html = '';
     products.forEach(p => {
       const isFav = state.wishlist.has(p.id);
-      const brand = p.name.toLowerCase().includes('macbook') || p.name.toLowerCase().includes('iphone') ? 'APPLE' : 'PREMIUM';
+      const brand = getBrandName(p.name);
       const isDiscount = Number(p.is_discount) === 1;
 
       // Chegirma foizi va tejash summasi
@@ -3659,6 +3695,8 @@
   logoBtnEl?.addEventListener('click', (e) => {
     e.preventDefault();
     triggerHaptic('light');
+    logoBtnEl.classList.add('logo-clicked');
+    setTimeout(() => logoBtnEl.classList.remove('logo-clicked'), 250);
     const wrap = logoBtnEl.querySelector('.blur-text-wrap');
     if (wrap) {
       wrap.classList.add('replaying');

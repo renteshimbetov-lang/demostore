@@ -330,9 +330,10 @@ async def sync_deleted_channel_posts(db: Database, channel_username: str):
                 except Exception as e:
                     logger.debug(f"Post #{msg_id} tekshirishda xatolik: {e}")
 
-        if deleted_ids:
-            await db.deactivate_products_by_ids(deleted_ids)
-            logger.info(f"Jami {len(deleted_ids)} ta kanalidan o'chirilgan mahsulot mini appdan muvaffaqiyatli o'chirildi!")
+        # Avtomatik o'chirish xavfli bo'lgani va tovarlarni o'chirib yubormasligi uchun bloklandi
+        # if deleted_ids:
+        #     await db.deactivate_products_by_ids(deleted_ids)
+        #     logger.info(f"Jami {len(deleted_ids)} ta kanalidan o'chirilgan mahsulot mini appdan muvaffaqiyatli o'chirildi!")
     except Exception as e:
         logger.warning(f"Kanal postlarini sinxronlashda xatolik: {e}")
 

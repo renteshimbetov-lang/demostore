@@ -20,6 +20,8 @@ _cache_lock = asyncio.Lock()
 def _get_fallback_image(webapp_dir: str) -> Tuple[bytes, str]:
     """Standart zaxira rasmni (apple_3d_logo.png) yuklash"""
     candidates = [
+        os.path.join(webapp_dir, "static", "technoprice_icon.png"),
+        os.path.join(webapp_dir, "technoprice_icon.png"),
         os.path.join(webapp_dir, "static", "apple_3d_logo.png"),
         os.path.join(webapp_dir, "apple_3d_logo.png"),
     ]
@@ -295,7 +297,7 @@ def create_web_app(db: Database, webapp_dir: str, bot=None) -> web.Application:
             elif img:
                 p["image_url"] = img
             else:
-                p["image_url"] = "/static/apple_3d_logo.png"
+                p["image_url"] = "/static/technoprice_icon.png"
 
             raw_g = p.get("gallery_images")
             if isinstance(raw_g, str):
@@ -480,7 +482,7 @@ def create_web_app(db: Database, webapp_dir: str, bot=None) -> web.Application:
             elif img:
                 p["image_url"] = img
             else:
-                p["image_url"] = "/static/apple_3d_logo.png"
+                p["image_url"] = "/static/technoprice_icon.png"
 
             if p.get("currency") == "UZS" and p.get("price_uzs"):
                 p["price_uzs"] = int(p["price_uzs"])

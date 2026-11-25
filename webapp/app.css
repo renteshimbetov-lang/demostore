@@ -203,8 +203,9 @@ html, body {
   will-change: transform, opacity, filter;
 }
 
-/* Yuqoridagi "Demo" so'zi */
-.splash-word-demo {
+/* Yuqoridagi "Demo" / "techno" so'zi */
+.splash-word-demo,
+.splash-word-techno {
   color: #ffffff;
   text-shadow: 0 4px 20px rgba(0, 0, 0, 0.7), 0 0 16px rgba(255, 255, 255, 0.22);
   opacity: 0;
@@ -213,8 +214,9 @@ html, body {
   animation: splashWordDemoReveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) 1.2s forwards;
 }
 
-/* Pastidagi "Store" so'zi */
-.splash-word-store {
+/* Pastidagi "Store" / "price" so'zi */
+.splash-word-store,
+.splash-word-price {
   color: #ffffff;
   text-shadow: 0 4px 20px rgba(0, 0, 0, 0.7), 0 0 16px rgba(255, 255, 255, 0.22);
   opacity: 0;
@@ -436,7 +438,51 @@ html, body {
 
 .brand-logo {
   text-decoration: none;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.brand-logo-technoprice {
+  padding: 2px 4px;
+  border-radius: 8px;
+  transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.15s ease;
+}
+
+.brand-logo-technoprice:active,
+.brand-logo.logo-clicked {
+  transform: scale(0.93) !important;
+}
+
+.logo-technoprice-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.logo-technoprice-img {
+  height: 27px;
+  width: auto;
+  max-width: 146px;
+  object-fit: contain;
+  display: block;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.light-mode-logo {
+  display: block !important;
+}
+.dark-mode-logo {
+  display: none !important;
+}
+
+html.dark .light-mode-logo {
+  display: none !important;
+}
+html.dark .dark-mode-logo {
+  display: block !important;
 }
 
 .brand-logo .logo-text {
@@ -4578,6 +4624,396 @@ html:not(.light) .deal-cart-btn:not(.is-success):hover {
 .blur-text-wrap.replaying .blur-letter {
   animation: none !important;
 }
+
+/* ==========================================================================
+   PAPPLE LUXURY DESIGN SYSTEM (Apple Malika Store Style - papple-two.vercel.app)
+   Manrope Typography, Deep Black & Gold Gradients, Pill Buttons, Luxury Tiles
+   ========================================================================== */
+
+:root {
+  --font-body: 'Manrope', -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+  --font-heading: 'Manrope', -apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif;
+  
+  --papple-white: #ffffff;
+  --papple-soft: #f4f4f2;
+  --papple-line: #e5e3de;
+  --papple-black: #000000;
+  --papple-ink: #111111;
+  --papple-mute: #666666;
+  --papple-mute-d: #a3a3a3;
+  --papple-gold: #c9a227;
+  --papple-gold-2: #e2bd4f;
+  --papple-gold-deep: #8a6a12;
+  --papple-ease: cubic-bezier(.22, 1, .36, 1);
+}
+
+body {
+  font-family: var(--font-body) !important;
+  color: var(--papple-ink) !important;
+  background-color: var(--papple-white) !important;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, .section-title, .product-title, .papple-hero-title, .deals-section-title {
+  font-family: var(--font-heading) !important;
+  letter-spacing: -0.03em;
+}
+
+/* --- Pill Buttons from PApple --- */
+.pill {
+  white-space: nowrap;
+  min-height: 44px;
+  transition: transform .3s var(--papple-ease), background-color .3s, color .3s, box-shadow .3s;
+  border-radius: 999px;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  padding: 0 20px;
+  font-size: 14px;
+  font-weight: 700;
+  display: inline-flex;
+  cursor: pointer;
+  text-decoration: none;
+  border: none;
+}
+.pill.dark {
+  background: var(--papple-black) !important;
+  color: var(--papple-white) !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+}
+.pill.gold {
+  background: linear-gradient(180deg, #ecca6a, var(--papple-gold)) !important;
+  color: var(--papple-black) !important;
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.6), 0 4px 14px rgba(201, 162, 39, 0.28) !important;
+}
+.pill:active {
+  transform: scale(0.97);
+}
+
+/* --- PApple Hero Banner --- */
+.papple-hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: 28px;
+  padding: 30px 18px 24px;
+  margin: 10px 12px 16px;
+  background: radial-gradient(55% 40% at 10% 80%, rgba(239, 217, 160, 0.45), transparent 72%),
+              radial-gradient(45% 35% at 95% 52%, rgba(241, 226, 186, 0.4), transparent 70%),
+              linear-gradient(180deg, #e8e7e4 0%, #ecebe8 40%, #f4f3ef 78%, #ffffff 100%);
+  border: 1px solid rgba(229, 227, 222, 0.9);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+}
+.papple-hero-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  mask-image: linear-gradient(#000 85%, transparent);
+  -webkit-mask-image: linear-gradient(#000 85%, transparent);
+}
+@keyframes pappleWvA {
+  0% { transform: translate(-3%, 2%); }
+  100% { transform: translate(4%, -3%) rotate(-1deg); }
+}
+.papple-wv {
+  width: 130%;
+  height: 120%;
+  position: absolute;
+  top: -10%;
+  left: -15%;
+  animation: 20s ease-in-out infinite alternate pappleWvA;
+}
+.papple-hero-content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.papple-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--papple-black);
+  color: var(--papple-gold-2);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 5px 14px;
+  border-radius: 999px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+}
+.papple-hero-title {
+  font: 800 clamp(22px, 5.5vw, 36px)/1.1 var(--font-heading) !important;
+  letter-spacing: -0.04em !important;
+  color: var(--papple-ink) !important;
+  margin-bottom: 8px !important;
+  max-width: 22ch;
+}
+.papple-hero-sub {
+  color: var(--papple-mute);
+  font-size: 13.5px;
+  font-weight: 500;
+  max-width: 36ch;
+  line-height: 1.45;
+  margin-bottom: 18px;
+}
+.papple-hero-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* --- PApple Nums Badges --- */
+.nums-wrap {
+  padding: 0 12px 16px;
+}
+.nums {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  display: grid;
+}
+.num {
+  background: var(--papple-soft);
+  border: 1px solid rgba(229, 227, 222, 0.85);
+  border-radius: 18px;
+  padding: 14px 12px;
+  position: relative;
+  overflow: hidden;
+  text-align: left;
+}
+.num > * { z-index: 1; position: relative; }
+.num b {
+  font: 800 clamp(20px, 4.5vw, 34px)/1 var(--font-heading);
+  letter-spacing: -0.05em;
+  color: var(--papple-ink);
+  display: block;
+}
+.num span {
+  color: var(--papple-mute);
+  font-weight: 600;
+  font-size: 11px;
+  margin-top: 4px;
+  display: block;
+  line-height: 1.25;
+}
+.num::after {
+  content: "";
+  border: 10px solid var(--papple-gold);
+  opacity: 0.22;
+  border-radius: 50%;
+  width: 70px;
+  height: 70px;
+  position: absolute;
+  top: -26px;
+  right: -26px;
+}
+
+/* --- Category Pills (PApple Style) --- */
+.category-slider {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 4px 12px 14px;
+  -webkit-overflow-scrolling: touch;
+}
+.category-slider::-webkit-scrollbar { display: none; }
+.category-pill {
+  border: 1.5px solid var(--papple-line) !important;
+  border-radius: 999px !important;
+  min-height: 40px !important;
+  padding: 0 18px !important;
+  font-size: 13.5px !important;
+  font-weight: 700 !important;
+  background: var(--papple-white) !important;
+  color: var(--papple-ink) !important;
+  white-space: nowrap !important;
+  box-shadow: none !important;
+  transition: all 0.22s var(--papple-ease) !important;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+}
+.category-pill.active {
+  background: var(--papple-black) !important;
+  border-color: var(--papple-black) !important;
+  color: var(--papple-white) !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* --- Product Grid & Cards (PApple .grid .tile style) --- */
+.products-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 12px !important;
+  padding: 0 12px 24px !important;
+}
+@media (min-width: 680px) {
+  .products-grid {
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)) !important;
+    gap: 16px !important;
+  }
+}
+.product-card {
+  background: var(--papple-white) !important;
+  color: var(--papple-ink) !important;
+  border: 1px solid var(--papple-line) !important;
+  transition: transform .35s var(--papple-ease), box-shadow .35s var(--papple-ease), border-color .3s !important;
+  border-radius: 20px !important;
+  padding: 10px 10px 14px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  position: relative !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02) !important;
+}
+.product-card:active {
+  transform: scale(0.98) !important;
+}
+.card-media {
+  aspect-ratio: 1 / 1 !important;
+  background: var(--papple-soft) !important;
+  border-radius: 14px !important;
+  position: relative !important;
+  overflow: hidden !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+.card-media img, .product-img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  transition: transform 0.4s var(--papple-ease) !important;
+}
+.product-card:hover .product-img {
+  transform: scale(1.04) !important;
+}
+.product-brand {
+  color: var(--papple-gold-deep) !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  margin-top: 10px !important;
+  display: block !important;
+}
+.product-title {
+  font: 700 14.5px/1.25 var(--font-heading) !important;
+  letter-spacing: -0.025em !important;
+  color: var(--papple-ink) !important;
+  margin-top: 3px !important;
+  display: -webkit-box !important;
+  -webkit-line-clamp: 2 !important;
+  -webkit-box-orient: vertical !important;
+  overflow: hidden !important;
+  min-height: 36px !important;
+}
+.price-wrap {
+  border-top: 1px solid var(--papple-line) !important;
+  margin-top: auto !important;
+  padding-top: 10px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+}
+.price-current {
+  font: 800 16px/1.15 var(--font-heading) !important;
+  letter-spacing: -0.03em !important;
+  color: var(--papple-ink) !important;
+}
+.price-uzs, .price-usd {
+  color: var(--papple-mute) !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+}
+
+/* Card Button: Pill format from PApple */
+.card-actions-stack {
+  margin-top: 10px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 6px !important;
+}
+.btn-buy, .btn-add-cart {
+  background: var(--papple-black) !important;
+  color: var(--papple-white) !important;
+  border-radius: 999px !important;
+  min-height: 40px !important;
+  padding: 0 16px !important;
+  font-size: 13.5px !important;
+  font-weight: 700 !important;
+  border: none !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12) !important;
+  transition: all 0.22s var(--papple-ease) !important;
+  width: 100% !important;
+}
+.btn-buy:active {
+  transform: scale(0.96) !important;
+}
+.btn-buy.btn-goto-order {
+  background: linear-gradient(180deg, #ecca6a, var(--papple-gold)) !important;
+  color: var(--papple-black) !important;
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.6), 0 4px 14px rgba(201, 162, 39, 0.25) !important;
+}
+.btn-channel-link {
+  background: var(--papple-soft) !important;
+  color: var(--papple-ink) !important;
+  border: 1px solid var(--papple-line) !important;
+  border-radius: 999px !important;
+  min-height: 32px !important;
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  padding: 0 10px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 5px !important;
+}
+
+/* --- Header & Search & Dock Styling --- */
+.mobile-header {
+  background: rgba(255, 255, 255, 0.94) !important;
+  backdrop-filter: blur(20px) -webkit-backdrop-filter: blur(20px) !important;
+  border-bottom: 1px solid var(--papple-line) !important;
+}
+.search-wrap {
+  border: 1.5px solid var(--papple-line) !important;
+  border-radius: 999px !important;
+  background: var(--papple-soft) !important;
+  box-shadow: none !important;
+  transition: border-color 0.2s, background-color 0.2s !important;
+}
+.search-wrap:focus-within {
+  border-color: var(--papple-black) !important;
+  background: var(--papple-white) !important;
+}
+.search-input {
+  font-family: var(--font-body) !important;
+  font-size: 14px !important;
+  color: var(--papple-ink) !important;
+}
+.mobile-dock {
+  background: rgba(255, 255, 255, 0.94) !important;
+  backdrop-filter: blur(20px) -webkit-backdrop-filter: blur(20px) !important;
+  border-top: 1px solid var(--papple-line) !important;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05) !important;
+}
+.dock-item.active {
+  color: var(--papple-gold-deep) !important;
+}
+.dock-item.active svg {
+  stroke: var(--papple-gold-deep) !important;
+}
+
 
 
 
